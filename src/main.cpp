@@ -111,7 +111,7 @@ void accelTest(){
       previousM1Micros = currentMicros;
 
       // Adjust acceleration and deceleration logic
-      if (currentStep < TOTAL_STEPS * 0.7) {  // Acceleration phase (70% of travel)
+      if (currentStep < TOTAL_STEPS * 0.5) {  // Acceleration phase (70% of travel)
         if (stepInterval > MIN_SPEED) {
           stepInterval -= ACCEL / TOTAL_STEPS;  // Speed up faster
         }
