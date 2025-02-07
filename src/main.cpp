@@ -19,7 +19,7 @@ unsigned long previousSlowStepM1 = 0;
 // long m3Speed = 1400; //200 is 70/min.... 130 = 90/min @800 steps/rev --- 1250 @200 steps/rev
 double m1PulsePerRevMultiplier = 0.9; //.9 for 400, .45 for 800 on driver
 
-long m1Speed = 200; // Initial step delay (microseconds)
+long m1Speed = 2000; // Initial step delay (microseconds)
 long minSpeed = 500; // Minimum step delay (max speed, microseconds)
 long accel = 2000;   // Acceleration rate (microseconds per step reduction)
 long stepInterval = m1Speed;
