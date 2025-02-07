@@ -87,5 +87,10 @@ void setup()
 
 void loop()
 {
-  runMotorM1();
+  for (int i = 0; i < i+10; i++) {
+        digitalWrite(stepPinM1, HIGH);
+        delayMicroseconds(500);
+        digitalWrite(stepPinM1, LOW);
+        delayMicroseconds(500);
+    }
 }
