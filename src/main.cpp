@@ -6,18 +6,23 @@
 const int stepPinM1 = 22; //PUL+ Green Current setp
 const int dirPinM1 = 23; //DIR+ Blue
 const int enPinM1 = 24; //ENA+ Red
-long rotaryPosition;
-long previousPosition;
+long rotaryPosition = 0;
+long previousPosition = 0;
 int m1Step = 1;
+int targetSteps = 400;
 unsigned long previousM1Micros = 0;
 
 unsigned long previousSlowStepM1 = 0;
 
-long m1Speed = 400; // 1000 is 70/min.... 750 = 90/min... If change, to change speed change the m1 speed in else of runMotorM1()...
-long m2Speed = 910; //150 is 70/min.... 95 = 90/min @800 steps/rev --- 910 @200 steps/rev
-long m3Speed = 1400; //200 is 70/min.... 130 = 90/min @800 steps/rev --- 1250 @200 steps/rev
+// long m1Speed = 400; // 1000 is 70/min.... 750 = 90/min... If change, to change speed change the m1 speed in else of runMotorM1()...
+// long m2Speed = 910; //150 is 70/min.... 95 = 90/min @800 steps/rev --- 910 @200 steps/rev
+// long m3Speed = 1400; //200 is 70/min.... 130 = 90/min @800 steps/rev --- 1250 @200 steps/rev
 double m1PulsePerRevMultiplier = 0.9; //.9 for 400, .45 for 800 on driver
 
+long m1Speed = 200; // Initial step delay (microseconds)
+long minSpeed = 500; // Minimum step delay (max speed, microseconds)
+long accel = 2000;   // Acceleration rate (microseconds per step reduction)
+long stepInterval = m1Speed;
 long calculateDegrees(long rotaryPosition) //converts the steps the stepper has stepped to degrees //a 400 step goes 0.9 degrees per step. 200 stepper motor is 1.8 degrees per step. Currently 800!
 {
   long result = rotaryPosition * m1PulsePerRevMultiplier; 
@@ -46,6 +51,39 @@ long calculateDegrees(long rotaryPosition) //converts the steps the stepper has 
 //   }
 //   }
 // }
+void accelerateMotorM1() {
+  digitalWrite(dirPinM1, LOW);
+  unsigned long currentMicros = micros();
+
+  // Check if it's time to step
+  if ((currentMicros - previousM1Micros) >= stepInterval) {
+    // Make a step
+    if (m1Step == 1) {
+      digitalWrite(stepPinM1, HIGH);
+      m1Step++;
+      previousPosition = rotaryPosition;
+      rotaryPosition++;
+    } else if (m1Step == 2) {
+      digitalWrite(stepPinM1, LOW);
+      m1Step = 1;
+    }
+
+    previousM1Micros = currentMicros;
+
+    // Accelerate or decelerate
+    if (rotaryPosition < targetSteps / 2) {
+      // Accelerate
+      if (stepInterval > minSpeed) {
+        stepInterval -= accel / targetSteps;
+      }
+    } else {
+      // Decelerate
+      if (stepInterval < m1Speed) {
+        stepInterval += accel / targetSteps;
+      }
+    }
+  }
+}
 void runMotorM1()
 {
   digitalWrite(dirPinM1, LOW);
@@ -88,7 +126,7 @@ void setup()
 
 void loop()
 {
-  runMotorM1();
+  accelerateMotorM1();
   // for (int i = 0; i < i+10; i++) {
   //       digitalWrite(stepPinM1, HIGH);
   //       delayMicroseconds(500);
