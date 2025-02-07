@@ -7,8 +7,8 @@ const int stepPinM1 = 22; //PUL+ Green Current setp
 const int dirPinM1 = 23; //DIR+ Blue
 const int enPinM1 = 24; //ENA+ Red
 #define TOTAL_STEPS 800   // Steps per cycle
-#define MIN_SPEED 30      // Minimum step delay (fastest speed, in microseconds)
-#define MAX_SPEED 500    // Maximum step delay (slowest speed, in microseconds)
+#define MIN_SPEED 10      // Minimum step delay (fastest speed, in microseconds)
+#define MAX_SPEED 450    // Maximum step delay (slowest speed, in microseconds)
 #define ACCEL_RATE 15000   // Acceleration rate (higher = faster acceleration)
 #define CYCLE_DELAY 250000 // 1-second delay between cycles (in microseconds)
 
