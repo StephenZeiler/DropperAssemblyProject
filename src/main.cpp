@@ -10,14 +10,22 @@ long rotaryPosition = 0;
 long previousPosition = 0;
 int m1Step = 1;
 int targetSteps = 400;
+int currentStep = 0;
+bool accelerating = true;
+bool moving = true;  // Track motor movement state
 unsigned long previousM1Micros = 0;
-
+unsigned long cyclePauseStart = 0;
 unsigned long previousSlowStepM1 = 0;
 
 // long m1Speed = 400; // 1000 is 70/min.... 750 = 90/min... If change, to change speed change the m1 speed in else of runMotorM1()...
 // long m2Speed = 910; //150 is 70/min.... 95 = 90/min @800 steps/rev --- 910 @200 steps/rev
 // long m3Speed = 1400; //200 is 70/min.... 130 = 90/min @800 steps/rev --- 1250 @200 steps/rev
 double m1PulsePerRevMultiplier = 0.9; //.9 for 400, .45 for 800 on driver
+#define TOTAL_STEPS 800  // Steps per cycle
+#define MIN_SPEED 500     // Minimum delay between steps (fastest speed, in microseconds)
+#define MAX_SPEED 2000    // Maximum delay between steps (slowest speed, in microseconds)
+#define ACCEL 2000        // Acceleration rate (microseconds per step reduction)
+#define CYCLE_DELAY 1000000 // 1-second delay between cycles (in microseconds)
 
 long m1Speed = 2000; // Initial step delay (microseconds)
 long minSpeed = 500; // Minimum step delay (max speed, microseconds)
@@ -84,6 +92,53 @@ void accelerateMotorM1() {
     }
   }
 }
+void accelTest(){
+   unsigned long currentMicros = micros();
+
+  if (moving) {
+    // Check if it's time to step
+    if ((currentMicros - previousM1Micros) >= stepInterval) {
+      // Make a step
+      if (m1Step == 1) {
+        digitalWrite(stepPinM1, HIGH);
+        m1Step++;
+      } else if (m1Step == 2) {
+        digitalWrite(stepPinM1, LOW);
+        m1Step = 1;
+        currentStep++; // Count steps
+      }
+
+      previousM1Micros = currentMicros;
+
+      // Acceleration & Deceleration logic
+      if (currentStep < TOTAL_STEPS / 2) {
+        // Accelerate
+        if (stepInterval > MIN_SPEED) {
+          stepInterval -= ACCEL / TOTAL_STEPS;
+        }
+      } else {
+        // Decelerate
+        if (stepInterval < MAX_SPEED) {
+          stepInterval += ACCEL / TOTAL_STEPS;
+        }
+      }
+
+      // Check if cycle is complete
+      if (currentStep >= TOTAL_STEPS) {
+        moving = false;
+        cyclePauseStart = micros();  // Record the pause start time
+        currentStep = 0; // Reset step counter
+        stepInterval = MAX_SPEED; // Reset speed for next cycle
+      }
+    }
+  } 
+  else {
+    // 1-second pause before restarting motion
+    if (currentMicros - cyclePauseStart >= CYCLE_DELAY) {
+      moving = true;
+    }
+  }
+}
 void runMotorM1()
 {
   digitalWrite(dirPinM1, LOW);
@@ -126,7 +181,7 @@ void setup()
 
 void loop()
 {
-  accelerateMotorM1();
+  accelTest();
   // for (int i = 0; i < i+10; i++) {
   //       digitalWrite(stepPinM1, HIGH);
   //       delayMicroseconds(500);
