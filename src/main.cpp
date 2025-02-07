@@ -28,7 +28,7 @@ double m1PulsePerRevMultiplier = 0.9; //.9 for 400, .45 for 800 on driver
 #define CYCLE_DELAY 1000000 // 1-second delay between cycles (in microseconds)
 
 long m1Speed = 2000; // Initial step delay (microseconds)
-long minSpeed = 500; // Minimum step delay (max speed, microseconds)
+long minSpeed = 50; // Minimum step delay (max speed, microseconds)
 long accel = 2000;   // Acceleration rate (microseconds per step reduction)
 long stepInterval = m1Speed;
 long calculateDegrees(long rotaryPosition) //converts the steps the stepper has stepped to degrees //a 400 step goes 0.9 degrees per step. 200 stepper motor is 1.8 degrees per step. Currently 800!
