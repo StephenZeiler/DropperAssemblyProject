@@ -8,8 +8,8 @@ const int dirPinM1 = 23; //DIR+ Blue
 const int enPinM1 = 24; //ENA+ Red
 #define TOTAL_STEPS 800   // Steps per cycle
 #define MIN_SPEED 10      // Minimum step delay (fastest speed, in microseconds)
-#define MAX_SPEED 480    // Maximum step delay (slowest speed, in microseconds)
-#define ACCEL_RATE 50000   // Acceleration rate (higher = faster acceleration)
+#define MAX_SPEED 450    // Maximum step delay (slowest speed, in microseconds)
+#define ACCEL_RATE 30000   // Acceleration rate (higher = faster acceleration)
 #define CYCLE_DELAY 250000 // 1-second delay between cycles (in microseconds)
 
 unsigned long previousM1Micros = 0;
