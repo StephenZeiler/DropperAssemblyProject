@@ -23,7 +23,7 @@ unsigned long previousSlowStepM1 = 0;
 double m1PulsePerRevMultiplier = 0.9; //.9 for 400, .45 for 800 on driver
 #define TOTAL_STEPS 800  // Steps per cycle
 #define MIN_SPEED 100     // Minimum delay between steps (fastest speed, in microseconds) Lower value = Faster speed (smaller delay between steps).
-#define MAX_SPEED 1500    // Maximum delay between steps (slowest speed, in microseconds) Lower value = Starts at a faster initial speed.
+#define MAX_SPEED 800    // Maximum delay between steps (slowest speed, in microseconds) Lower value = Starts at a faster initial speed.
 #define ACCEL 8000        // Acceleration rate (microseconds per step reduction) Increase from 2000 to 8000 for a much quicker ramp-up.
 #define CYCLE_DELAY 1000000 // 1-second delay between cycles (in microseconds)
 
