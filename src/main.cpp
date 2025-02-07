@@ -82,6 +82,7 @@ void setup()
   pinMode(stepPinM1, OUTPUT);
   pinMode(dirPinM1, OUTPUT);
   pinMode(enPinM1, OUTPUT);
+  digitalWrite(enPinM1, LOW);
   
 }
 
