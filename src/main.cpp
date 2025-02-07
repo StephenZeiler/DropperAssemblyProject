@@ -2,9 +2,10 @@
 #include <Arduino.h>
 #include <Stepper.h>
 //Motors
-const int stepPinM1 = 11; //PUL+ Green
-const int dirPinM1 = 10; //DIR+ Blue
-const int enPinM1 = 9; //ENA+ Red
+//Currently 400 steps per rev 
+const int stepPinM1 = 22; //PUL+ Green Current setp
+const int dirPinM1 = 23; //DIR+ Blue
+const int enPinM1 = 24; //ENA+ Red
 long rotaryPosition;
 long previousPosition;
 int m1Step = 1;
@@ -45,27 +46,27 @@ long calculateDegrees(long rotaryPosition) //converts the steps the stepper has 
 //   }
 //   }
 // }
-// void runMotorM1()
-// {
-//   digitalWrite(dirPinM1, HIGH);
-//   unsigned long currentMicros = micros();
-//   for (int x = 0; x < 1; x++)
-//   {
-//     if((currentMicros - previousM1Micros)> m1Speed){
-//       if(m1Step ==1){
-//         digitalWrite(stepPinM1, HIGH);
-//         ++m1Step;
-//         previousPosition = rotaryPosition;
-//         rotaryPosition = rotaryPosition + 1;
-//       }
-//       else if(m1Step ==2){
-//           digitalWrite(stepPinM1, LOW);
-//           m1Step = 1;
-//       }
-//       previousM1Micros = currentMicros; 
-//     }
-//   }
-// }
+void runMotorM1()
+{
+  digitalWrite(dirPinM1, HIGH);
+  unsigned long currentMicros = micros();
+  for (int x = 0; x < 1; x++)
+  {
+    if((currentMicros - previousM1Micros)> m1Speed){
+      if(m1Step ==1){
+        digitalWrite(stepPinM1, HIGH);
+        ++m1Step;
+        previousPosition = rotaryPosition;
+        rotaryPosition = rotaryPosition + 1;
+      }
+      else if(m1Step ==2){
+          digitalWrite(stepPinM1, LOW);
+          m1Step = 1;
+      }
+      previousM1Micros = currentMicros; 
+    }
+  }
+}
 // void stepM1()
 // {
 //   digitalWrite(dirPinM1, HIGH);
@@ -86,5 +87,5 @@ void setup()
 
 void loop()
 {
-  
+  runMotorM1();
 }
