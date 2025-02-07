@@ -13,7 +13,7 @@ unsigned long previousM1Micros = 0;
 
 unsigned long previousSlowStepM1 = 0;
 
-long m1Speed = 200; // 1000 is 70/min.... 750 = 90/min... If change, to change speed change the m1 speed in else of runMotorM1()...
+long m1Speed = 300; // 1000 is 70/min.... 750 = 90/min... If change, to change speed change the m1 speed in else of runMotorM1()...
 long m2Speed = 910; //150 is 70/min.... 95 = 90/min @800 steps/rev --- 910 @200 steps/rev
 long m3Speed = 1400; //200 is 70/min.... 130 = 90/min @800 steps/rev --- 1250 @200 steps/rev
 double m1PulsePerRevMultiplier = 0.9; //.9 for 400, .45 for 800 on driver
