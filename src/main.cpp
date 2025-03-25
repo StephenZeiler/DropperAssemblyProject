@@ -94,7 +94,7 @@ void setup()
 
 void loop()
 {
-  runMotorM1();
+  runMotorM1()
   //accelerateMotorM1();
   // for (int i = 0; i < i+10; i++) {
   //       digitalWrite(stepPinM1, HIGH);
