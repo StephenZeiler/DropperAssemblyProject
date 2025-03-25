@@ -11,7 +11,7 @@ const int ACCEL_STEPS = 70;        // 70 steps acceleration
 const int DECEL_STEPS = 30;        // 30 steps deceleration
 const int MIN_STEP_DELAY = 100;    // Fastest speed (µs)
 const int MAX_STEP_DELAY = 2000;   // Slowest speed (µs)
-const unsigned long PAUSE_AFTER = 250000; // Pause after movement (µs)
+const unsigned long PAUSE_AFTER = 500000; // Pause after movement (µs)
 
 // Motor state
 unsigned long lastStepTime = 0;
