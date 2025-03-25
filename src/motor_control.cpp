@@ -28,29 +28,25 @@ void runMotorM1() {
   digitalWrite(enPinM1, LOW);
   digitalWrite(dirPinM1, LOW);  // Set direction
 
-  while (true) {  // Infinite loop to keep motor running
+while (true) {  // Infinite loop to keep motor running
     unsigned long currentMicros = micros();
 
     if (moving) {
       // Check if it's time to step
       if ((currentMicros - previousM1Micros) >= stepInterval) {
         // Make a step
-        if (m1Step == 1) {
-          digitalWrite(stepPinM1, HIGH);
-          m1Step++;
-        } else if (m1Step == 2) {
-          digitalWrite(stepPinM1, LOW);
-          m1Step = 1;
-          currentStep++; // Count steps
-        }
-
+        digitalWrite(stepPinM1, HIGH);
+        delayMicroseconds(5);  // Short pulse for step signal
+        digitalWrite(stepPinM1, LOW);
+        
+        currentStep++; // Increase step count
         previousM1Micros = currentMicros;
 
         // Exponential Acceleration & Deceleration
         float progress = (float)currentStep / TOTAL_STEPS;  // Progress from 0.0 to 1.0
 
         if (progress < 0.7) {  // First 70% = Acceleration
-          stepInterval = MAX_SPEED / pow(ACCEL_FACTOR, (progress / 0.7));  // Exponential speed-up
+          stepInterval = MAX_SPEED / pow(ACCEL_FACTOR, (progress / 0.7) * 4);  // Faster speed-up
           if (stepInterval < MIN_SPEED) stepInterval = MIN_SPEED;  // Cap at max speed
         } else {  // Last 30% = Deceleration
           float decelProgress = (progress - 0.7) / 0.3;  // Normalize 0.7-1.0 to 0.0-1.0
@@ -61,7 +57,7 @@ void runMotorM1() {
         // Check if cycle is complete
         if (currentStep >= TOTAL_STEPS) {
           moving = false;
-          cyclePauseStart = micros();  // Record the pause start time
+          cyclePauseStart = micros();  // Record pause start time
           currentStep = 0; // Reset step counter
           stepInterval = MAX_SPEED; // Reset speed for next cycle
         }
