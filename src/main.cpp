@@ -1,81 +1,134 @@
 #include <Arduino.h>
+#include "SlotObject.h"
 
 // Motor pins
-const int stepPinM1 = 22;  // PUL - Step
-const int dirPinM1 = 23;   // DIR - Direction
-const int enPinM1 = 24;    // ENA - Enable
+const int stepPin = 22;
+const int dirPin = 23;
+const int enablePin = 24;
 
 // Movement parameters
-const int TOTAL_STEPS = 100;       // Exactly 100 steps
-const int ACCEL_STEPS = 70;        // 70 steps acceleration
-const int DECEL_STEPS = 30;        // 30 steps deceleration
-const int MIN_STEP_DELAY = 100;    // Fastest speed (µs)
-const int MAX_STEP_DELAY = 2000;   // Slowest speed (µs)
-const unsigned long PAUSE_AFTER = 500000; // Pause after movement (µs)
+const int TOTAL_STEPS = 100;
+const int ACCEL_STEPS = 70;
+const int DECEL_STEPS = 30;
+const int MIN_STEP_DELAY = 100;   // microseconds
+const int MAX_STEP_DELAY = 2000;  // microseconds
+const unsigned long PAUSE_AFTER = 500000; // microseconds
 
 // Motor state
 unsigned long lastStepTime = 0;
 unsigned long pauseStartTime = 0;
 int stepsTaken = 0;
-bool isMoving = true;
+bool isMoving = false;
 bool stepHigh = false;
 
+// Slot tracking
+SlotObject slots[] = {
+    SlotObject(0), SlotObject(1), SlotObject(2), SlotObject(3),
+    SlotObject(4), SlotObject(5), SlotObject(6), SlotObject(7),
+    SlotObject(8), SlotObject(9), SlotObject(10), SlotObject(11),
+    SlotObject(12), SlotObject(13), SlotObject(14), SlotObject(15)
+};
+int currentHomePosition = 0;
+
+
+
+void updateSlotPositions() {
+    for(int i = 0; i < 16; i++) {
+        int relativePos = (slots[i].getId() - 1 - currentHomePosition + 16) % 16;
+        slots[i].setPosition(relativePos);
+    }
+}
+
+void processAssembly() {
+    for(int i = 0; i < 16; i++) {
+        if(slots[i].getError()) {
+            Serial.print("Slot ");
+            Serial.print(slots[i].getId());
+            Serial.println(" has error - skipping");
+            continue;
+        }
+        
+        if(slots[i].isAtCapInjection()) {
+            Serial.print("Processing cap injection at slot ");
+            Serial.println(slots[i].getId());
+            // Add cap injection logic
+        }
+        else if(slots[i].isAtBulbInjection()) {
+            Serial.print("Processing bulb injection at slot ");
+            Serial.println(slots[i].getId());
+            // Add bulb injection logic
+        }
+        // Add other position handlers...
+        if(slots[0].isAtHome()){
+          delay(5000);
+        }
+    }
+}
+
+
+
+void stepMotor() {
+    unsigned long currentTime = micros();
+    
+    if (isMoving) {
+        // Calculate current speed profile
+        unsigned long stepDelay;
+        if (stepsTaken < ACCEL_STEPS) {
+            float progress = (float)stepsTaken / ACCEL_STEPS;
+            stepDelay = MAX_STEP_DELAY * pow((float)MIN_STEP_DELAY/MAX_STEP_DELAY, progress);
+        } else {
+            float progress = (float)(stepsTaken - ACCEL_STEPS) / DECEL_STEPS;
+            stepDelay = MIN_STEP_DELAY * pow((float)MAX_STEP_DELAY/MIN_STEP_DELAY, progress);
+        }
+
+        stepDelay = constrain(stepDelay, MIN_STEP_DELAY, MAX_STEP_DELAY);
+
+        if (currentTime - lastStepTime >= stepDelay) {
+            if (!stepHigh) {
+                digitalWrite(stepPin, HIGH);
+                stepHigh = true;
+            } else {
+                digitalWrite(stepPin, LOW);
+                stepHigh = false;
+                stepsTaken++;
+                
+                if (stepsTaken >= TOTAL_STEPS) {
+                    isMoving = false;
+                    pauseStartTime = currentTime;
+                    stepsTaken = 0;
+                    
+                    // Update to next position
+                    currentHomePosition = (currentHomePosition + 1) % 16;
+                    updateSlotPositions();
+                    processAssembly();
+                }
+            }
+            lastStepTime = currentTime;
+        }
+    } else {
+        if (currentTime - pauseStartTime >= PAUSE_AFTER) {
+            isMoving = true;
+            lastStepTime = currentTime;
+        }
+    }
+}
+
 void setup() {
-  pinMode(stepPinM1, OUTPUT);
-  pinMode(dirPinM1, OUTPUT);
-  pinMode(enPinM1, OUTPUT);
-  
-  digitalWrite(enPinM1, LOW);      // Enable motor
-  digitalWrite(dirPinM1, HIGH);    // Set CCW direction (never changes)
-  digitalWrite(stepPinM1, LOW);    // Start with step pin low
-  lastStepTime = micros();         // Initialize timing
+    Serial.begin(115200);
+    
+    // Initialize motor pins
+    pinMode(stepPin, OUTPUT);
+    pinMode(dirPin, OUTPUT);
+    pinMode(enablePin, OUTPUT);
+    digitalWrite(enablePin, LOW);
+    digitalWrite(dirPin, HIGH); // CCW rotation
+    digitalWrite(stepPin, LOW);
+    
+    // Initialize slot positions
+    updateSlotPositions();
 }
 
 void loop() {
-  unsigned long currentTime = micros();
-
-  if (isMoving) {
-    // Calculate current speed profile
-    unsigned long stepDelay;
-    if (stepsTaken < ACCEL_STEPS) {
-      // Acceleration phase (steps 0-69)
-      float progress = (float)stepsTaken / ACCEL_STEPS;
-      stepDelay = MAX_STEP_DELAY * pow((float)MIN_STEP_DELAY/MAX_STEP_DELAY, progress);
-    } else {
-      // Deceleration phase (steps 70-99)
-      float progress = (float)(stepsTaken - ACCEL_STEPS) / DECEL_STEPS;
-      stepDelay = MIN_STEP_DELAY * pow((float)MAX_STEP_DELAY/MIN_STEP_DELAY, progress);
-    }
-
-    // Constrain the step delay to our limits
-    stepDelay = constrain(stepDelay, MIN_STEP_DELAY, MAX_STEP_DELAY);
-
-    // Time to take a step?
-    if (currentTime - lastStepTime >= stepDelay) {
-      if (!stepHigh) {
-        // Rising edge - initiate step
-        digitalWrite(stepPinM1, HIGH);
-        stepHigh = true;
-      } else {
-        // Falling edge - complete step
-        digitalWrite(stepPinM1, LOW);
-        stepHigh = false;
-        stepsTaken++;  // Only count completed steps
-        
-        // Check if movement complete
-        if (stepsTaken >= TOTAL_STEPS) {
-          isMoving = false;
-          pauseStartTime = currentTime;
-          stepsTaken = 0;  // Reset for next movement
-        }
-      }
-      lastStepTime = currentTime;
-    }
-  } else {
-    // Pause between movements
-    if (currentTime - pauseStartTime >= PAUSE_AFTER) {
-      isMoving = true;
-      lastStepTime = currentTime;  // Reset timing for new movement
-    }
-  }
+    stepMotor();
+    // Add other loop logic as needed
 }
