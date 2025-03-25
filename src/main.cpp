@@ -1,82 +1,80 @@
 #include <Arduino.h>
 
 // Motor pins
-const int stepPinM1 = 22; // PUL+ Green Current step
-const int dirPinM1 = 23;  // DIR+ Blue
-const int enPinM1 = 24;   // ENA+ Red
+const int stepPinM1 = 22; // PUL - Step
+const int dirPinM1 = 23;  // DIR - Direction
+const int enPinM1 = 24;   // ENA - Enable
 
-// Configuration
-const int TOTAL_STEPS = 100;    // Total steps to move
-const int MIN_SPEED = 50;       // Minimum step delay (fastest speed, microseconds)
-const int MAX_SPEED = 2000;     // Maximum step delay (slowest speed, microseconds)
-const float ACCEL_PHASE = 0.7f; // 70% of distance for acceleration
-const float DECEL_PHASE = 0.3f; // 30% of distance for deceleration
-const unsigned long CYCLE_DELAY = 250000; // Delay between cycles (microseconds)
+// Movement parameters
+const int TOTAL_STEPS = 100;      // Exactly 100 steps
+const int MIN_SPEED = 100;        // Fastest speed (microseconds between steps)
+const int MAX_SPEED = 2000;       // Slowest speed (microseconds between steps)
+const float ACCEL_PHASE = 0.7f;   // 70% acceleration phase (70 steps)
+const float DECEL_PHASE = 0.3f;   // 30% deceleration phase (30 steps)
+const unsigned long PAUSE_AFTER = 250000; // Pause after movement (microseconds)
 
-// Motor control variables
-static unsigned long previousM1Micros = 0;
-static unsigned long cyclePauseStart = 0;
-static int currentStep = 0;
-static bool moving = true;
-static int m1Step = 1;
+// Motor state
+unsigned long lastStepTime = 0;
+unsigned long pauseStartTime = 0;
+int stepsTaken = 0;
+bool isMoving = false;
+bool stepState = false;
 
 void setup() {
-  // Motors
   pinMode(stepPinM1, OUTPUT);
   pinMode(dirPinM1, OUTPUT);
   pinMode(enPinM1, OUTPUT);
-  digitalWrite(enPinM1, LOW);
-  digitalWrite(dirPinM1, HIGH); // Set direction to counterclockwise (HIGH)
+  
+  digitalWrite(enPinM1, LOW);      // Enable motor
+  digitalWrite(dirPinM1, HIGH);    // Set CCW direction
+  isMoving = true;                 // Start moving immediately
 }
 
 void loop() {
-  unsigned long currentMicros = micros();
-  
-  if (moving) {
-    // Calculate current phase
-    float progress = (float)currentStep / TOTAL_STEPS;
+  unsigned long currentTime = micros();
+
+  if (isMoving) {
+    // Calculate progress (0.0 to 1.0)
+    float progress = (float)stepsTaken / TOTAL_STEPS;
     
-    // Calculate step interval using exponential curves
+    // Calculate step interval based on phase
     unsigned long stepInterval;
-    
-    if (progress <= ACCEL_PHASE) {
-      // Acceleration phase (exponential)
+    if (progress < ACCEL_PHASE) {
+      // Acceleration phase (0-70 steps)
       float phaseProgress = progress / ACCEL_PHASE;
-      stepInterval = MAX_SPEED * pow(MIN_SPEED / (float)MAX_SPEED, phaseProgress);
+      stepInterval = MAX_SPEED * pow((float)MIN_SPEED/MAX_SPEED, phaseProgress);
     } else {
-      // Deceleration phase (exponential)
+      // Deceleration phase (70-100 steps)
       float phaseProgress = (progress - ACCEL_PHASE) / DECEL_PHASE;
-      stepInterval = MIN_SPEED * pow(MAX_SPEED / (float)MIN_SPEED, phaseProgress);
+      stepInterval = MIN_SPEED * pow((float)MAX_SPEED/MIN_SPEED, phaseProgress);
     }
-    
-    // Constrain the step interval to our defined limits
+
+    // Ensure we stay within speed limits
     stepInterval = constrain(stepInterval, MIN_SPEED, MAX_SPEED);
-    
-    // Check if it's time to step
-    if ((currentMicros - previousM1Micros) >= stepInterval) {
-      // Make a step
-      if (m1Step == 1) {
-        digitalWrite(stepPinM1, HIGH);
-        m1Step++;
-      } else if (m1Step == 2) {
-        digitalWrite(stepPinM1, LOW);
-        m1Step = 1;
-        currentStep++; // Count steps
-      }
-      previousM1Micros = currentMicros;
+
+    // Time to take a step?
+    if (currentTime - lastStepTime >= stepInterval) {
+      // Generate step pulse
+      digitalWrite(stepPinM1, stepState ? HIGH : LOW);
+      stepState = !stepState;
       
-      // Check if cycle is complete
-      if (currentStep >= TOTAL_STEPS) {
-        moving = false;
-        cyclePauseStart = micros(); // Record the pause start time
-        currentStep = 0; // Reset step counter
-        // Removed direction reversal
+      // Only count on falling edge
+      if (!stepState) {
+        stepsTaken++;
+        lastStepTime = currentTime;
+        
+        // Check if we've completed all steps
+        if (stepsTaken >= TOTAL_STEPS) {
+          isMoving = false;
+          pauseStartTime = currentTime;
+          stepsTaken = 0;
+        }
       }
     }
   } else {
-    // Pause before restarting motion
-    if (currentMicros - cyclePauseStart >= CYCLE_DELAY) {
-      moving = true;
+    // Pause between movements
+    if (currentTime - pauseStartTime >= PAUSE_AFTER) {
+      isMoving = true;
     }
   }
 }
