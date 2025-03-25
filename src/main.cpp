@@ -59,7 +59,7 @@ void processAssembly() {
             // Add bulb injection logic
         }
         // Add other position handlers...
-        if(slots[0].isAtHome()){
+        if(slots[0].isAtBulbInjection()){
           delay(5000);
         }
     }
