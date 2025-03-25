@@ -1,83 +1,86 @@
-
 #include <Arduino.h>
 #include <Stepper.h>
-// Motor pins
+
+// Motors - Currently 400 steps per rev
 const int stepPinM1 = 22; // PUL+ Green Current step
 const int dirPinM1 = 23;  // DIR+ Blue
 const int enPinM1 = 24;   // ENA+ Red
 
-// Constants
-#define TOTAL_STEPS 100    // Steps per cycle
-#define MIN_SPEED 10       // Minimum step delay (fastest speed, in microseconds)
-#define MAX_SPEED 450      // Maximum step delay (slowest speed, in microseconds)
-#define ACCEL_RATIO 0.7    // Percentage for acceleration phase
-#define CYCLE_DELAY 1000000 // 1-second delay between cycles (in microseconds)
+#define TOTAL_STEPS 100    // Total steps to move
+#define MIN_SPEED 50       // Minimum step delay (fastest speed, microseconds)
+#define MAX_SPEED 2000     // Maximum step delay (slowest speed, microseconds)
+#define ACCEL_PHASE 0.7    // 70% of distance for acceleration
+#define DECEL_PHASE 0.3    // 30% of distance for deceleration
+#define CYCLE_DELAY 250000 // Delay between cycles (microseconds)
 
-// Global Variables
-unsigned long previousMicros = 0;
+unsigned long previousM1Micros = 0;
 unsigned long cyclePauseStart = 0;
 int currentStep = 0;
-bool moving = true;  // Motor movement state
-float stepInterval = MAX_SPEED; // Initial step interval
+bool moving = true;
+bool accelerating = true;
+int m1Step = 1;
 
 void setup() {
-    // Initialize motor pins
-    pinMode(stepPinM1, OUTPUT);
-    pinMode(dirPinM1, OUTPUT);
-    pinMode(enPinM1, OUTPUT);
-    digitalWrite(enPinM1, LOW);  // Enable motor driver
-    digitalWrite(dirPinM1, LOW); // Set direction
-
-    Serial.begin(9600);  // Start Serial Monitor for debugging
+  // Motors
+  pinMode(stepPinM1, OUTPUT);
+  pinMode(dirPinM1, OUTPUT);
+  pinMode(enPinM1, OUTPUT);
+  digitalWrite(enPinM1, LOW);
+  digitalWrite(dirPinM1, HIGH); // Set direction
 }
 
 void loop() {
-    if (moving) {
-        accelerateDecelerateMotor();
+  accelerateMotorM1();
+}
+
+void accelerateMotorM1() {
+  unsigned long currentMicros = micros();
+  
+  if (moving) {
+    // Calculate current phase
+    float progress = (float)currentStep / TOTAL_STEPS;
+    
+    // Calculate step interval using exponential curves
+    unsigned long stepInterval;
+    
+    if (progress <= ACCEL_PHASE) {
+      // Acceleration phase (exponential)
+      float phaseProgress = progress / ACCEL_PHASE;
+      stepInterval = MAX_SPEED * pow(MIN_SPEED / (float)MAX_SPEED, phaseProgress);
     } else {
-        pauseMotor();
+      // Deceleration phase (exponential)
+      float phaseProgress = (progress - ACCEL_PHASE) / DECEL_PHASE;
+      stepInterval = MIN_SPEED * pow(MAX_SPEED / (float)MIN_SPEED, phaseProgress);
     }
-}
-
-void accelerateDecelerateMotor() {
-    unsigned long currentMicros = micros();
-
-    if ((currentMicros - previousMicros) >= stepInterval) {
-        // Step the motor
+    
+    // Constrain the step interval to our defined limits
+    stepInterval = constrain(stepInterval, MIN_SPEED, MAX_SPEED);
+    
+    // Check if it's time to step
+    if ((currentMicros - previousM1Micros) >= stepInterval) {
+      // Make a step
+      if (m1Step == 1) {
         digitalWrite(stepPinM1, HIGH);
-        delayMicroseconds(50);  // Step pulse width
+        m1Step++;
+      } else if (m1Step == 2) {
         digitalWrite(stepPinM1, LOW);
-        currentStep++;
-
-        // Calculate progress (0.0 to 1.0)
-        float progress = (float)currentStep / TOTAL_STEPS;
-
-        // Adjust speed based on progress
-        if (progress < ACCEL_RATIO) {
-            float accelProgress = pow(progress / ACCEL_RATIO, 2); // Quadratic acceleration
-            stepInterval = MAX_SPEED - (MAX_SPEED - MIN_SPEED) * accelProgress;
-        } else {
-            float decelProgress = pow((progress - ACCEL_RATIO) / (1 - ACCEL_RATIO), 2); // Quadratic deceleration
-            stepInterval = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * decelProgress;
-        }
-
-        previousMicros = currentMicros;
-
-        // Stop the motor after completing all steps
-        if (currentStep >= TOTAL_STEPS) {
-            moving = false;
-            cyclePauseStart = micros();
-        }
+        m1Step = 1;
+        currentStep++; // Count steps
+      }
+      previousM1Micros = currentMicros;
+      
+      // Check if cycle is complete
+      if (currentStep >= TOTAL_STEPS) {
+        moving = false;
+        cyclePauseStart = micros(); // Record the pause start time
+        currentStep = 0; // Reset step counter
+      }
     }
-}
-
-void pauseMotor() {
-    unsigned long currentMicros = micros();
-
+  } else {
     // Pause before restarting motion
     if (currentMicros - cyclePauseStart >= CYCLE_DELAY) {
-        currentStep = 0;         // Reset step counter
-        stepInterval = MAX_SPEED; // Reset speed
-        moving = true;           // Resume motion
+      moving = true;
+      digitalWrite(dirPinM1, !digitalRead(dirPinM1)); // Reverse direction for next cycle
     }
+  }
 }
