@@ -34,7 +34,8 @@ int currentHomePosition = 0;
 
 void updateSlotPositions() {
     for(int i = 0; i < 16; i++) {
-        int relativePos = (slots[i].getId() - 1 - currentHomePosition + 16) % 16;
+        // Simple forward position calculation
+        int relativePos = (currentHomePosition + slots[i].getId()) % 16;
         slots[i].setPosition(relativePos);
     }
 }
