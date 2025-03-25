@@ -26,7 +26,7 @@ void setup() {
   pinMode(dirPinM1, OUTPUT);
   pinMode(enPinM1, OUTPUT);
   digitalWrite(enPinM1, LOW);
-  digitalWrite(dirPinM1, HIGH); // Set initial direction
+  digitalWrite(dirPinM1, HIGH); // Set direction to counterclockwise (HIGH)
 }
 
 void loop() {
@@ -70,7 +70,7 @@ void loop() {
         moving = false;
         cyclePauseStart = micros(); // Record the pause start time
         currentStep = 0; // Reset step counter
-        digitalWrite(dirPinM1, !digitalRead(dirPinM1)); // Reverse direction for next cycle
+        // Removed direction reversal
       }
     }
   } else {
