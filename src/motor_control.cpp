@@ -5,21 +5,16 @@
 #define stepPinM1 22
 #define dirPinM1 23
 #define enPinM1 24
-// Motion parameters
-#define TOTAL_STEPS 100   // Steps per cycle
-#define MIN_SPEED 50      // Minimum step delay (fastest speed, in microseconds)
-#define MAX_SPEED 2000    // Maximum step delay (slowest speed, in microseconds)
-#define CYCLE_DELAY 1000000 // 1-second delay between cycles (in microseconds)
-
-// Exponential acceleration factor (adjust for faster ramping)
-#define ACCEL_FACTOR 2.0   
-
-unsigned long previousM1Micros = 0;
-unsigned long cyclePauseStart = 0;
-long stepInterval = MAX_SPEED; // Start at slowest speed
-int m1Step = 1;
-int currentStep = 0;
-bool moving = true;  // Track motor movement state
+ // Example pin, adjust as needed
+extern unsigned long previousM1Micros = 0;
+extern unsigned long stepInterval = 1000;
+extern bool moving = false;
+extern int currentStep = 0;
+extern unsigned long cyclePauseStart = 0;
+extern const int TOTAL_STEPS = 100;
+extern const int MAX_SPEED = 1000;
+extern const int MIN_SPEED = 100;
+extern const unsigned long CYCLE_DELAY = 1000000;  // 1 second delay between cycles
 
 void runMotorM1() {
   pinMode(stepPinM1, OUTPUT);
@@ -28,47 +23,49 @@ void runMotorM1() {
   digitalWrite(enPinM1, LOW);
   digitalWrite(dirPinM1, LOW);  // Set direction
 
-while (true) {  
-    unsigned long currentMicros = micros();
+unsigned long currentMicros = micros();
 
     if (moving) {
-      // Check if enough time has passed to make the next step
-      if ((currentMicros - previousM1Micros) >= stepInterval) {
-        // Make the step
-        digitalWrite(stepPinM1, HIGH);
-        digitalWrite(stepPinM1, LOW);
+        // Check if it's time to step
+        if ((currentMicros - previousM1Micros) >= stepInterval) {
+            // Make a step
+            if (currentStep < TOTAL_STEPS) {
+                if (currentStep % 2 == 0) {
+                    digitalWrite(stepPinM1, HIGH);
+                } else {
+                    digitalWrite(stepPinM1, LOW);
+                    currentStep++; // Count steps
+                }
+            }
 
-        currentStep++; // Increment the step count
-        previousM1Micros = currentMicros;  // Update the timestamp for the last step
+            // Acceleration & Deceleration using exponential curve
+            float progress = (float)currentStep / TOTAL_STEPS;  // Progress from 0.0 to 1.0
 
-        // Calculate acceleration and deceleration based on step progress
-        float progress = (float)currentStep / TOTAL_STEPS;  // Progress from 0.0 to 1.0
+            // Exponential acceleration for the first 70% of the steps
+            if (progress < 0.7) {
+                float accelProgress = exp(progress * 3);  // Exponential acceleration, adjust "3" for curve steepness
+                stepInterval = MAX_SPEED - (MAX_SPEED - MIN_SPEED) * accelProgress;
+            } 
+            // Exponential deceleration for the last 30% of the steps
+            else {
+                float decelProgress = exp((progress - 0.7) * 3);  // Exponential deceleration
+                stepInterval = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (1 - decelProgress);
+            }
 
-        if (progress < 0.7) {  
-          // Exponential acceleration for the first 70% of the total steps
-          stepInterval = MAX_SPEED / pow(ACCEL_FACTOR, (progress / 0.7) * 4);
-          if (stepInterval < MIN_SPEED) stepInterval = MIN_SPEED;
-        } else {  
-          // Exponential deceleration for the last 30% of the total steps
-          float decelProgress = (progress - 0.7) / 0.3;
-          stepInterval = MIN_SPEED * pow(ACCEL_FACTOR, decelProgress * 3);
-          if (stepInterval > MAX_SPEED) stepInterval = MAX_SPEED;
+            previousM1Micros = currentMicros;
+
+            // Check if cycle is complete
+            if (currentStep >= TOTAL_STEPS) {
+                moving = false;
+                cyclePauseStart = micros();  // Record the pause start time
+                currentStep = 0; // Reset step counter
+                stepInterval = MAX_SPEED; // Reset speed for next cycle
+            }
         }
-
-        // Stop after reaching the target step count (100 steps)
-        if (currentStep >= TOTAL_STEPS) {
-          moving = false;
+    } else {
+        // 1-second pause before restarting motion
+        if (currentMicros - cyclePauseStart >= CYCLE_DELAY) {
+            moving = true;
         }
-      }
-    } 
-    else {
-      // Once we stop, wait 1 second before restarting the motion cycle
-      if ((currentMicros - previousM1Micros) >= CYCLE_DELAY) {
-        moving = true;
-        currentStep = 0;  // Reset step counter
-        stepInterval = MAX_SPEED;  // Reset speed for the next cycle
-        previousM1Micros = currentMicros;  // Reset the timing
-      }
     }
-  }
 }
