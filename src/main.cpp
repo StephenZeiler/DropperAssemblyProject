@@ -121,7 +121,7 @@ void setup() {
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
     digitalWrite(enablePin, LOW);
-    digitalWrite(dirPin, HIGH); // CCW rotation
+    digitalWrite(dirPin, LOW); // CCW rotation
     digitalWrite(stepPin, LOW);
     
     // Initialize slot positions
