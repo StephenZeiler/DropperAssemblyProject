@@ -224,7 +224,7 @@ void setup() {
     // Initialize slot positions
     updateSlotPositions();
 }
-const int TEST_SPEED = 1000; //
+const int TEST_SPEED = 5000; //
 void runMotorTestForever() {
     Serial.println("TEST MODE: Motor running continuously...");
     digitalWrite(dirPin, LOW); // Set direction (LOW or HIGH)
@@ -239,9 +239,9 @@ void runMotorTestForever() {
 
 // Modify handleButtons() to trigger test mode
 void handleButtons1() {
-    if (digitalRead(startButtonPin) == HIGH) {
+    if (digitalRead(startButtonPin) == LOW) {
         delay(50); // Simple debounce
-        if (digitalRead(startButtonPin) == HIGH) { // Confirm press
+        if (digitalRead(startButtonPin) == LOW) { // Confirm press
             runMotorTestForever(); // Will never exit!
         }
     }
