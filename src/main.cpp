@@ -7,7 +7,7 @@ const int stepPin = 22;
 const int dirPin = 23;
 const int enablePin = 24;
 
-// Button pins
+// Button pins (configured as INPUT, not INPUT_PULLUP)
 const int startButtonPin = 10;
 const int pauseButtonPin = 11;
 const int stopButtonPin = 12;
@@ -29,6 +29,8 @@ unsigned long pauseStartTime = 0;
 int stepsTaken = 0;
 bool isMoving = false;
 bool stepHigh = false;
+bool pauseRequested = false;
+bool stopRequested = false;
 
 // Slot tracking
 SlotObject slots[] = {
@@ -80,8 +82,9 @@ void homeMachine() {
             digitalWrite(stepPin, LOW);
             lastStep = micros();
             
-            if(digitalRead(stopButtonPin) == HIGH) {
+            if(stopRequested) {
                 machine.stop();
+                stopRequested = false;
                 return;
             }
         }
@@ -126,12 +129,26 @@ void stepMotor() {
                     currentHomePosition = (currentHomePosition + 1) % 16;
                     updateSlotPositions();
                     processAssembly();
+                    
+                    // Check if pause was requested during movement
+                    if(pauseRequested) {
+                        machine.pause();
+                        pauseRequested = false;
+                        return;
+                    }
+                    
+                    // Check if stop was requested
+                    if(stopRequested && currentHomePosition == 0) {
+                        machine.stop();
+                        stopRequested = false;
+                        return;
+                    }
                 }
             }
             lastStepTime = currentTime;
         }
     } else {
-        if (currentTime - pauseStartTime >= PAUSE_AFTER) {
+        if (!machine.isPaused && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
             isMoving = true;
             lastStepTime = currentTime;
         }
@@ -141,33 +158,45 @@ void stepMotor() {
 void handleButtons() {
     static unsigned long lastDebounceTime = 0;
     const unsigned long debounceDelay = 50;
+    static bool lastStartState = LOW;
+    static bool lastPauseState = LOW;
+    static bool lastStopState = LOW;
     
+    bool startState = digitalRead(startButtonPin);
+    bool pauseState = digitalRead(pauseButtonPin);
+    bool stopState = digitalRead(stopButtonPin);
+    
+    // Only check buttons if debounce time has passed
     if (millis() - lastDebounceTime < debounceDelay) return;
     
-    // Start button
-    if (digitalRead(startButtonPin) == HIGH) {
+    // Start button pressed (HIGH when pushed)
+    if (startState == HIGH && lastStartState == LOW) {
         lastDebounceTime = millis();
         machine.start();
+        pauseRequested = false;
+        stopRequested = false;
         Serial.println("Start command received");
     }
     
-    // Pause button
-    if (digitalRead(pauseButtonPin) == HIGH && !machine.isStopped) {
+    // Pause button pressed
+    if (pauseState == HIGH && lastPauseState == LOW && !machine.isStopped && !machine.isPaused) {
         lastDebounceTime = millis();
-        machine.pause();
-        isMoving = false;
-        Serial.println("Pause command received");
+        pauseRequested = true;
+        Serial.println("Pause requested - will pause at next position");
     }
     
-    // Stop button
-    if (digitalRead(stopButtonPin) == HIGH) {
+    // Stop button pressed
+    if (stopState == HIGH && lastStopState == LOW && !machine.isStopped) {
         lastDebounceTime = millis();
-        machine.stop();
-        isMoving = false;
-        Serial.println("Stop command received");
+        stopRequested = true;
+        Serial.println("Stop requested - will stop when reaching home position");
     }
+    
+    // Update last states
+    lastStartState = startState;
+    lastPauseState = pauseState;
+    lastStopState = stopState;
 }
-
 void setup() {
     Serial.begin(115200);
     
