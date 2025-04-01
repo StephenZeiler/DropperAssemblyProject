@@ -71,9 +71,9 @@ void homeMachine() {
     
     // Set slow speed for homing
     digitalWrite(dirPin, HIGH); // Direction doesn't matter for homing
-    unsigned long stepDelay = 200; // Very slow speed (5000µs between steps)
+    unsigned long stepDelay = 5000; // Very slow speed (5000µs between steps)
     
-    while(digitalRead(homeSensorPin) == LOW) {
+    while(digitalRead(homeSensorPin) == HIGH) {
         // Move until sensor activates
         digitalWrite(stepPin, HIGH);
         delayMicroseconds(10); // Short pulse
@@ -144,7 +144,7 @@ void setup() {
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
     pinMode(homeSensorPin, INPUT); // Home sensor input
-
+    
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW); // CCW rotation
     digitalWrite(stepPin, LOW);
