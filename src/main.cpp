@@ -213,9 +213,9 @@ void setup() {
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
     pinMode(homeSensorPin, INPUT); // Home sensor input
-    pinMode(startButtonPin, INPUT_PULLUP);
-    pinMode(pauseButtonPin, INPUT_PULLUP);
-    pinMode(stopButtonPin, INPUT_PULLUP);
+    pinMode(startButtonPin, OUTPUT);
+    pinMode(pauseButtonPin, OUTPUT);
+    pinMode(stopButtonPin, OUTPUT);
 
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW); // CCW rotation
