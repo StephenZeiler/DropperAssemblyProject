@@ -224,26 +224,48 @@ void setup() {
     // Initialize slot positions
     updateSlotPositions();
 }
+const int TEST_SPEED = 1000; //
+void runMotorTestForever() {
+    Serial.println("TEST MODE: Motor running continuously...");
+    digitalWrite(dirPin, LOW); // Set direction (LOW or HIGH)
+    
+    while (true) { // Runs forever
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(TEST_SPEED);
+    }
+}
 
+// Modify handleButtons() to trigger test mode
+void handleButtons1() {
+    if (digitalRead(startButtonPin) == LOW) {
+        delay(50); // Simple debounce
+        if (digitalRead(startButtonPin) == LOW) { // Confirm press
+            runMotorTestForever(); // Will never exit!
+        }
+    }
+}
 void loop() {
-    // Always check buttons first
-    handleButtons();
+        handleButtons1();
+    // // Always check buttons first
+    // handleButtons();
     
-    // State machine logic
-    if(machine.stopped()) {
-        return; // Do nothing when stopped
-    }
+    // // State machine logic
+    // if(machine.stopped()) {
+    //     return; // Do nothing when stopped
+    // }
     
-    if(machine.requiresHoming()) {
-        homeMachine();
-        return; // After homing, wait for next loop
-    }
+    // if(machine.requiresHoming()) {
+    //     homeMachine();
+    //     return; // After homing, wait for next loop
+    // }
     
-    if(machine.paused()) {
-        return; // Do nothing when paused
-    }
+    // if(machine.paused()) {
+    //     return; // Do nothing when paused
+    // }
     
-    if(machine.inProductionMode() && isMoving) {
-        stepMotor();
-    }
+    // if(machine.inProductionMode() && isMoving) {
+    //     stepMotor();
+    // }
 }
