@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "SlotObject.h"
+#include "MachineState.h"
 
 // Motor pins
 const int stepPin = 22;
@@ -17,6 +18,12 @@ const unsigned long PAUSE_AFTER = 500000; // microseconds
 //Sensor
 const int homeSensorPin = 25;
 
+
+// Button pins
+const int startButtonPin = 10;
+const int pauseButtonPin = 11;
+const int stopButtonPin = 12;
+
 // Motor state
 unsigned long lastStepTime = 0;
 unsigned long pauseStartTime = 0;
@@ -31,6 +38,59 @@ SlotObject slots[] = {
     SlotObject(8), SlotObject(9), SlotObject(10), SlotObject(11),
     SlotObject(12), SlotObject(13), SlotObject(14), SlotObject(15)
 };
+
+MachineState machine;
+
+// Button states
+bool lastStartButtonState = HIGH;
+bool lastPauseButtonState = HIGH;
+bool lastStopButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;
+
+void handleButtons() {
+    unsigned long currentTime = millis();
+    
+    // Read buttons with debounce
+    int startReading = digitalRead(startButtonPin);
+    int pauseReading = digitalRead(pauseButtonPin);
+    int stopReading = digitalRead(stopButtonPin);
+    
+    // Start button handling
+    if (startReading != lastStartButtonState) {
+        lastDebounceTime = currentTime;
+    }
+    
+    if ((currentTime - lastDebounceTime) > debounceDelay) {
+        // Start button pressed
+        if (startReading == LOW && lastStartButtonState == HIGH) {
+            if (machine.stopped()) {
+                // Full startup with homing
+                machine.startProduction();
+            } else if (machine.paused()) {
+                // Resume from pause
+                machine.resumeFromPause();
+            }
+        }
+        
+        // Pause button pressed
+        if (pauseReading == LOW && lastPauseButtonState == HIGH && !machine.stopped()) {
+            machine.pauseProduction();
+        }
+        
+        // Stop button pressed
+        if (stopReading == LOW && lastStopButtonState == HIGH) {
+            machine.stopProduction();
+            isMoving = false; // Immediate stop
+        }
+    }
+    
+    // Update last button states
+    lastStartButtonState = startReading;
+    lastPauseButtonState = pauseReading;
+    lastStopButtonState = stopReading;
+}
+
 int currentHomePosition = 0;
 
 
@@ -140,7 +200,10 @@ void setup() {
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
     pinMode(homeSensorPin, INPUT); // Home sensor input
-    
+    pinMode(startButtonPin, INPUT_PULLUP);
+    pinMode(pauseButtonPin, INPUT_PULLUP);
+    pinMode(stopButtonPin, INPUT_PULLUP);
+
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW); // CCW rotation
     digitalWrite(stepPin, LOW);
@@ -150,7 +213,25 @@ void setup() {
 }
 
 void loop() {
-    homeMachine();
-    stepMotor();
+       handleButtons();
+    
+    if (machine.stopped()) {
+        // Machine is stopped - do nothing
+        return;
+    }
+    
+    if (machine.requiresHoming()) {
+        homeMachine();
+        machine.completeHoming();
+    }
+    
+    if (machine.paused()) {
+        // Machine is paused - wait for resume
+        return;
+    }
+    
+    if (machine.inProductionMode()) {
+        stepMotor();
+    }
     // Add other loop logic as needed
 }
