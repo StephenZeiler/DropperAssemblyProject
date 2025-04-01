@@ -56,7 +56,7 @@ void handleButtons() {
     if(millis() - lastButtonTime < 200) return;
     
     // Start button (active LOW)
-    if(digitalRead(startButtonPin) == LOW) {
+    if(digitalRead(startButtonPin) == HIGH) {
         if(machine.stopped()) {
             machine.startProduction();
             Serial.println("Starting production...");
@@ -71,7 +71,7 @@ void handleButtons() {
     }
     
     // Pause button
-    if(digitalRead(pauseButtonPin) == LOW && !machine.stopped()) {
+    if(digitalRead(pauseButtonPin) == HIGH && !machine.stopped()) {
         machine.pauseProduction();
         isMoving = false;
         Serial.println("Production paused");
@@ -80,7 +80,7 @@ void handleButtons() {
     }
     
     // Stop button (immediate)
-    if(digitalRead(stopButtonPin) == LOW) {
+    if(digitalRead(stopButtonPin) == HIGH) {
         machine.stopProduction();
         isMoving = false;
         Serial.println("EMERGENCY STOP");
@@ -141,7 +141,7 @@ void homeMachine() {
             lastStepTime = micros();
             
             // Emergency stop check
-            if(digitalRead(stopButtonPin) == LOW) {
+            if(digitalRead(stopButtonPin) == HIGH) {
                 machine.stopProduction();
                 return;
             }
@@ -224,48 +224,26 @@ void setup() {
     // Initialize slot positions
     updateSlotPositions();
 }
-const int TEST_SPEED = 5000; //
-void runMotorTestForever() {
-    Serial.println("TEST MODE: Motor running continuously...");
-    digitalWrite(dirPin, LOW); // Set direction (LOW or HIGH)
-    
-    while (true) { // Runs forever
-        digitalWrite(stepPin, HIGH);
-        delayMicroseconds(10);
-        digitalWrite(stepPin, LOW);
-        delayMicroseconds(TEST_SPEED);
-    }
-}
 
-// Modify handleButtons() to trigger test mode
-void handleButtons1() {
-    if (digitalRead(startButtonPin) == HIGH) {
-        delay(50); // Simple debounce
-        if (digitalRead(startButtonPin) == HIGH) { // Confirm press
-            runMotorTestForever(); // Will never exit!
-        }
-    }
-}
 void loop() {
-        handleButtons1();
-    // // Always check buttons first
-    // handleButtons();
+    // Always check buttons first
+    handleButtons();
     
-    // // State machine logic
-    // if(machine.stopped()) {
-    //     return; // Do nothing when stopped
-    // }
+    // State machine logic
+    if(machine.stopped()) {
+        return; // Do nothing when stopped
+    }
     
-    // if(machine.requiresHoming()) {
-    //     homeMachine();
-    //     return; // After homing, wait for next loop
-    // }
+    if(machine.requiresHoming()) {
+        homeMachine();
+        return; // After homing, wait for next loop
+    }
     
-    // if(machine.paused()) {
-    //     return; // Do nothing when paused
-    // }
+    if(machine.paused()) {
+        return; // Do nothing when paused
+    }
     
-    // if(machine.inProductionMode() && isMoving) {
-    //     stepMotor();
-    // }
+    if(machine.inProductionMode() && isMoving) {
+        stepMotor();
+    }
 }
