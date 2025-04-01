@@ -42,9 +42,9 @@ SlotObject slots[] = {
 MachineState machine;
 
 // Button states
-bool lastStartButtonState = HIGH;
-bool lastPauseButtonState = HIGH;
-bool lastStopButtonState = HIGH;
+bool lastStartButtonState;
+bool lastPauseButtonState;
+bool lastStopButtonState;
 unsigned long lastDebounceTime = 0;
 const unsigned long debounceDelay = 50;
 
