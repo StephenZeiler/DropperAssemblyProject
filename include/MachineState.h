@@ -2,55 +2,38 @@
 #define MACHINE_STATE_H
 
 class MachineState {
-private:
-    bool isHomed;
-    bool isPaused;
-    bool isStopped;
-    bool inProduction;
-    bool needsHoming;
-
 public:
-    MachineState() : 
-        isHomed(false),
-        isPaused(false),
-        isStopped(true),
-        inProduction(false),
-        needsHoming(true) {}
-
-    // State checks
-    bool homed() const { return isHomed; }
-    bool paused() const { return isPaused; }
-    bool stopped() const { return isStopped; }
-    bool inProductionMode() const { return inProduction; }
-    bool requiresHoming() const { return needsHoming; }
-
-    // State transitions
-    void startProduction() { 
-        isStopped = false;
-        isPaused = false;
-        inProduction = true;
+    bool isPaused = false;
+    bool isStopped = true;
+    bool inProduction = false;
+    bool needsHoming = true;
+    
+    void start() {
+        if (isStopped) {
+            needsHoming = true;
+            isStopped = false;
+            inProduction = true;
+        } else if (isPaused) {
+            isPaused = false;
+            inProduction = true;
+        }
     }
     
-    void pauseProduction() {
-        isPaused = true;
-        inProduction = false;
+    void pause() {
+        if (!isStopped) {
+            isPaused = true;
+            inProduction = false;
+        }
     }
     
-    void stopProduction() {
+    void stop() {
         isStopped = true;
         isPaused = false;
         inProduction = false;
         needsHoming = true;
     }
     
-    void completeHoming() {
-        isHomed = true;
-        needsHoming = false;
-    }
-    
-    void resumeFromPause() {
-        isPaused = false;
-        inProduction = true;
+    void homingComplete() {
         needsHoming = false;
     }
 };

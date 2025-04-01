@@ -7,6 +7,11 @@ const int stepPin = 22;
 const int dirPin = 23;
 const int enablePin = 24;
 
+// Button pins
+const int startButtonPin = 10;
+const int pauseButtonPin = 11;
+const int stopButtonPin = 12;
+
 // Movement parameters
 const int TOTAL_STEPS = 100;
 const int ACCEL_STEPS = 70;
@@ -15,17 +20,10 @@ const int MIN_STEP_DELAY = 100;   // microseconds
 const int MAX_STEP_DELAY = 2000;  // microseconds
 const unsigned long PAUSE_AFTER = 500000; // microseconds
 
-//Sensor
+// Sensor
 const int homeSensorPin = 25;
 
-
-// Button pins
-const int startButtonPin = 10;
-const int pauseButtonPin = 11;
-const int stopButtonPin = 12;
-
 // Motor state
-bool shouldStartMoving = false;
 unsigned long lastStepTime = 0;
 unsigned long pauseStartTime = 0;
 int stepsTaken = 0;
@@ -39,63 +37,12 @@ SlotObject slots[] = {
     SlotObject(8), SlotObject(9), SlotObject(10), SlotObject(11),
     SlotObject(12), SlotObject(13), SlotObject(14), SlotObject(15)
 };
+int currentHomePosition = 0;
 
 MachineState machine;
 
-// Button states
-bool lastStartButtonState;
-bool lastPauseButtonState;
-bool lastStopButtonState;
-unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 50;
-
-
-void handleButtons() {
-    // Simple debounce with immediate response
-    static unsigned long lastButtonTime = 0;
-    if(millis() - lastButtonTime < 200) return;
-    
-    // Start button (active LOW)
-    if(digitalRead(startButtonPin) == HIGH) {
-        if(machine.stopped()) {
-            machine.startProduction();
-            Serial.println("Starting production...");
-        } 
-        else if(machine.paused()) {
-            machine.resumeFromPause();
-            isMoving = true;
-            Serial.println("Resuming production...");
-        }
-        lastButtonTime = millis();
-        return;
-    }
-    
-    // Pause button
-    if(digitalRead(pauseButtonPin) == HIGH && !machine.stopped()) {
-        machine.pauseProduction();
-        isMoving = false;
-        Serial.println("Production paused");
-        lastButtonTime = millis();
-        return;
-    }
-    
-    // Stop button (immediate)
-    if(digitalRead(stopButtonPin) == HIGH) {
-        machine.stopProduction();
-        isMoving = false;
-        Serial.println("EMERGENCY STOP");
-        lastButtonTime = millis();
-    }
-}
-
-
-int currentHomePosition = 0;
-
-
-
 void updateSlotPositions() {
     for(int i = 0; i < 16; i++) {
-        // Simple forward position calculation
         int relativePos = (currentHomePosition + slots[i].getId()) % 16;
         slots[i].setPosition(relativePos);
     }
@@ -113,57 +60,45 @@ void processAssembly() {
         if(slots[i].isAtCapInjection()) {
             Serial.print("Processing cap injection at slot ");
             Serial.println(slots[i].getId());
-            // Add cap injection logic
         }
         else if(slots[i].isAtBulbInjection()) {
             Serial.print("Processing bulb injection at slot ");
             Serial.println(slots[i].getId());
-            // Add bulb injection logic
         }
-        // Add other position handlers...
     }
 }
 
 void homeMachine() {
     Serial.println("Homing started...");
+    unsigned long stepDelay = 5000;
+    unsigned long lastStep = micros();
     
-    // Set slow speed for homing (5000µs between steps)
-    const unsigned long homingSpeed = 5000;
-    unsigned long lastStepTime = micros();
-    
-    // Move until sensor activates (goes HIGH)
-    while(digitalRead(homeSensorPin) == LOW) {
-        if(micros() - lastStepTime >= homingSpeed) {
-            // Generate step pulse
+    while(digitalRead(homeSensorPin) == HIGH) {
+        if(micros() - lastStep >= stepDelay) {
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
             digitalWrite(stepPin, LOW);
-            lastStepTime = micros();
+            lastStep = micros();
             
-            // Emergency stop check
             if(digitalRead(stopButtonPin) == HIGH) {
-                machine.stopProduction();
+                machine.stop();
                 return;
             }
         }
     }
     
-    // Found home position
     currentHomePosition = 0;
     updateSlotPositions();
-    machine.completeHoming();
-    isMoving = true; // Start normal movement
+    machine.homingComplete();
+    isMoving = true;
     lastStepTime = micros();
-    
     Serial.println("Homing complete - Slot 0 at Position 0");
 }
-
 
 void stepMotor() {
     unsigned long currentTime = micros();
     
     if (isMoving) {
-        // Calculate current speed profile
         unsigned long stepDelay;
         if (stepsTaken < ACCEL_STEPS) {
             float progress = (float)stepsTaken / ACCEL_STEPS;
@@ -188,8 +123,6 @@ void stepMotor() {
                     isMoving = false;
                     pauseStartTime = currentTime;
                     stepsTaken = 0;
-                    
-                    // Update to next position
                     currentHomePosition = (currentHomePosition + 1) % 16;
                     updateSlotPositions();
                     processAssembly();
@@ -205,45 +138,68 @@ void stepMotor() {
     }
 }
 
+void handleButtons() {
+    static unsigned long lastDebounceTime = 0;
+    const unsigned long debounceDelay = 50;
+    
+    if (millis() - lastDebounceTime < debounceDelay) return;
+    
+    // Start button
+    if (digitalRead(startButtonPin) == HIGH) {
+        lastDebounceTime = millis();
+        machine.start();
+        Serial.println("Start command received");
+    }
+    
+    // Pause button
+    if (digitalRead(pauseButtonPin) == HIGH && !machine.isStopped) {
+        lastDebounceTime = millis();
+        machine.pause();
+        isMoving = false;
+        Serial.println("Pause command received");
+    }
+    
+    // Stop button
+    if (digitalRead(stopButtonPin) == HIGH) {
+        lastDebounceTime = millis();
+        machine.stop();
+        isMoving = false;
+        Serial.println("Stop command received");
+    }
+}
+
 void setup() {
     Serial.begin(115200);
     
-    // Initialize motor pins
+    // Initialize pins
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
-    pinMode(homeSensorPin, INPUT); // Home sensor input
+    pinMode(homeSensorPin, INPUT);
     pinMode(startButtonPin, OUTPUT);
     pinMode(pauseButtonPin, OUTPUT);
     pinMode(stopButtonPin, OUTPUT);
 
     digitalWrite(enablePin, LOW);
-    digitalWrite(dirPin, LOW); // CCW rotation
+    digitalWrite(dirPin, LOW);
     digitalWrite(stepPin, LOW);
     
-    // Initialize slot positions
     updateSlotPositions();
 }
 
 void loop() {
-    // Always check buttons first
     handleButtons();
     
-    // State machine logic
-    if(machine.stopped()) {
-        return; // Do nothing when stopped
-    }
+    if (machine.isStopped) return;
     
-    if(machine.requiresHoming()) {
+    if (machine.needsHoming) {
         homeMachine();
-        return; // After homing, wait for next loop
+        return;
     }
     
-    if(machine.paused()) {
-        return; // Do nothing when paused
-    }
+    if (machine.isPaused) return;
     
-    if(machine.inProductionMode() && isMoving) {
+    if (machine.inProduction) {
         stepMotor();
     }
 }
