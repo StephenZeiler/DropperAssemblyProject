@@ -143,6 +143,8 @@ void setup() {
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
+    pinMode(homeSensorPin, INPUT); // Home sensor input
+    
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW); // CCW rotation
     digitalWrite(stepPin, LOW);
