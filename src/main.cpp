@@ -239,9 +239,9 @@ void runMotorTestForever() {
 
 // Modify handleButtons() to trigger test mode
 void handleButtons1() {
-    if (digitalRead(startButtonPin) == LOW) {
+    if (digitalRead(startButtonPin) == HIGH) {
         delay(50); // Simple debounce
-        if (digitalRead(startButtonPin) == LOW) { // Confirm press
+        if (digitalRead(startButtonPin) == HIGH) { // Confirm press
             runMotorTestForever(); // Will never exit!
         }
     }
