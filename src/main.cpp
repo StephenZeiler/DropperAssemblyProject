@@ -70,7 +70,6 @@ void homeMachine() {
     Serial.println("Homing started...");
     
     // Set slow speed for homing
-    digitalWrite(dirPin, HIGH); // Direction doesn't matter for homing
     unsigned long stepDelay = 5000; // Very slow speed (5000µs between steps)
     
     while(digitalRead(homeSensorPin) == HIGH) {
@@ -85,9 +84,6 @@ void homeMachine() {
     Serial.println("Homing complete - Slot 0 at Position 0");
     currentHomePosition = 0;
     //updateSlotPositions();
-    
-    // Optional: back off slightly if needed
-    // for(int i=0; i<5; i++) { stepMotorReverse(); }
 }
 
 void stepMotor() {
@@ -155,6 +151,6 @@ void setup() {
 
 void loop() {
     homeMachine();
-    //stepMotor();
+    stepMotor();
     // Add other loop logic as needed
 }
