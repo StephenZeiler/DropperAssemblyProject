@@ -51,38 +51,40 @@ const unsigned long debounceDelay = 50;
 
 
 void handleButtons() {
-    int startReading = digitalRead(startButtonPin);
-    int pauseReading = digitalRead(pauseButtonPin);
-    int stopReading = digitalRead(stopButtonPin);
+    // Simple debounce with immediate response
+    static unsigned long lastButtonTime = 0;
+    if(millis() - lastButtonTime < 200) return;
     
-    // Start button pressed (active LOW)
-    if (startReading == LOW) {
-        if (machine.stopped()) {
+    // Start button (active LOW)
+    if(digitalRead(startButtonPin) == LOW) {
+        if(machine.stopped()) {
             machine.startProduction();
-            Serial.println("Start button - beginning homing");
+            Serial.println("Starting production...");
         } 
-        else if (machine.paused()) {
+        else if(machine.paused()) {
             machine.resumeFromPause();
-            isMoving = true;  // Restart movement
-            Serial.println("Resuming from pause");
+            isMoving = true;
+            Serial.println("Resuming production...");
         }
-        delay(200);  // Simple debounce
+        lastButtonTime = millis();
+        return;
     }
     
     // Pause button
-    if (pauseReading == LOW && !machine.stopped()) {
+    if(digitalRead(pauseButtonPin) == LOW && !machine.stopped()) {
         machine.pauseProduction();
         isMoving = false;
-        Serial.println("Paused");
-        delay(200);
+        Serial.println("Production paused");
+        lastButtonTime = millis();
+        return;
     }
     
-    // Stop button
-    if (stopReading == LOW) {
+    // Stop button (immediate)
+    if(digitalRead(stopButtonPin) == LOW) {
         machine.stopProduction();
         isMoving = false;
-        Serial.println("Stopped");
-        delay(200);
+        Serial.println("EMERGENCY STOP");
+        lastButtonTime = millis();
     }
 }
 
@@ -125,24 +127,35 @@ void processAssembly() {
 void homeMachine() {
     Serial.println("Homing started...");
     
-    // Set slow speed for homing
-    unsigned long stepDelay = 5000; // Very slow speed (5000µs between steps)
-    unsigned long lastStep = micros();
+    // Set slow speed for homing (5000µs between steps)
+    const unsigned long homingSpeed = 5000;
+    unsigned long lastStepTime = micros();
     
-    while(digitalRead(homeSensorPin) == LOW) {  // Changed from HIGH to LOW
-        if(micros() - lastStep >= stepDelay) {
+    // Move until sensor activates (goes HIGH)
+    while(digitalRead(homeSensorPin) == LOW) {
+        if(micros() - lastStepTime >= homingSpeed) {
+            // Generate step pulse
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
             digitalWrite(stepPin, LOW);
-            lastStep = micros();
+            lastStepTime = micros();
+            
+            // Emergency stop check
+            if(digitalRead(stopButtonPin) == LOW) {
+                machine.stopProduction();
+                return;
+            }
         }
     }
     
-    Serial.println("Homing complete - Slot 0 at Position 0");
+    // Found home position
     currentHomePosition = 0;
     updateSlotPositions();
     machine.completeHoming();
-    shouldStartMoving = true;  // Signal to start moving
+    isMoving = true; // Start normal movement
+    lastStepTime = micros();
+    
+    Serial.println("Homing complete - Slot 0 at Position 0");
 }
 
 
@@ -213,26 +226,24 @@ void setup() {
 }
 
 void loop() {
-     handleButtons();
+    // Always check buttons first
+    handleButtons();
     
-    if (machine.stopped()) {
-        return;
+    // State machine logic
+    if(machine.stopped()) {
+        return; // Do nothing when stopped
     }
     
-    if (machine.requiresHoming()) {
+    if(machine.requiresHoming()) {
         homeMachine();
+        return; // After homing, wait for next loop
     }
     
-    if (machine.paused()) {
-        return;
+    if(machine.paused()) {
+        return; // Do nothing when paused
     }
     
-    if (machine.inProductionMode()) {
-        if (shouldStartMoving) {
-            isMoving = true;
-            lastStepTime = micros();
-            shouldStartMoving = false;
-        }
+    if(machine.inProductionMode() && isMoving) {
         stepMotor();
     }
 }
