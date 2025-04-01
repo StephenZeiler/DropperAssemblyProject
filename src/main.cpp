@@ -14,6 +14,9 @@ const int MIN_STEP_DELAY = 100;   // microseconds
 const int MAX_STEP_DELAY = 2000;  // microseconds
 const unsigned long PAUSE_AFTER = 500000; // microseconds
 
+//Sensor
+const int homeSensorPin = 25;
+
 // Motor state
 unsigned long lastStepTime = 0;
 unsigned long pauseStartTime = 0;
@@ -63,7 +66,29 @@ void processAssembly() {
     }
 }
 
-
+void homeMachine() {
+    Serial.println("Homing started...");
+    
+    // Set slow speed for homing
+    digitalWrite(dirPin, HIGH); // Direction doesn't matter for homing
+    unsigned long stepDelay = 5000; // Very slow speed (5000µs between steps)
+    
+    while(digitalRead(homeSensorPin) == LOW) {
+        // Move until sensor activates
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(10); // Short pulse
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(stepDelay);
+    }
+    
+    // Sensor is now HIGH - we're home
+    Serial.println("Homing complete - Slot 0 at Position 0");
+    currentHomePosition = 0;
+    //updateSlotPositions();
+    
+    // Optional: back off slightly if needed
+    // for(int i=0; i<5; i++) { stepMotorReverse(); }
+}
 
 void stepMotor() {
     unsigned long currentTime = micros();
@@ -127,6 +152,7 @@ void setup() {
 }
 
 void loop() {
-    stepMotor();
+    homeMachine();
+    //stepMotor();
     // Add other loop logic as needed
 }
