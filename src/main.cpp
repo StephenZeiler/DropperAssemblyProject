@@ -32,6 +32,25 @@ bool stepHigh = false;
 bool pauseRequested = false;
 bool stopRequested = false;
 
+// Bulb system pins
+const int bulbRamHomeSensorPin = 27;
+const int bulbPositionSensorPin = 26;
+const int bulbAirPushPin = 41;
+const int bulbSeparatorPin = 37;
+const int bulbRamPin = 39;
+
+// Bulb system state
+enum BulbState {
+    BULB_IDLE,
+    BULB_AIR_PUSHING,
+    BULB_SEPARATING,
+    BULB_RAM_EXTENDING,
+    BULB_RAM_RETRACTING
+};
+BulbState currentBulbState = BULB_IDLE;
+unsigned long bulbStateStartTime = 0;
+bool motorDecelerated = false;
+
 // Slot tracking
 SlotObject slots[] = {
     SlotObject(0), SlotObject(1), SlotObject(2), SlotObject(3),
@@ -42,6 +61,67 @@ SlotObject slots[] = {
 int currentHomePosition = 0;
 
 MachineState machine;
+
+void handleBulbSystem() {
+    static bool lastMotorState = false;
+    
+    // Detect motor deceleration completion
+    if (lastMotorState && !isMoving) {
+        motorDecelerated = true;
+        if (currentBulbState == BULB_IDLE) {
+            currentBulbState = BULB_AIR_PUSHING;
+            bulbStateStartTime = micros();
+            digitalWrite(bulbAirPushPin, HIGH);
+            digitalWrite(bulbSeparatorPin, LOW);
+            machine.setBulbSystemReady(false);
+        }
+    }
+    lastMotorState = isMoving;
+    
+    // Read sensors
+    bool ramHome = digitalRead(bulbRamHomeSensorPin);
+    bool bulbPresent = digitalRead(bulbPositionSensorPin);
+    
+    // State machine transitions
+    switch (currentBulbState) {
+        case BULB_AIR_PUSHING:
+            if (bulbPresent) {
+                currentBulbState = BULB_SEPARATING;
+                digitalWrite(bulbAirPushPin, LOW);
+                digitalWrite(bulbSeparatorPin, HIGH);
+                bulbStateStartTime = micros();
+            }
+            break;
+            
+        case BULB_SEPARATING:
+            if (micros() - bulbStateStartTime >= 125000) {
+                currentBulbState = BULB_RAM_EXTENDING;
+                digitalWrite(bulbRamPin, HIGH);
+                bulbStateStartTime = micros();
+            }
+            break;
+            
+        case BULB_RAM_EXTENDING:
+            if (micros() - bulbStateStartTime >= 300000) {
+                currentBulbState = BULB_RAM_RETRACTING;
+                digitalWrite(bulbRamPin, LOW);
+            }
+            break;
+            
+        case BULB_RAM_RETRACTING:
+            if (ramHome) {
+                currentBulbState = BULB_IDLE;
+                digitalWrite(bulbSeparatorPin, LOW);
+                machine.setBulbSystemReady(true);
+                motorDecelerated = false;
+            }
+            break;
+            
+        case BULB_IDLE:
+            // Waiting for motor to stop
+            break;
+    }
+}
 
 void updateSlotPositions() {
     for(int i = 0; i < 16; i++) {
@@ -127,6 +207,8 @@ void stepMotor() {
                     pauseStartTime = currentTime;
                     stepsTaken = 0;
                     currentHomePosition = (currentHomePosition + 1) % 16;
+                    machine.resetAllPneumatics();
+
                     updateSlotPositions();
                     processAssembly();
                     
@@ -148,7 +230,7 @@ void stepMotor() {
             lastStepTime = currentTime;
         }
     } else {
-        if (!machine.isPaused && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
+        if (machine.isReadyToMove() && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
             isMoving = true;
             lastStepTime = currentTime;
         }
@@ -217,18 +299,24 @@ void setup() {
 }
 
 void loop() {
-    handleButtons();
+    // handleButtons();
     
-    if (machine.isStopped) return;
+    // if (machine.isStopped) return;
     
-    if (machine.needsHoming) {
-        homeMachine();
-        return;
-    }
+    // if (machine.needsHoming) {
+    //     homeMachine();
+    //     return;
+    // }
     
-    if (machine.isPaused) return;
+    // if (machine.isPaused) return;
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
+
+
+    digitalWrite(bulbRamPin, HIGH);
+    delay(2000);
+    digitalWrite(bulbRamPin, LOW);
+    delay(2000);
 }
