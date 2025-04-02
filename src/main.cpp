@@ -295,6 +295,9 @@ void setup() {
     digitalWrite(dirPin, LOW);
     digitalWrite(stepPin, LOW);
     
+    //Pneumatics
+    pinMode(bulbRamPin, OUTPUT);
+
     updateSlotPositions();
 }
 
