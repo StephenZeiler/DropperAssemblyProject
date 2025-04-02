@@ -8,6 +8,11 @@ public:
     bool inProduction = false;
     bool needsHoming = true;
     
+    bool bulbSystemReady = true;
+    // Add more system flags here as needed:
+    // bool capSystemReady = true;
+    // bool pipetSystemReady = true;
+    
     void start() {
         if (isStopped) {
             needsHoming = true;
@@ -35,6 +40,30 @@ public:
     
     void homingComplete() {
         needsHoming = false;
+    }
+    // Check if all pneumatics are ready
+    bool isReadyToMove() {
+        return bulbSystemReady &&  // Add other systems here with &&
+               !needsHoming && 
+               !isPaused && 
+               !isStopped;
+    }
+    
+    // Set individual system readiness
+    void setBulbSystemReady(bool ready) {
+        bulbSystemReady = ready;
+    }
+    
+    // Add similar setters for other systems:
+    // void setCapSystemReady(bool ready) {
+    //     capSystemReady = ready;
+    // }
+    
+    // Reset all pneumatics to not ready
+    void resetAllPneumatics() {
+        bulbSystemReady = false;
+        // capSystemReady = false;
+        // etc...
     }
 };
 
