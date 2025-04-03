@@ -286,7 +286,7 @@ void setup() {
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
-    pinMode(homeSensorPin, INPUT);
+   
     pinMode(startButtonPin, OUTPUT);
     pinMode(pauseButtonPin, OUTPUT);
     pinMode(stopButtonPin, OUTPUT);
@@ -297,6 +297,11 @@ void setup() {
     
     //Pneumatics
     pinMode(bulbRamPin, OUTPUT);
+
+    //sensors
+    pinMode(homeSensorPin, INPUT);
+    pinMode(bulbRamHomeSensorPin, INPUT);
+    pinMode(bulbPositionSensorPin, INPUT);
 
     updateSlotPositions();
 }
@@ -317,9 +322,13 @@ void loop() {
     //     stepMotor();
     // }
 
-
+if(digitalRead(bulbPositionSensorPin)){
     digitalWrite(bulbAirPushPin, HIGH);
-    delay(2000);
+
+}
+else{
+
     digitalWrite(bulbAirPushPin, LOW);
-    delay(2000);
+}
+
 }
