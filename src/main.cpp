@@ -322,7 +322,7 @@ void loop() {
     //     stepMotor();
     // }
 
-if(digitalRead(bulbPositionSensorPin)){
+if(digitalRead(bulbRamHomeSensorPin)){
     digitalWrite(bulbAirPushPin, HIGH);
 
 }
