@@ -44,8 +44,9 @@ public:
     }
     // Check if all pneumatics are ready
     bool isReadyToMove() {
-        return bulbSystemReady &&  // Add other systems here with &&
-               dropperSystemReady &&  // Add this
+        return 
+        //bulbSystemReady &&  // Add other systems here with &&
+               //dropperSystemReady &&  // Add this
                !needsHoming && 
                !isPaused && 
                !isStopped;
