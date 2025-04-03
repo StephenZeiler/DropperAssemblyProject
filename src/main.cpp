@@ -275,7 +275,11 @@ void stepMotor() {
             lastStepTime = currentTime;
         }
     } else {
-        if (machine.isReadyToMove() && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
+        // if (machine.isReadyToMove() && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
+        //     isMoving = true;
+        //     lastStepTime = currentTime;
+        // }
+          if (!machine.isPaused && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
             isMoving = true;
             lastStepTime = currentTime;
         }
