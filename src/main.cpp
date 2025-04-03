@@ -321,14 +321,14 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
+digitalWrite(bulbAirPushPin, HIGH);
+// if(digitalRead(bulbRamHomeSensorPin)){ // in home
+//     digitalWrite(bulbAirPushPin, HIGH);
 
-if(digitalRead(bulbRamHomeSensorPin)){
-    digitalWrite(bulbAirPushPin, HIGH);
+// }
+// else{
 
-}
-else{
-
-    digitalWrite(bulbAirPushPin, LOW);
-}
+//     digitalWrite(bulbAirPushPin, LOW);
+// }
 
 }
