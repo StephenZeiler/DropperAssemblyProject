@@ -358,20 +358,23 @@ void setup() {
 }
 
 void loop() {
-     handleButtons();
-    //handleBulbSystem();
-    //handleDropperSystem();  
-    if (machine.isStopped) return;
+    //  handleButtons();
+    // //handleBulbSystem();
+    // //handleDropperSystem();  
+    // if (machine.isStopped) return;
     
-    if (machine.needsHoming) {
-        homeMachine();
-        return;
-    }
+    // if (machine.needsHoming) {
+    //     homeMachine();
+    //     return;
+    // }
     
-     if (machine.isPaused) return;
+    //  if (machine.isPaused) return;
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
-  
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
+  digitalWrite(dropperEjectPin, HIGH);
+    delay(2000);
+  digitalWrite(dropperEjectPin, LOW);
+  delay(2000);
 }
