@@ -35,7 +35,7 @@ bool stopRequested = false;
 // Bulb system pins
 const int bulbRamHomeSensorPin = 27;
 const int bulbPositionSensorPin = 26;
-const int bulbAirPushPin = 43;
+const int bulbAirPushPin = 41;
 const int bulbSeparatorPin = 37;
 const int bulbRamPin = 39;
 
