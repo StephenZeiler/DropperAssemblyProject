@@ -318,8 +318,8 @@ void loop() {
     // }
 
 
-    digitalWrite(bulbSeparatorPin, HIGH);
+    digitalWrite(bulbAirPushPin, HIGH);
     delay(2000);
-    digitalWrite(bulbSeparatorPin, LOW);
+    digitalWrite(bulbAirPushPin, LOW);
     delay(2000);
 }
