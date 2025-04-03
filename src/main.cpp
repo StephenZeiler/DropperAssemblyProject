@@ -39,6 +39,19 @@ const int bulbAirPushPin = 41;
 const int bulbSeparatorPin = 37;
 const int bulbRamPin = 39;
 
+//ejection pin
+const int dropperEjectPin = 47;
+
+// Dropper ejection system state
+enum DropperState {
+    DROPPER_IDLE,
+    DROPPER_EJECTING,
+    DROPPER_RETRACTING
+};
+DropperState currentDropperState = DROPPER_IDLE;
+
+unsigned long dropperStateStartTime = 0;
+
 // Bulb system state
 enum BulbState {
     BULB_IDLE,
@@ -79,8 +92,8 @@ void handleBulbSystem() {
     lastMotorState = isMoving;
     
     // Read sensors
-    bool ramHome = digitalRead(bulbRamHomeSensorPin);
-    bool bulbPresent = digitalRead(bulbPositionSensorPin);
+    bool ramHome = digitalRead(bulbRamHomeSensorPin); //high if home 
+    bool bulbPresent = digitalRead(bulbPositionSensorPin); //hgih if present
     
     // State machine transitions
     switch (currentBulbState) {
@@ -119,6 +132,38 @@ void handleBulbSystem() {
             
         case BULB_IDLE:
             // Waiting for motor to stop
+            break;
+    }
+}
+
+void handleDropperSystem() {
+    static bool lastMotorState = false;
+    
+    // Detect motor deceleration completion
+    if (lastMotorState && !isMoving) {
+        if (currentDropperState == DROPPER_IDLE) {
+            currentDropperState = DROPPER_EJECTING;
+            digitalWrite(dropperEjectPin, HIGH);
+            dropperStateStartTime = micros();
+            machine.setDropperSystemReady(false);
+        }
+    }
+    lastMotorState = isMoving;
+    
+    // State machine transitions
+    switch (currentDropperState) {
+        case DROPPER_EJECTING:
+            if (micros() - dropperStateStartTime >= 125000) { // 0.125s
+                currentDropperState = DROPPER_RETRACTING;
+                digitalWrite(dropperEjectPin, LOW);
+                machine.setDropperSystemReady(true);
+                currentDropperState = DROPPER_IDLE;
+            }
+            break;
+            
+        case DROPPER_RETRACTING:
+        case DROPPER_IDLE:
+            // No action needed
             break;
     }
 }
@@ -294,9 +339,11 @@ void setup() {
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW);
     digitalWrite(stepPin, LOW);
-    
+    digitalWrite(dropperEjectPin, LOW);
+
     //Pneumatics
     pinMode(bulbRamPin, OUTPUT);
+    pinMode(dropperEjectPin, OUTPUT);
 
     //sensors
     pinMode(homeSensorPin, INPUT);
@@ -307,28 +354,20 @@ void setup() {
 }
 
 void loop() {
-    // handleButtons();
+     handleButtons();
+    //handleBulbSystem();
+    //handleDropperSystem();  
+    if (machine.isStopped) return;
     
-    // if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        homeMachine();
+        return;
+    }
     
-    // if (machine.needsHoming) {
-    //     homeMachine();
-    //     return;
-    // }
+     if (machine.isPaused) return;
     
-    // if (machine.isPaused) return;
-    
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
-//home sensor - high when home
- if(digitalRead(bulbPositionSensorPin)){ 
-    digitalWrite(bulbAirPushPin, HIGH);
-
-}
-else{
-
-    digitalWrite(bulbAirPushPin, LOW);
-}
-
+    if (machine.inProduction) {
+        stepMotor();
+    }
+  
 }
