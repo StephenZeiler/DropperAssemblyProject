@@ -42,6 +42,26 @@ const int bulbRamPin = 39;
 //ejection pin
 const int dropperEjectPin = 47;
 
+//CAP injection
+const int capInjectPin = 35;
+
+// Pipet system pins
+const int pipetRamPin = 43;
+const int pipetTwisterPin = 45;
+const int pipetTwisterHomeSensorPin = 49; // Add appropriate pin number
+
+// Pipet system state
+enum PipetState {
+    PIPET_IDLE,
+    PIPET_RAM_EXTENDING,
+    PIPET_RAM_RETRACTING,
+    PIPET_TWISTER_HOMING,
+    PIPET_TWISTER_ACTIVE
+};
+PipetState currentPipetState = PIPET_IDLE;
+unsigned long pipetStateStartTime = 0;
+bool twisterAtHome = false;
+
 // Dropper ejection system state
 enum DropperState {
     DROPPER_IDLE,
@@ -49,6 +69,13 @@ enum DropperState {
     DROPPER_RETRACTING
 };
 DropperState currentDropperState = DROPPER_IDLE;
+
+enum CapState {
+    CAP_IDLE,
+    CAP_INJECTING,
+    CAP_RETRACTING
+};
+CapState currentCapState = CAP_IDLE;
 
 unsigned long dropperStateStartTime = 0;
 
@@ -74,6 +101,63 @@ SlotObject slots[] = {
 int currentHomePosition = 0;
 
 MachineState machine;
+void handlePipetSystem() {
+    static bool lastMotorState = false;
+    
+    // Read sensor
+    twisterAtHome = digitalRead(pipetTwisterHomeSensorPin);
+    
+    // Detect motor deceleration completion
+    if (lastMotorState && !isMoving) {
+        if (currentPipetState == PIPET_IDLE) {
+            currentPipetState = PIPET_RAM_EXTENDING;
+            pipetStateStartTime = micros();
+            digitalWrite(pipetRamPin, HIGH);
+            machine.setPipetSystemReady(false);
+            
+            // Start twister homing simultaneously (Step 1 & 2)
+            digitalWrite(pipetTwisterPin, LOW); // Deactivate twister
+        }
+    }
+    
+    // Detect motor acceleration start
+    if (!lastMotorState && isMoving) {
+        if (currentPipetState == PIPET_IDLE) {
+            pipetStateStartTime = micros();
+            currentPipetState = PIPET_TWISTER_ACTIVE;
+            digitalWrite(pipetTwisterPin, HIGH); // Activate twister
+        }
+    }
+    lastMotorState = isMoving;
+    
+    // State machine transitions
+    switch (currentPipetState) {
+        case PIPET_RAM_EXTENDING:
+            if (micros() - pipetStateStartTime >= 125000) { // 0.125s after stop
+                // Twister should be homing now (already started)
+                if (twisterAtHome) {
+                    currentPipetState = PIPET_RAM_RETRACTING;
+                }
+            }
+            if (micros() - pipetStateStartTime >= 250000) { // 0.25s after stop
+                digitalWrite(pipetRamPin, LOW); // Retract ram
+                currentPipetState = PIPET_IDLE;
+                machine.setPipetSystemReady(true);
+            }
+            break;
+            
+        case PIPET_TWISTER_ACTIVE:
+            if (micros() - pipetStateStartTime >= 125000) { // 0.125s after start
+                digitalWrite(pipetTwisterPin, LOW); // Deactivate twister
+                currentPipetState = PIPET_IDLE;
+            }
+            break;
+            
+        case PIPET_IDLE:
+            // Waiting for motor state changes
+            break;
+    }
+}
 
 void handleBulbSystem() {
     static bool lastMotorState = false;
@@ -153,7 +237,7 @@ void handleDropperSystem() {
     // State machine transitions
     switch (currentDropperState) {
         case DROPPER_EJECTING:
-            if (micros() - dropperStateStartTime >= 125000) { // 0.125s
+            if (micros() - dropperStateStartTime >= 250000) { // 0.125s
                 currentDropperState = DROPPER_RETRACTING;
                 digitalWrite(dropperEjectPin, LOW);
                 machine.setDropperSystemReady(true);
@@ -167,6 +251,39 @@ void handleDropperSystem() {
             break;
     }
 }
+
+void handleCapInjection() {
+    static bool lastMotorState = false;
+    
+    // Detect motor deceleration completion
+    if (lastMotorState && !isMoving) {
+        if (currentCapState == CAP_IDLE) {
+            currentCapState = CAP_INJECTING;
+            digitalWrite(capInjectPin, HIGH);
+            dropperStateStartTime = micros();
+            machine.    (false);
+        }
+    }
+    lastMotorState = isMoving;
+    
+    // State machine transitions
+    switch (currentCapState) {
+        case CAP_EJECTING:
+            if (micros() - dropperStateStartTime >= 250000) { // 0.125s
+                currentCapState = CAP_RETRACTING;
+                digitalWrite(capInjectPin, LOW);
+                machine.setDropperSystemReady(true);
+                currentCapState = CAP_IDLE;
+            }
+            break;
+            
+        case CAP_RETRACTING:
+        case CAP_IDLE:
+            // No action needed
+            break;
+    }
+}
+
 
 void updateSlotPositions() {
     for(int i = 0; i < 16; i++) {
@@ -358,23 +475,23 @@ void setup() {
 }
 
 void loop() {
-     handleButtons();
-    //handleBulbSystem();
-    //handleDropperSystem();  
-    if (machine.isStopped) return;
+    //  handleButtons();
+    // //handleBulbSystem();
+    // //handleDropperSystem();  
+    // if (machine.isStopped) return;
     
-    if (machine.needsHoming) {
-        homeMachine();
-        return;
-    }
+    // if (machine.needsHoming) {
+    //     homeMachine();
+    //     return;
+    // }
     
-     if (machine.isPaused) return;
+    //  if (machine.isPaused) return;
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
-//   digitalWrite(dropperEjectPin, HIGH);
-//     delay(2000);
-//   digitalWrite(dropperEjectPin, LOW);
-//   delay(2000);
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
+  digitalWrite(dropperEjectPin, HIGH);
+    delay(2000);
+  digitalWrite(dropperEjectPin, LOW);
+  delay(2000);
 }

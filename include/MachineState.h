@@ -10,6 +10,9 @@ public:
     
     bool bulbSystemReady = true;
         bool dropperSystemReady = true;  // Add this line
+        bool capInjectionReady = true;
+            bool pipetSystemReady = true;  // Add this line
+
     // Add more system flags here as needed:
     // bool capSystemReady = true;
     // bool pipetSystemReady = true;
@@ -47,16 +50,24 @@ public:
         return 
         //bulbSystemReady &&  // Add other systems here with &&
                //dropperSystemReady &&  // Add this
+               // capInjectionReady &&
+               // pipetSystemReady &&
                !needsHoming && 
                !isPaused && 
                !isStopped;
     }
 
     // Add this setter
+    void setPipetSystemReady(bool ready) {
+        pipetSystemReady = ready;
+    }
+    
     void setDropperSystemReady(bool ready) {
         dropperSystemReady = ready;
     }
-
+    void setCapInjectionReady(bool ready) {
+        capInjectionReady = ready;
+    }
     // Set individual system readiness
     void setBulbSystemReady(bool ready) {
         bulbSystemReady = ready;
@@ -71,6 +82,8 @@ public:
     void resetAllPneumatics() {
         bulbSystemReady = false;
         dropperSystemReady = false;  // Add this
+        capInjectionReady = false;
+        pipetSystemReady = false;
         // capSystemReady = false;
         // etc...
     }
