@@ -463,6 +463,7 @@ void setup() {
     digitalWrite(dropperEjectPin, LOW);
 
     //Pneumatics
+    pinMode(bulbAirPushPin, OUTPUT);
     pinMode(bulbRamPin, OUTPUT);
     pinMode(dropperEjectPin, OUTPUT);
     pinMode(pipetTwisterPin, OUTPUT);
@@ -477,21 +478,22 @@ void setup() {
 }
 
 void loop() {
-    //  handleButtons();
-    // //handleBulbSystem();
-    // //handleDropperSystem();  
-    // if (machine.isStopped) return;
+//     handleButtons();
+//    // handleBulbSystem();
+//     handleCapInjection();
+//     handleDropperSystem();  
+//     if (machine.isStopped) return;
     
-    // if (machine.needsHoming) {
-    //     homeMachine();
-    //     return;
-    // }
+//     if (machine.needsHoming) {
+//         homeMachine();
+//         return;
+//     }
     
-    //  if (machine.isPaused) return;
+//      if (machine.isPaused) return;
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+//     if (machine.inProduction) {
+//         stepMotor();
+//     }
   digitalWrite(dropperEjectPin, HIGH);
   digitalWrite(capInjectPin, HIGH);
   digitalWrite(bulbRamPin, HIGH);
