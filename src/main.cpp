@@ -261,18 +261,18 @@ void handleCapInjection() {
             currentCapState = CAP_INJECTING;
             digitalWrite(capInjectPin, HIGH);
             dropperStateStartTime = micros();
-            machine.    (false);
+            machine.setCapInjectionReady(false);
         }
     }
     lastMotorState = isMoving;
     
     // State machine transitions
     switch (currentCapState) {
-        case CAP_EJECTING:
+        case CAP_INJECTING:
             if (micros() - dropperStateStartTime >= 250000) { // 0.125s
                 currentCapState = CAP_RETRACTING;
                 digitalWrite(capInjectPin, LOW);
-                machine.setDropperSystemReady(true);
+                machine.setCapInjectionReady(true);
                 currentCapState = CAP_IDLE;
             }
             break;
