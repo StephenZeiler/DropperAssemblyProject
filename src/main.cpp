@@ -480,10 +480,10 @@ void setup() {
 
 void loop() {
     handleButtons();
-   handleBulbSystem();
-    handleCapInjection();
-    handleDropperSystem();  
-    handlePipetSystem();  
+//    handleBulbSystem();
+//     handleCapInjection();
+//     handleDropperSystem();  
+//     handlePipetSystem();  
     if (machine.isStopped) return;
     
     if (machine.needsHoming) {
