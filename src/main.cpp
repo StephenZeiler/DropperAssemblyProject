@@ -465,7 +465,9 @@ void setup() {
     //Pneumatics
     pinMode(bulbRamPin, OUTPUT);
     pinMode(dropperEjectPin, OUTPUT);
-
+    pinMode(pipetTwisterPin, OUTPUT);
+    pinMode(pipetRamPin, OUTPUT);
+    pinMode(capInjectPin, OUTPUT);
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
@@ -491,7 +493,16 @@ void loop() {
     //     stepMotor();
     // }
   digitalWrite(dropperEjectPin, HIGH);
+  digitalWrite(capInjectPin, HIGH);
+  digitalWrite(bulbRamPin, HIGH);
+  digitalWrite(pipetRamPin, HIGH);
+  digitalWrite(pipetTwisterPin, HIGH);
+
     delay(2000);
   digitalWrite(dropperEjectPin, LOW);
+  digitalWrite(capInjectPin, LOW);
+  digitalWrite(bulbRamPin, LOW);
+  digitalWrite(pipetRamPin, LOW);
+  digitalWrite(pipetTwisterPin, LOW);
   delay(2000);
 }
