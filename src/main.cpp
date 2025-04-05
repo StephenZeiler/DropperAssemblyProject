@@ -469,6 +469,7 @@ void setup() {
     pinMode(pipetTwisterPin, OUTPUT);
     pinMode(pipetRamPin, OUTPUT);
     pinMode(capInjectPin, OUTPUT);
+     pinMode(bulbSeparatorPin, OUTPUT);
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
@@ -500,6 +501,7 @@ void loop() {
   digitalWrite(pipetRamPin, HIGH);
   digitalWrite(pipetTwisterPin, HIGH);
   digitalWrite(bulbAirPushPin, HIGH);
+  digitalWrite(bulbSeparatorPin, HIGH);
 
     delay(2000);
   digitalWrite(dropperEjectPin, LOW);
@@ -508,5 +510,6 @@ void loop() {
   digitalWrite(pipetRamPin, LOW);
   digitalWrite(pipetTwisterPin, LOW);
   digitalWrite(bulbAirPushPin, LOW);
+  digitalWrite(bulbSeparatorPin, LOW);
   delay(2000);
 }
