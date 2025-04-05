@@ -497,6 +497,7 @@ void loop() {
   digitalWrite(bulbRamPin, HIGH);
   digitalWrite(pipetRamPin, HIGH);
   digitalWrite(pipetTwisterPin, HIGH);
+  digitalWrite(bulbAirPushPin, HIGH);
 
     delay(2000);
   digitalWrite(dropperEjectPin, LOW);
@@ -504,5 +505,6 @@ void loop() {
   digitalWrite(bulbRamPin, LOW);
   digitalWrite(pipetRamPin, LOW);
   digitalWrite(pipetTwisterPin, LOW);
+  digitalWrite(bulbAirPushPin, LOW);
   delay(2000);
 }
