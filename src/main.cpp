@@ -479,37 +479,37 @@ void setup() {
 }
 
 void loop() {
-//     handleButtons();
-//    // handleBulbSystem();
-//     handleCapInjection();
-//     handleDropperSystem();  
-//     if (machine.isStopped) return;
+    handleButtons();
+   // handleBulbSystem();
+    handleCapInjection();
+    handleDropperSystem();  
+    if (machine.isStopped) return;
     
-//     if (machine.needsHoming) {
-//         homeMachine();
-//         return;
-//     }
+    if (machine.needsHoming) {
+        homeMachine();
+        return;
+    }
     
-//      if (machine.isPaused) return;
+     if (machine.isPaused) return;
     
-//     if (machine.inProduction) {
-//         stepMotor();
-//     }
-  digitalWrite(dropperEjectPin, HIGH);
-  digitalWrite(capInjectPin, HIGH);
-  digitalWrite(bulbRamPin, HIGH);
-  digitalWrite(pipetRamPin, HIGH);
-  digitalWrite(pipetTwisterPin, HIGH);
-  digitalWrite(bulbAirPushPin, HIGH);
-  digitalWrite(bulbSeparatorPin, HIGH);
+    if (machine.inProduction) {
+        stepMotor();
+    }
+//   digitalWrite(dropperEjectPin, HIGH);
+//   digitalWrite(capInjectPin, HIGH);
+//   digitalWrite(bulbRamPin, HIGH);
+//   digitalWrite(pipetRamPin, HIGH);
+//   digitalWrite(pipetTwisterPin, HIGH);
+//   digitalWrite(bulbAirPushPin, HIGH);
+//   digitalWrite(bulbSeparatorPin, HIGH);
 
-    delay(2000);
-  digitalWrite(dropperEjectPin, LOW);
-  digitalWrite(capInjectPin, LOW);
-  digitalWrite(bulbRamPin, LOW);
-  digitalWrite(pipetRamPin, LOW);
-  digitalWrite(pipetTwisterPin, LOW);
-  digitalWrite(bulbAirPushPin, LOW);
-  digitalWrite(bulbSeparatorPin, LOW);
-  delay(2000);
+//     delay(2000);
+//   digitalWrite(dropperEjectPin, LOW);
+//   digitalWrite(capInjectPin, LOW);
+//   digitalWrite(bulbRamPin, LOW);
+//   digitalWrite(pipetRamPin, LOW);
+//   digitalWrite(pipetTwisterPin, LOW);
+//   digitalWrite(bulbAirPushPin, LOW);
+//   digitalWrite(bulbSeparatorPin, LOW);
+//   delay(2000);
 }
