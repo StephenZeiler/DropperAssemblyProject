@@ -485,36 +485,36 @@ pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
 }
 
 void loop() {
-     handleButtons();
-   // handleBulbSystem();
-    handleCapInjection();
-    handleDropperSystem();
-    handlePipetSystem();  // Make sure this is uncommented
+//      handleButtons();
+//    // handleBulbSystem();
+//     handleCapInjection();
+//     handleDropperSystem();
+//     handlePipetSystem();  // Make sure this is uncommented
     
-    if (machine.isStopped) return;
-    if (machine.needsHoming) {
-        homeMachine();
-        return;
-    }
+//     if (machine.isStopped) return;
+//     if (machine.needsHoming) {
+//         homeMachine();
+//         return;
+//     }
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
-//   digitalWrite(dropperEjectPin, HIGH);
-//   digitalWrite(capInjectPin, HIGH);
-//   digitalWrite(bulbRamPin, HIGH);
-//   digitalWrite(pipetRamPin, HIGH);
-//   digitalWrite(pipetTwisterPin, HIGH);
-//   digitalWrite(bulbAirPushPin, HIGH);
-//   digitalWrite(bulbSeparatorPin, HIGH);
+//     if (machine.inProduction) {
+//         stepMotor();
+//     }
+  digitalWrite(dropperEjectPin, HIGH);
+  digitalWrite(capInjectPin, HIGH);
+  digitalWrite(bulbRamPin, HIGH);
+  digitalWrite(pipetRamPin, HIGH);
+  digitalWrite(pipetTwisterPin, HIGH);
+  digitalWrite(bulbAirPushPin, HIGH);
+  digitalWrite(bulbSeparatorPin, HIGH);
 
-//     delay(2000);
-//   digitalWrite(dropperEjectPin, LOW);
-//   digitalWrite(capInjectPin, LOW);
-//   digitalWrite(bulbRamPin, LOW);
-//   digitalWrite(pipetRamPin, LOW);
-//   digitalWrite(pipetTwisterPin, LOW);
-//   digitalWrite(bulbAirPushPin, LOW);
-//   digitalWrite(bulbSeparatorPin, LOW);
-//   delay(2000);
+    delay(2000);
+  digitalWrite(dropperEjectPin, LOW);
+  digitalWrite(capInjectPin, LOW);
+  digitalWrite(bulbRamPin, LOW);
+  digitalWrite(pipetRamPin, LOW);
+  digitalWrite(pipetTwisterPin, LOW);
+  digitalWrite(bulbAirPushPin, LOW);
+  digitalWrite(bulbSeparatorPin, LOW);
+  delay(2000);
 }
