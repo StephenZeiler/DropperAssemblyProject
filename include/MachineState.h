@@ -51,7 +51,7 @@ public:
         //bulbSystemReady &&  // Add other systems here with &&
                dropperSystemReady &&  // Add this
                capInjectionReady &&
-                pipetSystemReady &&
+                //pipetSystemReady &&
                !needsHoming && 
                !isPaused && 
                !isStopped;
