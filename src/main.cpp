@@ -132,12 +132,12 @@ void handlePipetSystem() {
         switch (currentPipetState) {
             case PIPET_RAM_EXTENDING:
                 // Step 2: After 0.125s, deactivate twister (move to home)
-                if (micros() - pipetStateStartTime >= 1250000) {
+                if (micros() - pipetStateStartTime >= 125000) {
                     digitalWrite(pipetTwisterPin, LOW);
                 }
                 
                 // Step 3: After 0.25s, retract ram
-                if (micros() - pipetStateStartTime >= 1250000) {
+                if (micros() - pipetStateStartTime >= 125000) {
                     digitalWrite(pipetRamPin, LOW);
                     currentPipetState = PIPET_HOMING_COMPLETE;
                     machine.setPipetSystemReady(true);
@@ -146,7 +146,7 @@ void handlePipetSystem() {
                 
             case PIPET_TWISTER_ACTIVE:
                 // Step 4: After 0.125s of motor start, activate twister
-                if (micros() - pipetStateStartTime >= 1250000) {
+                if (micros() - pipetStateStartTime >= 125000) {
                     digitalWrite(pipetTwisterPin, HIGH);
                     currentPipetState = PIPET_HOMING_COMPLETE;
                 }
@@ -485,36 +485,36 @@ pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
 }
 
 void loop() {
-//      handleButtons();
-//    // handleBulbSystem();
-//     handleCapInjection();
-//     handleDropperSystem();
-//     handlePipetSystem();  // Make sure this is uncommented
+     handleButtons();
+   // handleBulbSystem();
+    handleCapInjection();
+    handleDropperSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-//     if (machine.isStopped) return;
-//     if (machine.needsHoming) {
-//         homeMachine();
-//         return;
-//     }
+    if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        homeMachine();
+        return;
+    }
     
-//     if (machine.inProduction) {
-//         stepMotor();
-//     }
-  digitalWrite(dropperEjectPin, HIGH);
-  digitalWrite(capInjectPin, HIGH);
-  digitalWrite(bulbRamPin, HIGH);
-  digitalWrite(pipetRamPin, HIGH);
-  digitalWrite(pipetTwisterPin, HIGH);
-  digitalWrite(bulbAirPushPin, HIGH);
-  digitalWrite(bulbSeparatorPin, HIGH);
+    if (machine.inProduction) {
+        stepMotor();
+    }
+//   digitalWrite(dropperEjectPin, HIGH);
+//   digitalWrite(capInjectPin, HIGH);
+//   digitalWrite(bulbRamPin, HIGH);
+//   digitalWrite(pipetRamPin, HIGH);
+//   digitalWrite(pipetTwisterPin, HIGH);
+//   digitalWrite(bulbAirPushPin, HIGH);
+//   digitalWrite(bulbSeparatorPin, HIGH);
 
-    delay(2000);
-  digitalWrite(dropperEjectPin, LOW);
-  digitalWrite(capInjectPin, LOW);
-  digitalWrite(bulbRamPin, LOW);
-  digitalWrite(pipetRamPin, LOW);
-  digitalWrite(pipetTwisterPin, LOW);
-  digitalWrite(bulbAirPushPin, LOW);
-  digitalWrite(bulbSeparatorPin, LOW);
-  delay(2000);
+//     delay(2000);
+//   digitalWrite(dropperEjectPin, LOW);
+//   digitalWrite(capInjectPin, LOW);
+//   digitalWrite(bulbRamPin, LOW);
+//   digitalWrite(pipetRamPin, LOW);
+//   digitalWrite(pipetTwisterPin, LOW);
+//   digitalWrite(bulbAirPushPin, LOW);
+//   digitalWrite(bulbSeparatorPin, LOW);
+//   delay(2000);
 }
