@@ -48,17 +48,17 @@ const int capInjectPin = 35;
 // Pipet system pins
 const int pipetRamPin = 43;
 const int pipetTwisterPin = 45;
-const int pipetTwisterHomeSensorPin = 49; // Add appropriate pin number
+const int pipetTwisterHomeSensorPin = 28;  // Changed to pin 28
 
 // Pipet system state
 enum PipetState {
-    PIPET_IDLE,
-    PIPET_RAM_EXTENDING,
-    PIPET_RAM_RETRACTING,
-    PIPET_TWISTER_HOMING,
-    PIPET_TWISTER_ACTIVE
+    PIPET_HOMING,          // Initial homing state
+    PIPET_HOMING_COMPLETE, // Twister is at home
+    PIPET_RAM_EXTENDING,   // Ram is extending
+    PIPET_RAM_RETRACTING,  // Ram is retracting
+    PIPET_TWISTER_ACTIVE   // Twister is active
 };
-PipetState currentPipetState = PIPET_IDLE;
+PipetState currentPipetState = PIPET_HOMING; // Start in homing state
 unsigned long pipetStateStartTime = 0;
 bool twisterAtHome = false;
 
@@ -103,62 +103,65 @@ int currentHomePosition = 0;
 MachineState machine;
 void handlePipetSystem() {
     static bool lastMotorState = false;
+    bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin); // Sensor is HIGH when at home
     
-    // Read sensor
-    twisterAtHome = digitalRead(pipetTwisterHomeSensorPin);
-    
-    // Detect motor deceleration completion
-    if (lastMotorState && !isMoving) {
-        if (currentPipetState == PIPET_IDLE) {
-            currentPipetState = PIPET_RAM_EXTENDING;
-            pipetStateStartTime = micros();
-            digitalWrite(pipetRamPin, HIGH);
-            machine.setPipetSystemReady(false);
-            
-            // Start twister homing simultaneously (Step 1 & 2)
-            digitalWrite(pipetTwisterPin, LOW); // Deactivate twister
-        }
+    // Handle twister homing at startup
+    if (currentPipetState == PIPET_HOMING) {
+        // if (!twisterAtHome) {
+        //     digitalWrite(pipetTwisterPin, HIGH);  // Activate twister to move away from home
+        // } else {
+        //     digitalWrite(pipetTwisterPin, LOW);   // Deactivate twister when home sensor is triggered
+        //     currentPipetState = PIPET_HOMING_COMPLETE;
+        // }
+        currentPipetState = PIPET_HOMING_COMPLETE;
+        return;
     }
-    
-    // Detect motor acceleration start
-    if (!lastMotorState && isMoving) {
-        if (currentPipetState == PIPET_IDLE) {
+
+    // Only proceed if homing is complete
+    if (currentPipetState == PIPET_HOMING_COMPLETE) {
+        // Detect motor deceleration completion
+        if (lastMotorState && !isMoving) {
+            // Step 1: Activate ram immediately
+            currentPipetState = PIPET_RAM_EXTENDING;
+            digitalWrite(pipetRamPin, HIGH);
+            pipetStateStartTime = micros();
+            machine.setPipetSystemReady(false);
+        }
+        
+        // State machine transitions
+        switch (currentPipetState) {
+            case PIPET_RAM_EXTENDING:
+                // Step 2: After 0.125s, deactivate twister (move to home)
+                if (micros() - pipetStateStartTime >= 125000) {
+                    digitalWrite(pipetTwisterPin, LOW);
+                }
+                
+                // Step 3: After 0.25s, retract ram
+                if (micros() - pipetStateStartTime >= 250000) {
+                    digitalWrite(pipetRamPin, LOW);
+                    currentPipetState = PIPET_HOMING_COMPLETE;
+                    machine.setPipetSystemReady(true);
+                }
+                break;
+                
+            case PIPET_TWISTER_ACTIVE:
+                // Step 4: After 0.125s of motor start, activate twister
+                if (micros() - pipetStateStartTime >= 125000) {
+                    digitalWrite(pipetTwisterPin, HIGH);
+                    currentPipetState = PIPET_HOMING_COMPLETE;
+                }
+                break;
+        }
+        
+        // Detect motor start for Step 4
+        if (!lastMotorState && isMoving && currentPipetState == PIPET_HOMING_COMPLETE) {
             pipetStateStartTime = micros();
             currentPipetState = PIPET_TWISTER_ACTIVE;
-            digitalWrite(pipetTwisterPin, HIGH); // Activate twister
         }
     }
-    lastMotorState = isMoving;
     
-    // State machine transitions
-    switch (currentPipetState) {
-        case PIPET_RAM_EXTENDING:
-            if (micros() - pipetStateStartTime >= 125000) { // 0.125s after stop
-                // Twister should be homing now (already started)
-                if (twisterAtHome) {
-                    currentPipetState = PIPET_RAM_RETRACTING;
-                }
-            }
-            if (micros() - pipetStateStartTime >= 250000) { // 0.25s after stop
-                digitalWrite(pipetRamPin, LOW); // Retract ram
-                currentPipetState = PIPET_IDLE;
-                machine.setPipetSystemReady(true);
-            }
-            break;
-            
-        case PIPET_TWISTER_ACTIVE:
-            if (micros() - pipetStateStartTime >= 125000) { // 0.125s after start
-                digitalWrite(pipetTwisterPin, LOW); // Deactivate twister
-                currentPipetState = PIPET_IDLE;
-            }
-            break;
-            
-        case PIPET_IDLE:
-            // Waiting for motor state changes
-            break;
-    }
+    lastMotorState = isMoving;
 }
-
 void handleBulbSystem() {
     static bool lastMotorState = false;
     
@@ -470,28 +473,29 @@ void setup() {
     pinMode(pipetRamPin, OUTPUT);
     pinMode(capInjectPin, OUTPUT);
      pinMode(bulbSeparatorPin, OUTPUT);
+pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
     pinMode(bulbPositionSensorPin, INPUT);
+    digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
+     currentPipetState = PIPET_HOMING;
 
     updateSlotPositions();
 }
 
 void loop() {
-    handleButtons();
-//    handleBulbSystem();
-//     handleCapInjection();
-//     handleDropperSystem();  
-//     handlePipetSystem();  
-    if (machine.isStopped) return;
+     handleButtons();
+   // handleBulbSystem();
+    handleCapInjection();
+    handleDropperSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
+    if (machine.isStopped) return;
     if (machine.needsHoming) {
         homeMachine();
         return;
     }
-    
-     if (machine.isPaused) return;
     
     if (machine.inProduction) {
         stepMotor();

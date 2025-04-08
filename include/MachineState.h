@@ -48,7 +48,7 @@ public:
     // Check if all pneumatics are ready
     bool isReadyToMove() {
         return 
-        bulbSystemReady &&  // Add other systems here with &&
+        //bulbSystemReady &&  // Add other systems here with &&
                dropperSystemReady &&  // Add this
                capInjectionReady &&
                 pipetSystemReady &&
