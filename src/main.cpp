@@ -132,12 +132,12 @@ void handlePipetSystem() {
         switch (currentPipetState) {
             case PIPET_RAM_EXTENDING:
                 // Step 2: After 0.125s, deactivate twister (move to home)
-                if (micros() - pipetStateStartTime >= 125000) {
+                if (micros() - pipetStateStartTime >= 1250000) {
                     digitalWrite(pipetTwisterPin, LOW);
                 }
                 
                 // Step 3: After 0.25s, retract ram
-                if (micros() - pipetStateStartTime >= 250000) {
+                if (micros() - pipetStateStartTime >= 1250000) {
                     digitalWrite(pipetRamPin, LOW);
                     currentPipetState = PIPET_HOMING_COMPLETE;
                     machine.setPipetSystemReady(true);
@@ -146,7 +146,7 @@ void handlePipetSystem() {
                 
             case PIPET_TWISTER_ACTIVE:
                 // Step 4: After 0.125s of motor start, activate twister
-                if (micros() - pipetStateStartTime >= 125000) {
+                if (micros() - pipetStateStartTime >= 1250000) {
                     digitalWrite(pipetTwisterPin, HIGH);
                     currentPipetState = PIPET_HOMING_COMPLETE;
                 }
