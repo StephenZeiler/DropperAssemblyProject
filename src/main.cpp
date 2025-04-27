@@ -104,8 +104,8 @@ MachineState machine;
 void handlePipetSystem() {
     static bool lastMotorState = false;
     static bool homingComplete = false;
-   // bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin); // Sensor is HIGH when at home
-   bool twisterAtHome = HIGH; // test
+   bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin); // Sensor is HIGH when at home
+   //bool twisterAtHome = HIGH; // test
     
     // Handle twister homing at startup
     if (!homingComplete) {
