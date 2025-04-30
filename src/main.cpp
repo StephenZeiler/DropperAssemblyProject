@@ -490,8 +490,8 @@ pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
 }
 
 void loop() {
-     handleButtons();
-   // handleBulbSystem();
+    handleButtons();
+    handleBulbSystem();
     handleCapInjection();
     handleDropperSystem();
     handlePipetSystem();  // Make sure this is uncommented
