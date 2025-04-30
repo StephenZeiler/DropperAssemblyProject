@@ -190,7 +190,7 @@ void handleBulbSystem() {
     // State machine transitions
     switch (currentBulbState) {
         case BULB_AIR_PUSHING:
-            if (bulbPresent) {
+            if (!bulbPresent) {
                 currentBulbState = BULB_SEPARATING;
                 digitalWrite(bulbAirPushPin, LOW);
                 digitalWrite(bulbSeparatorPin, HIGH);
@@ -214,7 +214,7 @@ void handleBulbSystem() {
             break;
             
         case BULB_RAM_RETRACTING:
-            if (ramHome) {
+            if (!ramHome) {
                 currentBulbState = BULB_IDLE;
                 digitalWrite(bulbSeparatorPin, LOW);
                 machine.setBulbSystemReady(true);
