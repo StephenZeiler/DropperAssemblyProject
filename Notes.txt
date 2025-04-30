@@ -1,0 +1,6 @@
+Pipet twister - goes HIGH after the wheel has traveled 25 percent of its movement to the next position (in this case 75 steps but use a percentage to calculate). Pipet twister will go LOW for after the 75 percent of its time stopped (in this case we have a delay in which the motor is paused waiting for actions to be performed but use a percentage of that delay).
+
+The air ram goes high after 5 percent of the time in which the motor has stopped (begun its delay). The pipet ram will go back to LOW after 90 percent of motor stop/delay has passed. 
+
+Keep logic to home the pipet twister using the sensor. This will give a good starting point. 
+
