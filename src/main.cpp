@@ -104,8 +104,9 @@ MachineState machine;
 void handlePipetSystem() {
     static bool lastMotorState = false;
     static bool homingComplete = false;
-   bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin); // Sensor is HIGH when at home
-   //bool twisterAtHome = HIGH; // test
+    static unsigned long motorStopTime = 0;
+    static unsigned long motorStartTime = 0;
+    bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin); // Sensor is HIGH when at home
     
     // Handle twister homing at startup
     if (!homingComplete) {
@@ -119,58 +120,52 @@ void handlePipetSystem() {
         return;
     }
 
+    // Track motor state transitions
+    if (lastMotorState && !isMoving) {
+        motorStopTime = micros(); // Record when motor stopped
+    }
+    if (!lastMotorState && isMoving) {
+        motorStartTime = micros(); // Record when motor started
+    }
+    lastMotorState = isMoving;
+
     // Only proceed if homing is complete
     if (currentPipetState == PIPET_HOMING_COMPLETE) {
-        // Detect motor deceleration completion (transition from moving to stopped)
-        if (lastMotorState && !isMoving) {
-            // Step 1: Activate ram immediately
-            currentPipetState = PIPET_RAM_EXTENDING;
-            digitalWrite(pipetRamPin, HIGH);
-            pipetStateStartTime = micros();
-            machine.setPipetSystemReady(false);
+        if (isMoving) {
+            // Motor is moving - handle twister activation after 25% of movement
+            unsigned long elapsedSteps = stepsTaken;
+            unsigned long totalMovementTime = micros() - motorStartTime;
             
-            // Step 2: Schedule twister deactivation after 0.125s
-            // This happens simultaneously with Step 1
-        }
-        
-        // Detect motor start (transition from stopped to moving)
-        if (!lastMotorState && isMoving) {
-            // Step 4: Activate twister after 0.125s of motor start
-            pipetStateStartTime = micros();
-            currentPipetState = PIPET_TWISTER_ACTIVE;
-        }
-    }
-    
-    // State machine transitions
-    switch (currentPipetState) {
-        case PIPET_RAM_EXTENDING:
-            // Step 2: After 0.125s, deactivate twister (move to home)
-            if (micros() - pipetStateStartTime >= 125000) {
-                digitalWrite(pipetTwisterPin, LOW);
+            // Calculate percentage of movement completed
+            float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
+            
+            // Activate twister after 25% of movement
+            if (movementPercent >= 0.25 && digitalRead(pipetTwisterPin) == LOW) {
+                digitalWrite(pipetTwisterPin, HIGH);
+            }
+        } else {
+            // Motor is stopped - handle ram and twister timing based on pause duration
+            unsigned long stopDuration = micros() - motorStopTime;
+            float pausePercent = (float)stopDuration / PAUSE_AFTER;
+            
+            // Activate ram after 5% of pause time
+            if (pausePercent >= 0.05 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW) {
+                digitalWrite(pipetRamPin, HIGH);
+                machine.setPipetSystemReady(false);
             }
             
-            // Step 3: After 0.25s, retract ram
-            if (micros() - pipetStateStartTime >= 250000) { 
+            // Deactivate ram after 90% of pause time
+            if (pausePercent >= 0.90 && digitalRead(pipetRamPin) == HIGH) {
                 digitalWrite(pipetRamPin, LOW);
-                currentPipetState = PIPET_HOMING_COMPLETE;
                 machine.setPipetSystemReady(true);
             }
-            break;
             
-        case PIPET_TWISTER_ACTIVE:
-            // Step 4: After 0.125s of motor start, activate twister
-            if (micros() - pipetStateStartTime >= 125000) {
-                digitalWrite(pipetTwisterPin, HIGH);
-                currentPipetState = PIPET_HOMING_COMPLETE;
+            // Deactivate twister after 75% of pause time
+            if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH) {
+                digitalWrite(pipetTwisterPin, LOW);
             }
-            break;
-            
-        case PIPET_HOMING_COMPLETE:
-            // Waiting for motor state changes
-            break;
+        }
     }
-    
-    lastMotorState = isMoving;
 }
 void handleBulbSystem() {
     static bool lastMotorState = false;
