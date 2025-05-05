@@ -33,7 +33,7 @@ bool pauseRequested = false;
 bool stopRequested = false;
 
 // Bulb system pins
-const int bulbRamHomeSensorPin = 33;
+const int bulbRamHomeSensorPin = 16;
 const int bulbPositionSensorPin = 26;
 const int bulbAirPushPin = 41;
 const int bulbSeparatorPin = 37;
@@ -483,8 +483,8 @@ void setup() {
     pinMode(pipetTwisterPin, OUTPUT);
     pinMode(pipetRamPin, OUTPUT);
     pinMode(capInjectPin, OUTPUT);
-     pinMode(bulbSeparatorPin, OUTPUT);
-pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
+    pinMode(bulbSeparatorPin, OUTPUT);
+    pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
