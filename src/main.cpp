@@ -176,6 +176,7 @@ void handleBulbSystem() {
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
+        machine.setBulbSystemReady(false); // System not ready when motor stops
     }
     if (!lastMotorState && isMoving) {
         motorStartTime = micros(); // Record when motor started
@@ -219,7 +220,6 @@ void handleBulbSystem() {
         if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent) {
             digitalWrite(bulbRamPin, HIGH);
             ramExtended = true;
-            machine.setBulbSystemReady(false);
         }
         
         // Deactivate ram after 95% of pause time
@@ -227,7 +227,7 @@ void handleBulbSystem() {
             digitalWrite(bulbRamPin, LOW);
         }
         
-        // Check if ram is home before setting system ready
+        // Only set system ready when ram is confirmed home
         if (ramExtended && ramHome) {
             machine.setBulbSystemReady(true);
             ramExtended = false;
@@ -496,28 +496,22 @@ void setup() {
 }
 
 void loop() {
-    // handleButtons();
-    // handleBulbSystem();
-    // handleCapInjection();
-    // handleDropperSystem();
-    // handlePipetSystem();  // Make sure this is uncommented
+    handleButtons();
+    handleBulbSystem();
+    handleCapInjection();
+    handleDropperSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-    // if (machine.isStopped) return;
-    // if (machine.needsHoming) {
-    //     homeMachine();
-    //     return;
-    // }
+    if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        homeMachine();
+        return;
+    }
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+    if (machine.inProduction) {
+        stepMotor();
+    }
 
-    if(digitalRead(bulbRamHomeSensorPin) ){
-        digitalWrite(dropperEjectPin, HIGH);
-    }
-    else{
-        digitalWrite(dropperEjectPin, LOW);
-    }
 //   digitalWrite(dropperEjectPin, HIGH);
 //   digitalWrite(capInjectPin, HIGH);
 //   digitalWrite(bulbRamPin, HIGH);
