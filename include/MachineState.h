@@ -48,13 +48,13 @@ public:
     // Check if all pneumatics are ready
     bool isReadyToMove() {
         return 
-        //bulbSystemReady &&  // Add other systems here with &&
-               dropperSystemReady &&  // Add this
-               capInjectionReady &&
-                //pipetSystemReady &&
-               !needsHoming && 
-               !isPaused && 
-               !isStopped;
+        bulbSystemReady &&  // Add other systems here with &&
+        dropperSystemReady &&  // Add this
+        capInjectionReady &&
+        pipetSystemReady &&
+        !needsHoming && 
+        !isPaused && 
+        !isStopped;
     }
 
     // Add this setter
