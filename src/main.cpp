@@ -228,7 +228,7 @@ void handleBulbSystem() {
         }
         
         // Check if ram is home before setting system ready
-        if (ramExtended && ramHome) {
+        if (ramExtended && !ramHome) {
             machine.setBulbSystemReady(true);
             ramExtended = false;
         }
