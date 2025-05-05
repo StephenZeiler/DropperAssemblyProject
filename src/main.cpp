@@ -512,7 +512,7 @@ void loop() {
     //     stepMotor();
     // }
 
-    if(bulbRamHomeSensorPin){
+    if(pipetTwisterHomeSensorPin){
         digitalWrite(bulbAirPushPin, HIGH);
     }
     else{
