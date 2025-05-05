@@ -172,11 +172,13 @@ void handleBulbSystem() {
     static unsigned long motorStopTime = 0;
     static unsigned long motorStartTime = 0;
     static bool ramExtended = false;
+    static bool ramRetracted = true;
     
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
         machine.setBulbSystemReady(false); // System not ready when motor stops
+        ramRetracted = false; // Ram needs to retract again
     }
     if (!lastMotorState && isMoving) {
         motorStartTime = micros(); // Record when motor started
@@ -220,6 +222,7 @@ void handleBulbSystem() {
         if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent) {
             digitalWrite(bulbRamPin, HIGH);
             ramExtended = true;
+            ramRetracted = false;
         }
         
         // Deactivate ram after 95% of pause time
@@ -227,42 +230,12 @@ void handleBulbSystem() {
             digitalWrite(bulbRamPin, LOW);
         }
         
-        // Only set system ready when ram is confirmed home
-        if (ramExtended && ramHome) {
+        // Only set system ready when ram is confirmed home and retracted
+        if (ramExtended && ramHome && !digitalRead(bulbRamPin)) {
             machine.setBulbSystemReady(true);
             ramExtended = false;
+            ramRetracted = true;
         }
-    }
-}
-void handleDropperSystem() {
-    static bool lastMotorState = false;
-    
-    // Detect motor deceleration completion
-    if (lastMotorState && !isMoving) {
-        if (currentDropperState == DROPPER_IDLE) {
-            currentDropperState = DROPPER_EJECTING;
-            digitalWrite(dropperEjectPin, HIGH);
-            dropperStateStartTime = micros();
-            machine.setDropperSystemReady(false);
-        }
-    }
-    lastMotorState = isMoving;
-    
-    // State machine transitions
-    switch (currentDropperState) {
-        case DROPPER_EJECTING:
-            if (micros() - dropperStateStartTime >= 250000) { // 0.125s
-                currentDropperState = DROPPER_RETRACTING;
-                digitalWrite(dropperEjectPin, LOW);
-                machine.setDropperSystemReady(true);
-                currentDropperState = DROPPER_IDLE;
-            }
-            break;
-            
-        case DROPPER_RETRACTING:
-        case DROPPER_IDLE:
-            // No action needed
-            break;
     }
 }
 
@@ -406,14 +379,14 @@ void stepMotor() {
             lastStepTime = currentTime;
         }
     } else {
+        // Only start moving if ALL systems are ready AND pause time has elapsed
         if (machine.isReadyToMove() && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
-            isMoving = true;
-            lastStepTime = currentTime;
+            // Additional safety check - confirm ram is home before moving
+            if (digitalRead(bulbRamHomeSensorPin) && !digitalRead(bulbRamPin)) {
+                isMoving = true;
+                lastStepTime = currentTime;
+            }
         }
-        //   if (!machine.isPaused && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
-        //     isMoving = true;
-        //     lastStepTime = currentTime;
-        // }
     }
 }
 
