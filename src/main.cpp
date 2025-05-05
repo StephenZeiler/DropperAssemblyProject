@@ -515,7 +515,7 @@ void loop() {
     if(pipetTwisterHomeSensorPin == HIGH ){
         digitalWrite(dropperEjectPin, HIGH);
     }
-    else{
+    if(pipetTwisterHomeSensorPin == LOW){
         digitalWrite(dropperEjectPin, LOW);
     }
 //   digitalWrite(dropperEjectPin, HIGH);
