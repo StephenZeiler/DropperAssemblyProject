@@ -228,7 +228,7 @@ void handleBulbSystem() {
         }
         
         // Check if ram is home before setting system ready
-        if (ramExtended && !ramHome) {
+        if (ramExtended && ramHome) {
             machine.setBulbSystemReady(true);
             ramExtended = false;
         }
@@ -496,20 +496,24 @@ pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
 }
 
 void loop() {
-    handleButtons();
-    handleBulbSystem();
-    handleCapInjection();
-    handleDropperSystem();
-    handlePipetSystem();  // Make sure this is uncommented
+    // handleButtons();
+    // handleBulbSystem();
+    // handleCapInjection();
+    // handleDropperSystem();
+    // handlePipetSystem();  // Make sure this is uncommented
     
-    if (machine.isStopped) return;
-    if (machine.needsHoming) {
-        homeMachine();
-        return;
-    }
+    // if (machine.isStopped) return;
+    // if (machine.needsHoming) {
+    //     homeMachine();
+    //     return;
+    // }
     
-    if (machine.inProduction) {
-        stepMotor();
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
+
+    if(bulbRamHomeSensorPin){
+        digitalWrite(bulbAirPushPin, HIGH);
     }
 //   digitalWrite(dropperEjectPin, HIGH);
 //   digitalWrite(capInjectPin, HIGH);
