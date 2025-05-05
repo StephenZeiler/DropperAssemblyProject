@@ -513,10 +513,10 @@ void loop() {
     // }
 
     if(pipetTwisterHomeSensorPin){
-        digitalWrite(bulbAirPushPin, HIGH);
+        digitalWrite(dropperEjectPin, HIGH);
     }
     else{
-        digitalWrite(bulbAirPushPin, LOW);
+        digitalWrite(dropperEjectPin, LOW);
     }
 //   digitalWrite(dropperEjectPin, HIGH);
 //   digitalWrite(capInjectPin, HIGH);
