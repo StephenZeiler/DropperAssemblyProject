@@ -512,10 +512,10 @@ void loop() {
     //     stepMotor();
     // }
 
-    if(pipetTwisterHomeSensorPin == HIGH ){
+    if(digitalRead(pipetTwisterHomeSensorPin) ){
         digitalWrite(dropperEjectPin, HIGH);
     }
-    if(pipetTwisterHomeSensorPin == LOW){
+    else(pipetTwisterHomeSensorPin == LOW){
         digitalWrite(dropperEjectPin, LOW);
     }
 //   digitalWrite(dropperEjectPin, HIGH);
