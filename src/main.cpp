@@ -238,6 +238,37 @@ void handleBulbSystem() {
         }
     }
 }
+void handleDropperSystem() {
+    static bool lastMotorState = false;
+    
+    // Detect motor deceleration completion
+    if (lastMotorState && !isMoving) {
+        if (currentDropperState == DROPPER_IDLE) {
+            currentDropperState = DROPPER_EJECTING;
+            digitalWrite(dropperEjectPin, HIGH);
+            dropperStateStartTime = micros();
+            machine.setDropperSystemReady(false);
+        }
+    }
+    lastMotorState = isMoving;
+    
+    // State machine transitions
+    switch (currentDropperState) {
+        case DROPPER_EJECTING:
+            if (micros() - dropperStateStartTime >= 250000) { // 0.125s
+                currentDropperState = DROPPER_RETRACTING;
+                digitalWrite(dropperEjectPin, LOW);
+                machine.setDropperSystemReady(true);
+                currentDropperState = DROPPER_IDLE;
+            }
+            break;
+            
+        case DROPPER_RETRACTING:
+        case DROPPER_IDLE:
+            // No action needed
+            break;
+    }
+}
 
 void handleCapInjection() {
     static bool lastMotorState = false;
