@@ -513,7 +513,7 @@ void loop() {
     // }
 
     if(bulbRamHomeSensorPin){
-        digitalWrite(bulbAirPushPin, HIGH);
+        digitalWrite(bulbAirPushPin, LOW);
     }
 //   digitalWrite(dropperEjectPin, HIGH);
 //   digitalWrite(capInjectPin, HIGH);
