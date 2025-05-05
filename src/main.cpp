@@ -13,7 +13,7 @@ const int pauseButtonPin = 11;
 const int stopButtonPin = 12;
 
 // Movement parameters
-const int TOTAL_STEPS = 100;
+const int TOTAL_STEPS = 200;
 const int ACCEL_STEPS = 70;
 const int DECEL_STEPS = 30;
 const int MIN_STEP_DELAY = 100;   // microseconds
