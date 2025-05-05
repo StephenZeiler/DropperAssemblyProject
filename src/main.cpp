@@ -169,65 +169,71 @@ void handlePipetSystem() {
 }
 void handleBulbSystem() {
     static bool lastMotorState = false;
+    static unsigned long motorStopTime = 0;
+    static unsigned long motorStartTime = 0;
+    static bool ramExtended = false;
     
-    // Detect motor deceleration completion
+    // Track motor state transitions
     if (lastMotorState && !isMoving) {
-        motorDecelerated = true;
-        if (currentBulbState == BULB_IDLE) {
-            currentBulbState = BULB_AIR_PUSHING;
-            bulbStateStartTime = micros();
-            digitalWrite(bulbAirPushPin, HIGH);
-            digitalWrite(bulbSeparatorPin, LOW);
-            machine.setBulbSystemReady(false);
-        }
+        motorStopTime = micros(); // Record when motor stopped
+    }
+    if (!lastMotorState && isMoving) {
+        motorStartTime = micros(); // Record when motor started
     }
     lastMotorState = isMoving;
-    
+
     // Read sensors
-    bool ramHome = digitalRead(bulbRamHomeSensorPin); //high if home 
-    bool bulbPresent = digitalRead(bulbPositionSensorPin); //hgih if present
-    
-    // State machine transitions
-    switch (currentBulbState) {
-        case BULB_AIR_PUSHING:
-            if (!bulbPresent) {
-                currentBulbState = BULB_SEPARATING;
-                digitalWrite(bulbAirPushPin, LOW);
-                digitalWrite(bulbSeparatorPin, HIGH);
-                bulbStateStartTime = micros();
-            }
-            break;
-            
-        case BULB_SEPARATING:
-            if (micros() - bulbStateStartTime >= 125000) {
-                currentBulbState = BULB_RAM_EXTENDING;
-                digitalWrite(bulbRamPin, HIGH);
-                bulbStateStartTime = micros();
-            }
-            break;
-            
-        case BULB_RAM_EXTENDING:
-            if (micros() - bulbStateStartTime >= 300000) {
-                currentBulbState = BULB_RAM_RETRACTING;
-                digitalWrite(bulbRamPin, LOW);
-            }
-            break;
-            
-        case BULB_RAM_RETRACTING:
-            if (!ramHome) {
-                currentBulbState = BULB_IDLE;
-                digitalWrite(bulbSeparatorPin, LOW);
-                machine.setBulbSystemReady(true);
-                motorDecelerated = false;
-            }
-            break;
-            
-        case BULB_IDLE:
-            // Waiting for motor to stop
-            break;
+    bool ramHome = digitalRead(bulbRamHomeSensorPin); // HIGH if home
+    bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
+
+    if (isMoving) {
+        // Motor is moving - handle separator deactivation after 5% of acceleration
+        unsigned long elapsedSteps = stepsTaken;
+        float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
+        
+        // Deactivate separator after 5% of acceleration
+        if (movementPercent >= 0.05 && digitalRead(bulbSeparatorPin)) {
+            digitalWrite(bulbSeparatorPin, LOW);
+        }
+        
+        // Activate air push after 5% of movement
+        if (movementPercent >= 0.05 && !digitalRead(bulbAirPushPin)) {
+            digitalWrite(bulbAirPushPin, HIGH);
+        }
+    } else {
+        // Motor is stopped - handle timing based on pause duration
+        unsigned long stopDuration = micros() - motorStopTime;
+        float pausePercent = (float)stopDuration / PAUSE_AFTER;
+        
+        // Activate separator after 40% of pause time
+        if (pausePercent >= 0.40 && !digitalRead(bulbSeparatorPin)) {
+            digitalWrite(bulbSeparatorPin, HIGH);
+        }
+        
+        // Deactivate air push after 40% of pause time
+        if (pausePercent >= 0.40 && digitalRead(bulbAirPushPin)) {
+            digitalWrite(bulbAirPushPin, LOW);
+        }
+        
+        // Activate ram after 60% of pause time (only if bulb position sensor reads LOW)
+        if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent) {
+            digitalWrite(bulbRamPin, HIGH);
+            ramExtended = true;
+            machine.setBulbSystemReady(false);
+        }
+        
+        // Deactivate ram after 95% of pause time
+        if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
+            digitalWrite(bulbRamPin, LOW);
+        }
+        
+        // Check if ram is home before setting system ready
+        if (ramExtended && ramHome) {
+            machine.setBulbSystemReady(true);
+            ramExtended = false;
+        }
     }
 }
-
 void handleDropperSystem() {
     static bool lastMotorState = false;
     
