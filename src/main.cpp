@@ -13,12 +13,12 @@ const int pauseButtonPin = 11;
 const int stopButtonPin = 12;
 
 // Movement parameters
-const int TOTAL_STEPS = 200;
-const int ACCEL_STEPS = 70;
-const int DECEL_STEPS = 30;
-const int MIN_STEP_DELAY = 100;   // microseconds
-const int MAX_STEP_DELAY = 2000;  // microseconds
-const unsigned long PAUSE_AFTER = 500000; // microseconds
+const int TOTAL_STEPS = 200;  // Changed from 100 to 200
+const int ACCEL_STEPS = 140;  // Changed from 70 to 140 (maintains same acceleration ratio)
+const int DECEL_STEPS = 60;   // Changed from 30 to 60 (maintains same deceleration ratio)
+const int MIN_STEP_DELAY = 100;   // microseconds (keep same for max speed)
+const int MAX_STEP_DELAY = 2000;  // microseconds (keep same for start speed)
+const unsigned long PAUSE_AFTER = 500000; // microseconds (keep same pause time)
 
 // Sensor
 const int homeSensorPin = 25;
