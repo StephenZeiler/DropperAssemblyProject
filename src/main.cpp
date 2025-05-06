@@ -173,7 +173,7 @@ void handleBulbSystem() {
     static unsigned long motorStartTime = 0;
     static bool ramExtended = false;
     static bool ramRetracted = true;
-    if(machine.canBulbProcessStart()){
+    // if(machine.canBulbProcessStart()){
     
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
@@ -239,7 +239,7 @@ void handleBulbSystem() {
             ramRetracted = true;
         }
     }
-    }
+   // }
 }
 void handleDropperSystem() {
     static bool lastMotorState = false;
