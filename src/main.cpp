@@ -131,6 +131,8 @@ void handlePipetSystem() {
 
     // Only proceed if homing is complete
     if (currentPipetState == PIPET_HOMING_COMPLETE) {
+        if(machine.canPipetProcessStart()){
+
         if (isMoving) {
             // Motor is moving - handle twister activation after 25% of movement
             unsigned long elapsedSteps = stepsTaken;
@@ -164,6 +166,7 @@ void handlePipetSystem() {
             if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH) {
                 digitalWrite(pipetTwisterPin, LOW);
             }
+        }
         }
     }
 }
