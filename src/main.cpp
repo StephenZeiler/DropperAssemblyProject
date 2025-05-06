@@ -219,7 +219,7 @@ void handleBulbSystem() {
         }
         
         // Activate ram after 60% of pause time (only if bulb position sensor reads LOW)
-        if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent) {
+        if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent) {
             digitalWrite(bulbRamPin, HIGH);
             ramExtended = true;
             ramRetracted = false;
