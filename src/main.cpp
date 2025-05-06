@@ -482,7 +482,6 @@ void setup() {
     digitalWrite(dropperEjectPin, LOW);
 
     //Pneumatics
-    pinMode(bulbRamPin, INPUT_PULLUP);
     delay(100);
     pinMode(bulbAirPushPin, OUTPUT);
     pinMode(bulbRamPin, OUTPUT);
