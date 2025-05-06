@@ -3,12 +3,9 @@
 
 class SlotObject {
 private:
-    int slotId;      // Permanent ID (1-16)
+    const int slotId;      // Permanent ID (1-16)
     bool hasError;
     int currentPosition;   // Dynamic position (0-15)
-    bool capInjected;
-    bool bulbInjected;
-    bool pipetInjected;
     
 public:
     SlotObject(int id);
@@ -17,16 +14,10 @@ public:
     int getId() const { return slotId; }
     int getPosition() const { return currentPosition; }
     bool getError() const { return hasError; }
-    bool isCapInjected() const { return capInjected; }
-    bool isBulbInjected() const { return bulbInjected; }
-    bool isPipetInjected() const { return pipetInjected; }
     
     // Setters
     void setPosition(int position) { currentPosition = position % 16; }
     void setError(bool error) { hasError = error; }
-    void setCapInjected(bool injected) { capInjected = injected; }
-    void setBulbInjected(bool injected) { bulbInjected = injected; }
-    void setPipetInjected(bool injected) { pipetInjected = injected; }
     
     // Position checks
     bool isAtHome() const { return currentPosition == 0; }
@@ -39,13 +30,6 @@ public:
     bool isAtCompletedEjection() const { return currentPosition == 13; }
     bool isAtJunkEjection() const { return currentPosition == 14; }
     bool isAtEmptyConfirm() const { return currentPosition == 15; }
-    
-    // Reset all injection flags
-    void resetInjectionFlags() {
-        capInjected = false;
-        bulbInjected = false;
-        pipetInjected = false;
-    }
 };
 
 #endif

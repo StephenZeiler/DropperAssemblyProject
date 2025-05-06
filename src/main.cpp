@@ -104,6 +104,8 @@ MachineState machine;
 void handlePipetSystem() {
     static bool lastMotorState = false;
     static bool homingComplete = false;
+    static unsigned long motorStopTime = 0;
+    static unsigned long motorStartTime = 0;
     bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin); // Sensor is HIGH when at home
     
     // Handle twister homing at startup
@@ -118,46 +120,123 @@ void handlePipetSystem() {
         return;
     }
 
-    // State machine transitions
-    switch (currentPipetState) {
-        case PIPET_RAM_EXTENDING:
-            if (micros() - pipetStateStartTime >= 250000) { // 0.25s
-                currentPipetState = PIPET_RAM_RETRACTING;
+    // Track motor state transitions
+    if (lastMotorState && !isMoving) {
+        motorStopTime = micros(); // Record when motor stopped
+    }
+    if (!lastMotorState && isMoving) {
+        motorStartTime = micros(); // Record when motor started
+    }
+    lastMotorState = isMoving;
+
+    // Only proceed if homing is complete
+    if (currentPipetState == PIPET_HOMING_COMPLETE) {
+        if (isMoving) {
+            // Motor is moving - handle twister activation after 25% of movement
+            unsigned long elapsedSteps = stepsTaken;
+            unsigned long totalMovementTime = micros() - motorStartTime;
+            
+            // Calculate percentage of movement completed
+            float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
+            
+            // Activate twister after 25% of movement
+            if (movementPercent >= 0.25 && digitalRead(pipetTwisterPin) == LOW) {
+                digitalWrite(pipetTwisterPin, HIGH);
+            }
+        } else {
+            // Motor is stopped - handle ram and twister timing based on pause duration
+            unsigned long stopDuration = micros() - motorStopTime;
+            float pausePercent = (float)stopDuration / PAUSE_AFTER;
+            
+            // Activate ram after 5% of pause time
+            if (pausePercent >= 0.05 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW) {
+                digitalWrite(pipetRamPin, HIGH);
+                machine.setPipetSystemReady(false);
+            }
+            
+            // Deactivate ram after 90% of pause time
+            if (pausePercent >= 0.90 && digitalRead(pipetRamPin) == HIGH) {
                 digitalWrite(pipetRamPin, LOW);
                 machine.setPipetSystemReady(true);
-                currentPipetState = PIPET_HOMING_COMPLETE;
             }
-            break;
             
-        case PIPET_HOMING_COMPLETE:
-            // No action needed
-            break;
+            // Deactivate twister after 75% of pause time
+            if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH) {
+                digitalWrite(pipetTwisterPin, LOW);
+            }
+        }
     }
 }
 void handleBulbSystem() {
+    static bool lastMotorState = false;
+    static unsigned long motorStopTime = 0;
+    static unsigned long motorStartTime = 0;
+    static bool ramExtended = false;
+    static bool ramRetracted = true;
+    
+    // Track motor state transitions
+    if (lastMotorState && !isMoving) {
+        motorStopTime = micros(); // Record when motor stopped
+        machine.setBulbSystemReady(false); // System not ready when motor stops
+        ramRetracted = false; // Ram needs to retract again
+    }
+    if (!lastMotorState && isMoving) {
+        motorStartTime = micros(); // Record when motor started
+    }
+    lastMotorState = isMoving;
+
     // Read sensors
     bool ramHome = digitalRead(bulbRamHomeSensorPin); // HIGH if home
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
 
-    // State machine transitions
-    switch (currentBulbState) {
-        case BULB_RAM_EXTENDING:
-            if (micros() - bulbStateStartTime >= 250000) { // 0.25s
-                currentBulbState = BULB_RAM_RETRACTING;
-                digitalWrite(bulbRamPin, LOW);
-            }
-            break;
-            
-        case BULB_RAM_RETRACTING:
-            if (ramHome) {
-                machine.setBulbSystemReady(true);
-                currentBulbState = BULB_IDLE;
-            }
-            break;
-            
-        case BULB_IDLE:
-            // No action needed
-            break;
+    if (isMoving) {
+        // Motor is moving - handle separator deactivation after 5% of acceleration
+        unsigned long elapsedSteps = stepsTaken;
+        float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
+        
+        // Deactivate separator after 5% of acceleration
+        if (movementPercent >= 0.05 && digitalRead(bulbSeparatorPin)) {
+            digitalWrite(bulbSeparatorPin, LOW);
+        }
+        
+        // Activate air push after 5% of movement
+        if (movementPercent >= 0.05 && !digitalRead(bulbAirPushPin)) {
+            digitalWrite(bulbAirPushPin, HIGH);
+        }
+    } else {
+        // Motor is stopped - handle timing based on pause duration
+        unsigned long stopDuration = micros() - motorStopTime;
+        float pausePercent = (float)stopDuration / PAUSE_AFTER;
+        
+        // Activate separator after 40% of pause time
+        if (pausePercent >= 0.40 && !digitalRead(bulbSeparatorPin)) {
+            digitalWrite(bulbSeparatorPin, HIGH);
+        }
+        
+        // Deactivate air push after 40% of pause time
+        if (pausePercent >= 0.40 && digitalRead(bulbAirPushPin)) {
+            digitalWrite(bulbAirPushPin, LOW);
+        }
+        
+        // Activate ram after 60% of pause time (only if bulb position sensor reads LOW)
+        if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent) {
+            //TODO: Error handle if no bulb is present. Right now the machine just stops. 
+            digitalWrite(bulbRamPin, HIGH);
+            ramExtended = true;
+            ramRetracted = false;
+        }
+        
+        // Deactivate ram after 95% of pause time
+        if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
+            digitalWrite(bulbRamPin, LOW);
+        }
+        
+        // Only set system ready when ram is confirmed home and retracted
+        if (ramExtended && ramHome && !digitalRead(bulbRamPin)) {
+            machine.setBulbSystemReady(true);
+            ramExtended = false;
+            ramRetracted = true;
+        }
     }
 }
 void handleDropperSystem() {
@@ -193,6 +272,19 @@ void handleDropperSystem() {
 }
 
 void handleCapInjection() {
+    static bool lastMotorState = false;
+    
+    // Detect motor deceleration completion
+    if (lastMotorState && !isMoving) {
+        if (currentCapState == CAP_IDLE) {
+            currentCapState = CAP_INJECTING;
+            digitalWrite(capInjectPin, HIGH);
+            dropperStateStartTime = micros();
+            machine.setCapInjectionReady(false);
+        }
+    }
+    lastMotorState = isMoving;
+    
     // State machine transitions
     switch (currentCapState) {
         case CAP_INJECTING:
@@ -408,9 +500,6 @@ void setup() {
     digitalWrite(pipetRamPin, LOW);
      currentPipetState = PIPET_HOMING;
 
-      for(int i = 0; i < 16; i++) {
-        slots[i] = SlotObject(i);
-    }
     updateSlotPositions();
 }
 

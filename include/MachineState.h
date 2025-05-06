@@ -1,3 +1,4 @@
+
 #ifndef MACHINE_STATE_H
 #define MACHINE_STATE_H
 
