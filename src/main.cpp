@@ -173,7 +173,6 @@ void handleBulbSystem() {
     static unsigned long motorStartTime = 0;
     static bool ramExtended = false;
     static bool ramRetracted = true;
-    if(machine.canBulbProcessStart()){
     
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
@@ -189,6 +188,7 @@ void handleBulbSystem() {
     // Read sensors
     bool ramHome = digitalRead(bulbRamHomeSensorPin); // HIGH if home
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
+    if(machine.canBulbProcessStart()){
 
     if (isMoving) {
         // Motor is moving - handle separator deactivation after 5% of acceleration
