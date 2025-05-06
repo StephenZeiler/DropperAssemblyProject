@@ -220,6 +220,7 @@ void handleBulbSystem() {
         
         // Activate ram after 60% of pause time (only if bulb position sensor reads LOW)
         if (pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent) {
+            //TODO: Error handle if no bulb is present. Right now the machine just stops. 
             digitalWrite(bulbRamPin, HIGH);
             ramExtended = true;
             ramRetracted = false;
@@ -494,6 +495,8 @@ void setup() {
     pinMode(bulbRamHomeSensorPin, INPUT);
     pinMode(bulbPositionSensorPin, INPUT);
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
+    digitalWrite(bulbRamPin, LOW);
+    digitalWrite(pipetRamPin, LOW);
      currentPipetState = PIPET_HOMING;
 
     updateSlotPositions();
