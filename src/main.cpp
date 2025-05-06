@@ -168,6 +168,9 @@ void handlePipetSystem() {
             }
         }
         }
+        else{
+            machine.setPipetSystemReady(true);
+        }
     }
 }
 void handleBulbSystem() {
