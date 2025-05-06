@@ -8,16 +8,27 @@ public:
     bool isStopped = true;
     bool inProduction = false;
     bool needsHoming = true;
-    
+    int positionsMoved = 0;
     bool bulbSystemReady = true;
-        bool dropperSystemReady = true;  // Add this line
-        bool capInjectionReady = true;
-            bool pipetSystemReady = true;  // Add this line
+    bool dropperSystemReady = true;  // Add this line
+    bool capInjectionReady = true;
+    bool pipetSystemReady = true;  // Add this line
 
     // Add more system flags here as needed:
     // bool capSystemReady = true;
     // bool pipetSystemReady = true;
-
+void IncrementPositionsMoved(){
+    positionsMoved++;
+}
+void ResetPositionsMoved(){
+    positionsMoved = 0;
+}
+bool canPipetProcessStart(){
+    return positionsMoved > 8;
+}
+bool canBulbProcessStart(){
+    return positionsMoved > 4;
+}
     void start() {
         if (isStopped) {
             needsHoming = true;
@@ -88,6 +99,7 @@ public:
         // capSystemReady = false;
         // etc...
     }
+
 };
 
 #endif

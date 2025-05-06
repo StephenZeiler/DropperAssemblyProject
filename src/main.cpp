@@ -173,6 +173,7 @@ void handleBulbSystem() {
     static unsigned long motorStartTime = 0;
     static bool ramExtended = false;
     static bool ramRetracted = true;
+    if(machine.canBulbProcessStart()){
     
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
@@ -238,10 +239,11 @@ void handleBulbSystem() {
             ramRetracted = true;
         }
     }
+    }
 }
 void handleDropperSystem() {
     static bool lastMotorState = false;
-    
+
     // Detect motor deceleration completion
     if (lastMotorState && !isMoving) {
         if (currentDropperState == DROPPER_IDLE) {
@@ -309,6 +311,7 @@ void updateSlotPositions() {
         int relativePos = (currentHomePosition + slots[i].getId()) % 16;
         slots[i].setPosition(relativePos);
     }
+    machine.IncrementPositionsMoved();
 }
 
 void processAssembly() {
