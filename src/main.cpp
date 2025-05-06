@@ -169,82 +169,95 @@ void handlePipetSystem() {
 }
 void handleBulbSystem() {
     static bool lastMotorState = false;
-    static unsigned long motorStopTime = 0;
-    static unsigned long motorStartTime = 0;
-    static bool ramExtended = false;
-    static bool ramRetracted = true;
-    static bool active = false;
-    
-    // Track motor state transitions
+    static unsigned long motorStopTime = 0;      // When motor last stopped
+    static unsigned long ramActivateTime = 0;    // When ram was last activated
+    static int activeSlot = -1;                  // Current slot being processed
+    static bool ramExtended = false;             // Ram extension state
+    static bool firstRotation = true;            // First rotation flag
+
+    // 1. Motor State Tracking
     if (lastMotorState && !isMoving) {
-        motorStopTime = micros();
+        motorStopTime = micros();  // Capture stop time
+        machine.setBulbSystemReady(false);
         
-        // Find first slot that needs bulb injection and hasn't completed first rotation
+        // Check if first rotation is complete
+        firstRotation = false;
         for (int i = 0; i < 16; i++) {
-            if (slots[i].isAtBulbInjection() && slots[i].shouldPerformAction()) {
-                machine.setBulbSystemReady(false);
-                ramRetracted = false;
-                active = true;
+            if (!slots[i].isFirstRotationComplete()) {
+                firstRotation = true;
                 break;
             }
         }
-        
-        // If all slots have completed first rotation, activate for all at bulb position
-        if (!active) {
-            for (int i = 0; i < 16; i++) {
-                if (slots[i].isAtBulbInjection() && slots[i].isFirstRotationComplete()) {
-                    machine.setBulbSystemReady(false);
-                    ramRetracted = false;
-                    break;
-                }
+
+        // Find next slot to process
+        activeSlot = -1;
+        for (int i = 0; i < 16; i++) {
+            if (slots[i].isAtBulbInjection() && 
+                (firstRotation ? slots[i].shouldPerformAction() : true)) {
+                activeSlot = i;
+                break;
             }
         }
-    }
-    
-    if (!lastMotorState && isMoving) {
-        motorStartTime = micros();
     }
     lastMotorState = isMoving;
 
-    // Read sensors
-    bool ramHome = digitalRead(bulbRamHomeSensorPin);
-    bool bulbPresent = digitalRead(bulbPositionSensorPin);
+    // 2. Sensor Readings
+    bool ramHome = digitalRead(bulbRamHomeSensorPin);      // HIGH when home
+    bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH when present
 
+    // 3. Movement Phase Handling
     if (isMoving) {
-        // Motor movement handling remains the same
-    } else {
-        unsigned long stopDuration = micros() - motorStopTime;
-        float pausePercent = (float)stopDuration / PAUSE_AFTER;
-        
-        // Only activate if we're either:
-        // 1. In first rotation and this is our turn, or
-        // 2. Past first rotation and at bulb position
-        bool shouldActivate = false;
-        if (active) {
-            shouldActivate = true;
+        // Handle air push during movement
+        float progress = (float)stepsTaken / TOTAL_STEPS;
+        if (progress >= 0.05 && !digitalRead(bulbAirPushPin)) {
+            digitalWrite(bulbAirPushPin, HIGH);
+        }
+    } 
+    // 4. Pause Phase Handling (when motor stopped)
+    else if (activeSlot != -1) {
+        unsigned long pauseDuration = micros() - motorStopTime;
+        float pausePercent = (float)pauseDuration / PAUSE_AFTER;
+
+        // Separator Control (40%-95% of pause)
+        if (pausePercent >= 0.40 && pausePercent < 0.95) {
+            digitalWrite(bulbSeparatorPin, HIGH);
         } else {
-            for (int i = 0; i < 16; i++) {
-                if (slots[i].isAtBulbInjection() && slots[i].isFirstRotationComplete()) {
-                    shouldActivate = true;
-                    break;
-                }
-            }
+            digitalWrite(bulbSeparatorPin, LOW);
         }
-        
-        if (shouldActivate) {
-            // Existing timing logic for ram activation/deactivation
-            // ...
-            
-            // When complete, increment assembly step if in first rotation
-            if (active && ramExtended && ramHome && !digitalRead(bulbRamPin)) {
-                for (int i = 0; i < 16; i++) {
-                    if (slots[i].isAtBulbInjection()) {
-                        slots[i].incrementAssemblyStep();
-                    }
-                }
-                active = false;
+
+        // Ram Control (60%-95% of pause)
+        if (pausePercent >= 0.60 && pausePercent < 0.95) {
+            if (!ramExtended && bulbPresent) {
+                digitalWrite(bulbRamPin, HIGH);
+                ramActivateTime = micros();
+                ramExtended = true;
+                Serial.print("Bulb ram activated for slot ");
+                Serial.println(slots[activeSlot].getId());
             }
+        } else if (pausePercent >= 0.95 && ramExtended) {
+            digitalWrite(bulbRamPin, LOW);
         }
+
+        // Completion Check
+        if (ramExtended && ramHome && !digitalRead(bulbRamPin)) {
+            if (firstRotation) {
+                slots[activeSlot].incrementAssemblyStep();
+            }
+            machine.setBulbSystemReady(true);
+            ramExtended = false;
+            activeSlot = -1;
+        }
+
+        // Error Handling
+        if (pausePercent >= 0.60 && !bulbPresent) {
+            Serial.println("ERROR: No bulb detected at injection position!");
+            slots[activeSlot].setError(true);
+        }
+    }
+
+    // 5. Air Push Deactivation
+    if (!isMoving || stepsTaken > ACCEL_STEPS) {
+        digitalWrite(bulbAirPushPin, LOW);
     }
 }
 void handleDropperSystem() {
@@ -281,61 +294,60 @@ void handleDropperSystem() {
 
 void handleCapInjection() {
     static bool lastMotorState = false;
-    static bool active = false;
+    static unsigned long actionStartTime = 0;
+    static int activeSlotId = -1;
+    static bool inFirstRotation = true;
     
-    // Detect motor deceleration completion
+    // Track motor state transitions
     if (lastMotorState && !isMoving) {
-        // Find first slot that needs cap injection and hasn't completed first rotation
+        // Check if we're still in first rotation
+        inFirstRotation = true;
         for (int i = 0; i < 16; i++) {
-            if (slots[i].isAtCapInjection() && slots[i].shouldPerformAction()) {
-                if (currentCapState == CAP_IDLE) {
-                    Serial.print("Activating cap injection for slot ");
-                    Serial.println(slots[i].getId());
-                    currentCapState = CAP_INJECTING;
-                    digitalWrite(capInjectPin, HIGH);
-                    dropperStateStartTime = micros();
-                    machine.setCapInjectionReady(false);
-                    active = true;
-                    break;
-                }
+            if (slots[i].isFirstRotationComplete()) {
+                inFirstRotation = false;
+                break;
             }
         }
-        
-        // If all slots have completed first rotation, activate for all at cap position
-        if (!active) {
-            for (int i = 0; i < 16; i++) {
-                if (slots[i].isAtCapInjection() && slots[i].isFirstRotationComplete()) {
-                    if (currentCapState == CAP_IDLE) {
-                        currentCapState = CAP_INJECTING;
-                        digitalWrite(capInjectPin, HIGH);
-                        dropperStateStartTime = micros();
-                        machine.setCapInjectionReady(false);
-                        break;
-                    }
-                }
+
+        // Find appropriate slot to process
+        activeSlotId = -1;
+        for (int i = 0; i < 16; i++) {
+            if (slots[i].isAtCapInjection() && 
+                (inFirstRotation ? slots[i].shouldPerformAction() : true)) {
+                activeSlotId = i;
+                break;
             }
+        }
+
+        // Start injection if we found a slot to process
+        if (activeSlotId != -1 && currentCapState == CAP_IDLE) {
+            Serial.print("Processing cap injection for slot ");
+            Serial.println(slots[activeSlotId].getId());
+            currentCapState = CAP_INJECTING;
+            digitalWrite(capInjectPin, HIGH);
+            actionStartTime = micros();
+            machine.setCapInjectionReady(false);
         }
     }
     lastMotorState = isMoving;
-    
+
     // State machine transitions
     switch (currentCapState) {
         case CAP_INJECTING:
-            if (micros() - dropperStateStartTime >= 250000) {
+            if (micros() - actionStartTime >= 250000) { // 0.25s injection time
                 currentCapState = CAP_RETRACTING;
                 digitalWrite(capInjectPin, LOW);
+                
+                // If in first rotation, mark this step as complete
+                if (inFirstRotation && activeSlotId != -1) {
+                    slots[activeSlotId].incrementAssemblyStep();
+                    Serial.print("Completed cap injection step for slot ");
+                    Serial.println(slots[activeSlotId].getId());
+                }
+                
                 machine.setCapInjectionReady(true);
                 currentCapState = CAP_IDLE;
-                
-                // Increment assembly step for this slot if in first rotation
-                if (!active) {
-                    for (int i = 0; i < 16; i++) {
-                        if (slots[i].isAtCapInjection()) {
-                            slots[i].incrementAssemblyStep();
-                        }
-                    }
-                }
-                active = false;
+                activeSlotId = -1;
             }
             break;
             
@@ -345,7 +357,6 @@ void handleCapInjection() {
             break;
     }
 }
-
 
 void updateSlotPositions() {
     for(int i = 0; i < 16; i++) {
