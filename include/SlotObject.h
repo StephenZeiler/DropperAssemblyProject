@@ -1,11 +1,14 @@
-// In SlotObject.h
+#ifndef SLOT_OBJECT_H
+#define SLOT_OBJECT_H
+
 class SlotObject {
 private:
-    const int slotId;
+    int slotId;      // Permanent ID (1-16)
     bool hasError;
-    int currentPosition;
-    bool firstRotationComplete;  // Track if first rotation is done
-    int assemblyStep;            // Current assembly step (0-15)
+    int currentPosition;   // Dynamic position (0-15)
+    bool capInjected;
+    bool bulbInjected;
+    bool pipetInjected;
     
 public:
     SlotObject(int id);
@@ -14,18 +17,16 @@ public:
     int getId() const { return slotId; }
     int getPosition() const { return currentPosition; }
     bool getError() const { return hasError; }
-    bool isFirstRotationComplete() const { return firstRotationComplete; }
-    int getAssemblyStep() const { return assemblyStep; }
+    bool isCapInjected() const { return capInjected; }
+    bool isBulbInjected() const { return bulbInjected; }
+    bool isPipetInjected() const { return pipetInjected; }
     
     // Setters
-    void setPosition(int position) { 
-        currentPosition = position % 16;
-        if (currentPosition == 0 && !firstRotationComplete) {
-            firstRotationComplete = true;
-        }
-    }
+    void setPosition(int position) { currentPosition = position % 16; }
     void setError(bool error) { hasError = error; }
-    void incrementAssemblyStep() { assemblyStep++; }
+    void setCapInjected(bool injected) { capInjected = injected; }
+    void setBulbInjected(bool injected) { bulbInjected = injected; }
+    void setPipetInjected(bool injected) { pipetInjected = injected; }
     
     // Position checks
     bool isAtHome() const { return currentPosition == 0; }
@@ -39,9 +40,12 @@ public:
     bool isAtJunkEjection() const { return currentPosition == 14; }
     bool isAtEmptyConfirm() const { return currentPosition == 15; }
     
-    // Should perform action based on current assembly step
-    bool shouldPerformAction() const {
-        if (firstRotationComplete) return true;
-        return assemblyStep == currentPosition;
+    // Reset all injection flags
+    void resetInjectionFlags() {
+        capInjected = false;
+        bulbInjected = false;
+        pipetInjected = false;
     }
 };
+
+#endif
