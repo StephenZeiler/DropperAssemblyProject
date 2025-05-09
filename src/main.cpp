@@ -364,7 +364,7 @@ void homeMachine() {
     }
     if(digitalRead(homeSensorPin) == LOW){       
         digitalWrite(capInjectPin, HIGH);
-        delay(1000);
+      //  delay(1000);
     }
     
     currentHomePosition = 0;
