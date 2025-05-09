@@ -282,37 +282,37 @@ void handleDropperSystem() {
     }
 }
 
-void handleCapInjection() {
-    static bool lastMotorState = false;
+// void handleCapInjection() {
+//     static bool lastMotorState = false;
     
-    // Detect motor deceleration completion
-    if (lastMotorState && !isMoving) {
-        if (currentCapState == CAP_IDLE) {
-            currentCapState = CAP_INJECTING;
-            digitalWrite(capInjectPin, HIGH);
-            dropperStateStartTime = micros();
-            machine.setCapInjectionReady(false);
-        }
-    }
-    lastMotorState = isMoving;
+//     // Detect motor deceleration completion
+//     if (lastMotorState && !isMoving) {
+//         if (currentCapState == CAP_IDLE) {
+//             currentCapState = CAP_INJECTING;
+//             digitalWrite(capInjectPin, HIGH);
+//             dropperStateStartTime = micros();
+//             machine.setCapInjectionReady(false);
+//         }
+//     }
+//     lastMotorState = isMoving;
     
-    // State machine transitions
-    switch (currentCapState) {
-        case CAP_INJECTING:
-            if (micros() - dropperStateStartTime >= 250000) { // 0.125s
-                currentCapState = CAP_RETRACTING;
-                digitalWrite(capInjectPin, LOW);
-                machine.setCapInjectionReady(true);
-                currentCapState = CAP_IDLE;
-            }
-            break;
+//     // State machine transitions
+//     switch (currentCapState) {
+//         case CAP_INJECTING:
+//             if (micros() - dropperStateStartTime >= 250000) { // 0.125s
+//                 currentCapState = CAP_RETRACTING;
+//                 digitalWrite(capInjectPin, LOW);
+//                 machine.setCapInjectionReady(true);
+//                 currentCapState = CAP_IDLE;
+//             }
+//             break;
             
-        case CAP_RETRACTING:
-        case CAP_IDLE:
-            // No action needed
-            break;
-    }
-}
+//         case CAP_RETRACTING:
+//         case CAP_IDLE:
+//             // No action needed
+//             break;
+//     }
+// }
 
 
 void updateSlotPositions() {
@@ -361,6 +361,9 @@ void homeMachine() {
                 return;
             }
         }
+    }
+    if(digitalRead(homeSensorPin) == LOW){
+        digitalWrite(capInjectPin, HIGH);
     }
     
     currentHomePosition = 0;
@@ -518,7 +521,7 @@ void setup() {
 void loop() {
     handleButtons();
     handleBulbSystem();
-    handleCapInjection();
+    //handleCapInjection();
     handleDropperSystem();
     handlePipetSystem();  // Make sure this is uncommented
     

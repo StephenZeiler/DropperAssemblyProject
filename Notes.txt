@@ -4,3 +4,16 @@ The air ram goes high after 5 percent of the time in which the motor has stopped
 
 Keep logic to home the pipet twister using the sensor. This will give a good starting point. 
 
+
+
+
+
+
+Todo: 
+
+Empty stop - When this button is pushed go to home but finish production. We need to close capFeed once stop.
+
+One step mode - push button and it moves one step at a time assembling
+
+Releasing caps - When motor finds home for the first time then we need it to open cap shoot and pause one second. This will allow a cap to get in the first slot before assembly begins. pin 35. capFeed. 
+
