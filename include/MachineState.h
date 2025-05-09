@@ -52,6 +52,7 @@ bool canBulbProcessStart(){
         isPaused = false;
         inProduction = false;
         needsHoming = true;
+        
     }
     
     void homingComplete() {
