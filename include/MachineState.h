@@ -63,7 +63,7 @@ bool canBulbProcessStart(){
         return 
         bulbSystemReady &&  // Add other systems here with &&
         dropperSystemReady &&  // Add this
-        capInjectionReady &&
+        //capInjectionReady &&
         pipetSystemReady &&
         !needsHoming && 
         !isPaused && 
@@ -95,7 +95,7 @@ bool canBulbProcessStart(){
     void resetAllPneumatics() {
         bulbSystemReady = false;
         dropperSystemReady = false;  // Add this
-        capInjectionReady = false;
+        //capInjectionReady = false;
         pipetSystemReady = false;
         // capSystemReady = false;
         // etc...
