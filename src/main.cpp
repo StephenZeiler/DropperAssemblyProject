@@ -1,7 +1,10 @@
 #include <Arduino.h>
 #include "SlotObject.h"
 #include "MachineState.h"
+#include "EasyNextionLibrary.h"
 
+EasyNex myNex(Serial2); // Create an object of EasyNex class with the name < myNex >
+long startTime;
 // Motor pins
 const int stepPin = 22;
 const int dirPin = 23;
@@ -231,6 +234,11 @@ void handleBulbSystem() {
             digitalWrite(bulbRamPin, HIGH);
             ramExtended = true;
             ramRetracted = false;
+            bulbPresent = true;
+        }
+        else if(pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent){
+            //TODO Log no bulb present 
+            machine.bulbPresent = false;
         }
         
         // Deactivate ram after 95% of pause time
@@ -458,21 +466,18 @@ void handleButtons() {
         machine.start();
         pauseRequested = false;
         stopRequested = false;
-        Serial.println("Start command received");
     }
     
     // Pause button pressed
     if (pauseState == HIGH && lastPauseState == LOW && !machine.isStopped && !machine.isPaused) {
         lastDebounceTime = millis();
         pauseRequested = true;
-        Serial.println("Pause requested - will pause at next position");
     }
     
     // Stop button pressed
     if (stopState == HIGH && lastStopState == LOW && !machine.isStopped) {
         lastDebounceTime = millis();
         stopRequested = true;
-        Serial.println("Stop requested - will stop when reaching home position");
     }
     
     // Update last states
@@ -480,9 +485,27 @@ void handleButtons() {
     lastPauseState = pauseState;
     lastStopState = stopState;
 }
+String msToHMS(unsigned long milliseconds) {
+  // Convert to total seconds
+  unsigned long totalSeconds = milliseconds / 1000;
+  
+  // Calculate time components
+  unsigned int hours = totalSeconds / 3600;
+  unsigned int minutes = (totalSeconds % 3600) / 60;
+  unsigned int seconds = totalSeconds % 60;
+  
+  // Format as HH:MM:SS with leading zeros
+  char timeString[9]; // HH:MM:SS + null terminator
+  sprintf(timeString, "%02d:%02d:%02d", hours, minutes, seconds);
+  
+  return String(timeString);
+}
+
+
 void setup() {
-    Serial.begin(115200);
-    
+    //Serial.begin(115200);
+     myNex.begin(9600); 
+      startTime = millis();
     // Initialize pins
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
@@ -517,9 +540,19 @@ void setup() {
      currentPipetState = PIPET_HOMING;
 
     updateSlotPositions();
+     
 }
 
+int i = 0;
+void setErrorLogs(){
+    //myNex.writeStr("errorTxt.txt", "");
+    if(!machine.bulbPresent){
+        myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!");
+    }
+    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
+}
 void loop() {
+    setErrorLogs();
     handleButtons();
     handleBulbSystem();
     //handleCapInjection();
@@ -536,21 +569,11 @@ void loop() {
         stepMotor();
     }
 
-//   digitalWrite(dropperEjectPin, HIGH);
-//   digitalWrite(capInjectPin, HIGH);
-//   digitalWrite(bulbRamPin, HIGH);
-//   digitalWrite(pipetRamPin, HIGH);
-//   digitalWrite(pipetTwisterPin, HIGH);
-//   digitalWrite(bulbAirPushPin, HIGH);
-//   digitalWrite(bulbSeparatorPin, HIGH);
-
-//     delay(2000);
-//   digitalWrite(dropperEjectPin, LOW);
-//   digitalWrite(capInjectPin, LOW);
-//   digitalWrite(bulbRamPin, LOW);
-//   digitalWrite(pipetRamPin, LOW);
-//   digitalWrite(pipetTwisterPin, LOW);
-//   digitalWrite(bulbAirPushPin, LOW);
-//   digitalWrite(bulbSeparatorPin, LOW);
-//   delay(2000);
+// i++;
+//myNex.writeStr("cautiontTxt.txt+", (String)i+"\\r");
+// myNex.writeStr("logTxt.txt", "test1\\r");
+// delay(2950);
+// unsigned long currentUptime = millis() - startTime;
+// String time = msToHMS(currentUptime);
+// myNex.writeStr("t2.txt", time);
 }

@@ -1,6 +1,7 @@
 
 #ifndef MACHINE_STATE_H
 #define MACHINE_STATE_H
+#include "EasyNextionLibrary.h"
 
 class MachineState {
 public:
@@ -20,6 +21,7 @@ public:
 void IncrementPositionsMoved(){
     positionsMoved++;
 }
+
 void ResetPositionsMoved(){
     positionsMoved = 0;
 }
@@ -100,6 +102,22 @@ bool canBulbProcessStart(){
         // capSystemReady = false;
         // etc...
     }
+//_____________LOGGING________________
+//
+//
+//
+//ERRORS
+bool bulbPresent = true;
+
+//
+//
+//
+//Cautions
+void setCautionLogs(EasyNex myNex){
+    myNex.writeStr("cautiontTxt.txt", "");
+    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
+}
+
 
 };
 
