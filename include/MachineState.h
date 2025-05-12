@@ -127,7 +127,7 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
         lastErrorResetTime=currentMilliTime;
         myNex.writeStr("errorTxt.txt", "");
     }
-    else if(printErrorLogs == true){
+    if(printErrorLogs == true){
 
         if(!bulbPresent){
             myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
