@@ -239,6 +239,8 @@ void handleBulbSystem() {
         else if(pausePercent >= 0.60 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent){
             //TODO Log no bulb present 
             machine.bulbPresent = false;
+            // machine.pause();
+            // pauseRequested = true;
         }
         
         // Deactivate ram after 95% of pause time
@@ -544,15 +546,9 @@ void setup() {
 }
 
 int i = 0;
-void setErrorLogs(){
-    //myNex.writeStr("errorTxt.txt", "");
-    if(!machine.bulbPresent){
-        myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!");
-    }
-    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
-}
+
 void loop() {
-    setErrorLogs();
+    machine.setErrorLogs(myNex, startTime);
     handleButtons();
     handleBulbSystem();
     //handleCapInjection();

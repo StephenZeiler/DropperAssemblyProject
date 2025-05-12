@@ -14,6 +14,8 @@ public:
     bool dropperSystemReady = true;  // Add this line
     bool capInjectionReady = true;
     bool pipetSystemReady = true;  // Add this line
+    long lastErrorResetTime = 0;
+    long lastCautionResetTime = 0;
 
     // Add more system flags here as needed:
     // bool capSystemReady = true;
@@ -114,11 +116,35 @@ bool bulbPresent = true;
 //
 //Cautions
 void setCautionLogs(EasyNex myNex){
-    myNex.writeStr("cautiontTxt.txt", "");
+    //myNex.writeStr("cautiontTxt.txt", "");
     //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
 }
 
-
+void setErrorLogs(EasyNex myNex, long currentMilliTime){
+    if((currentMilliTime-lastErrorResetTime) >= 500){
+        lastErrorResetTime=currentMilliTime;
+        myNex.writeStr("errorTxt.txt", "");
+    }
+    
+    if(!bulbPresent){
+        myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
+    }
+    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
+}
+bool setBackgroundColorError(EasyNex myNex){
+    String stringFromNextion;
+    myNex.NextionListen();
+    stringFromNextion = myNex.readStr("errorTxt.txt");
+    if(stringFromNextion!=""){
+        myNex.writeNum("Logs.bco", 63488);
+    }
+    else{
+        myNex.writeNum("Logs.bco", 50712);
+    }
+    //Yellow 65504
+    //Grey 50712
+    //red 63488
+}
 };
 
 #endif
