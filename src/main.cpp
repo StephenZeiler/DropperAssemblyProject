@@ -507,7 +507,7 @@ String msToHMS(unsigned long milliseconds) {
 void setup() {
     //Serial.begin(115200);
      myNex.begin(9600); 
-      startTime = millis();
+      
     // Initialize pins
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
@@ -548,6 +548,7 @@ void setup() {
 int i = 0;
 
 void loop() {
+    startTime = millis();
     machine.setErrorLogs(myNex, startTime);
     handleButtons();
     handleBulbSystem();

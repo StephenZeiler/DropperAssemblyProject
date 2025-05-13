@@ -132,7 +132,6 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
         if(!bulbPresent){
             myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
             myNex.writeStr("errorTxt.txt+", (String)currentMilliTime+ "\\r");
-            myNex.writeNum("Home.bco", 63488);
             delay(10000);
         }
         //printErrorLogs = false;
