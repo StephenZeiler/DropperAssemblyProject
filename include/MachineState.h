@@ -123,15 +123,12 @@ void setCautionLogs(EasyNex myNex){
 
 void setErrorLogs(EasyNex myNex, long currentMilliTime){
     String fullLog = "";
-    if(printErrorLogs == true){
-        if(!bulbPresent){
-            //myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
-            fullLog + "No bulb detected for injection!\\r";
-        }
-        printErrorLogs = false;
+    if(!bulbPresent){
+        //myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
+        fullLog + "No bulb detected for injection!\\r";
     }
+        printErrorLogs = false;
     if((currentMilliTime-lastErrorResetTime) >= 500){
-        printErrorLogs = true;
         lastErrorResetTime=currentMilliTime;
        myNex.writeStr("errorTxt.txt", fullLog);
     }
