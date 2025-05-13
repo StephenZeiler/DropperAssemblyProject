@@ -16,7 +16,7 @@ public:
     bool pipetSystemReady = true;  // Add this line
     long lastErrorResetTime = 0;
     long lastCautionResetTime = 0;
-    bool printErrorLogs = true;
+    bool printErrorLogs;
 
     // Add more system flags here as needed:
     // bool capSystemReady = true;
@@ -131,6 +131,7 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
 
         if(!bulbPresent){
             myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
+            delay(10000);
         }
         printErrorLogs = false;
     }
