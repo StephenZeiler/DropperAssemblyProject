@@ -124,7 +124,6 @@ void setCautionLogs(EasyNex myNex){
 void setErrorLogs(EasyNex myNex, long currentMilliTime){
     String fullLog = "";
     if(!bulbPresent){
-        //myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
         fullLog = fullLog + "No bulb detected for injection!\\r";
     }
         printErrorLogs = false;
@@ -132,7 +131,6 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
         lastErrorResetTime=currentMilliTime;
        myNex.writeStr("errorTxt.txt", fullLog);
     }
-    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
 }
 bool setBackgroundColorError(EasyNex myNex){
     String stringFromNextion;
