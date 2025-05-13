@@ -122,18 +122,18 @@ void setCautionLogs(EasyNex myNex){
 }
 
 void setErrorLogs(EasyNex myNex, long currentMilliTime){
-    if((currentMilliTime-lastErrorResetTime) >= 500){
-        printErrorLogs = true;
-        lastErrorResetTime=currentMilliTime;
-        myNex.writeStr("errorTxt.txt", "");
-    }
+    // if((currentMilliTime-lastErrorResetTime) >= 500){
+    //     printErrorLogs = true;
+    //     lastErrorResetTime=currentMilliTime;
+    //     myNex.writeStr("errorTxt.txt", "");
+    // }
     if(printErrorLogs == true){
 
         if(!bulbPresent){
             myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
             delay(10000);
         }
-        printErrorLogs = false;
+        //printErrorLogs = false;
     }
     //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
 }
