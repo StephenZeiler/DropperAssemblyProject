@@ -116,26 +116,66 @@ bool bulbPresent = true;
 //
 //
 //Cautions
+//
+//
+
 void setCautionLogs(EasyNex myNex){
     //myNex.writeStr("cautiontTxt.txt", "");
     //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
 }
 
-void setErrorLogs(EasyNex myNex, long currentMilliTime){
-    if((currentMilliTime-lastErrorResetTime) >= 500){
-        printErrorLogs = true;
-        lastErrorResetTime=currentMilliTime;
-        myNex.writeStr("errorTxt.txt", "");
-    }
-    if(printErrorLogs == true){
+// void setErrorLogs(EasyNex myNex, long currentMilliTime){
+//     if((currentMilliTime-lastErrorResetTime) >= 500){
+//         printErrorLogs = true;
+//         lastErrorResetTime=currentMilliTime;
+//         myNex.writeStr("errorTxt.txt", "");
+//     }
+//     if(printErrorLogs == true){
 
-        if(!bulbPresent){
-            myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
-        }
-        printErrorLogs = false;
+//         if(!bulbPresent){
+//             myNex.writeStr("errorTxt.txt+", "No bulb detected for injection!\\r");
+//         }
+//         printErrorLogs = false;
+//     }
+//     //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
+// }
+enum ErrorType {
+  ERROR_NONE,
+  ERROR_BULB_MISSING,
+  ERROR_PIPETTE_MISSING,
+  ERROR_COUNT // Tracks total # of errors
+};
+
+const char* errorMessages[ERROR_COUNT] = {
+  "", // ERROR_NONE
+  "No bulb detected!\\r",
+  "Pipette missing!\\r"
+};
+
+bool errorStates[ERROR_COUNT] = {false}; // All false by default
+void setErrorLogs(EasyNex myNex, long currentMilliTime) {
+  if ((currentMilliTime - lastErrorResetTime) >= 500) {
+    lastErrorResetTime = currentMilliTime;
+    myNex.writeStr("errorTxt.txt", "");
+    printErrorLogs = true;
+  }
+
+  if (printErrorLogs) {
+    // Check bulb
+    if (!bulbPresent && !errorStates[ERROR_BULB_MISSING]) {
+      myNex.writeStr("errorTxt.txt+", errorMessages[ERROR_BULB_MISSING]);
+      errorStates[ERROR_BULB_MISSING] = true;
     }
-    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
+    // Future: Check pipette
+    // if (!pipettePresent && !errorStates[ERROR_PIPETTE_MISSING]) {
+    //   myNex.writeStr("errorTxt.txt+", errorMessages[ERROR_PIPETTE_MISSING]);
+    //   errorStates[ERROR_PIPETTE_MISSING] = true;
+    // }
+    printErrorLogs = false;
+  }
 }
+
+
 bool setBackgroundColorError(EasyNex myNex){
     String stringFromNextion;
     myNex.NextionListen();
