@@ -16,7 +16,7 @@ public:
     bool pipetSystemReady = true;  // Add this line
     long lastErrorResetTime = 0;
     long lastCautionResetTime = 0;
-    bool printErrorLogs;
+    bool printErrorLogs = true;
 
     // Add more system flags here as needed:
     // bool capSystemReady = true;
