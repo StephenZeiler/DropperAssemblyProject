@@ -17,6 +17,21 @@ public:
     long lastErrorResetTime = 0;
     long lastCautionResetTime = 0;
     bool printErrorLogs;
+    bool revolverAtHome = false;
+    bool shouldRevolverMove = true;
+
+bool shouldRevolverMove(){
+    return shouldRevolverMove;
+}
+void setShouldRevolverMove(bool shouldMove){
+    shouldRevolverMove = shouldMove;
+}
+bool isRevolverAtHome(){
+    return revolverAtHome;
+}
+void setRevolverPosition(bool isAtHome){
+    revolverAtHome = isAtHome;
+}
 
     // Add more system flags here as needed:
     // bool capSystemReady = true;
