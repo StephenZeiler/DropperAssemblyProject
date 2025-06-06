@@ -39,7 +39,12 @@ bool stopRequested = false;
 const int bulbRamHomeSensorPin = 33;
 const int bulbPositionSensorPin = 26;
 const int bulbRevolverPositionSensorPin = 27;
-const int bulbRevolverStepperMotorPin = 51;
+
+//Revolver
+const int revolverPUL = 50;
+const int revolverDIR = 51;
+const int revolverENA = 52;
+
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
 const int bulbRamPin = 39;
@@ -106,6 +111,30 @@ SlotObject slots[] = {
 int currentHomePosition = 0;
 
 MachineState machine;
+long prevRevolverMicros = 0;  
+int revolverStep = 1;
+long revolverSpeed = 1000;
+void runRevolverMotor()
+{
+    long currentMicros = micros();
+  digitalWrite(revolverDIR, HIGH);
+  for (int x = 0; x < 1; x++)
+  {
+if((currentMicros - prevRevolverMicros)> revolverSpeed)
+  {
+    if(revolverStep ==1){
+    digitalWrite(revolverPUL, HIGH);
+      ++revolverStep;
+    }
+    else if(revolverStep ==2){
+      digitalWrite(revolverPUL, LOW);
+      revolverStep = 1;
+    }
+  prevRevolverMicros = currentMicros; 
+  
+  }
+  }
+}
 void handlePipetSystem() {
     static bool lastMotorState = false;
     static bool homingComplete = false;
@@ -141,7 +170,7 @@ void handlePipetSystem() {
         if (isMoving) {
             // Motor is moving - handle twister activation after 25% of movement
             unsigned long elapsedSteps = stepsTaken;
-            unsigned long totalMovementTime = micros() - motorStartTime;
+            //unsigned long totalMovementTime = micros() - motorStartTime;
             
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
@@ -202,97 +231,92 @@ void handleBulbSystem() {
     bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
     
     if(machine.canBulbProcessStart()){
-    if (isMoving) {
-        // // Motor is moving - handle separator deactivation after 5% of acceleration
-        // unsigned long elapsedSteps = stepsTaken;
-        // float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
-        
-        // // Deactivate separator after 5% of acceleration
-        // if (movementPercent >= 0.05 && digitalRead(bulbSeparatorPin)) {
-        //     digitalWrite(bulbSeparatorPin, LOW);
-        // }
-        
-        // // Activate air push after 5% of movement
-        // if (movementPercent >= 0.05 && !digitalRead(bulbAirPushPin)) {
-        //     digitalWrite(bulbAirPushPin, HIGH);
-        // }
-        
-        //Turn on revolver if hasn't hit sensor
-        if(machine.shouldRevolverMove())
-        {
-            if(revolverSensor == HIGH){
-                //MOVE
+        if (isMoving) {
+            // Handle revolver movement
+            unsigned long elapsedSteps = stepsTaken;
+            unsigned long totalMovementTime = micros() - motorStartTime;
+            
+            // Calculate percentage of movement completed
+            float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
+            if(machine.shouldRevolverMove() && movementPercent >= .01){
+                runRevolverMotor();
             }
-        }
-        else if(revolverSensor == LOW){
-
-        }
-
-        if(revolverSensor == LOW && !machine.isRevolverAtHome(){
-            machine.setRevolverPosition(true);
-        }
-
-        if(!machine.isRevolverAtHome()){
-            //run machine
-        }
-
-
-        if(!machine.isRevolverAtHome()){
-            if(revolverSensor == HIGH){
-            //TODO: run motor
+            if (revolverSensor == LOW && movementPercent >= .06){
+                machine.setShouldRevolverMove(false); 
             }
-            else if(LOW && !machine.isRevolverAtHome()){
-                machine.setRevolverPosition(true);
+                     
+            // Original commented out code remains unchanged
+            // if(machine.shouldRevolverMove())
+            // {
+            //     if(revolverSensor == HIGH){
+            //         //MOVE
+            //     }
+            // }
+            // else if(revolverSensor == LOW){
+            // 
+            // }
+            // 
+            // if(revolverSensor == LOW && !machine.isRevolverAtHome(){
+            //     machine.setRevolverPosition(true);
+            // }
+            // 
+            // if(!machine.isRevolverAtHome()){
+            //     //run machine
+            // }
+            // 
+            // 
+            // if(!machine.isRevolverAtHome()){
+            //     if(revolverSensor == HIGH){
+            //     //TODO: run motor
+            //     }
+            //     else if(LOW && !machine.isRevolverAtHome()){
+            //         machine.setRevolverPosition(true);
+            //     }
+            //     else{
+            // 
+            //     }
+            //     
+            // }
+        } else {
+            // Motor is stopped - handle timing based on pause duration
+            unsigned long stopDuration = micros() - motorStopTime;
+            float pausePercent = (float)stopDuration / PAUSE_AFTER;
+            
+            // Original commented out code remains unchanged
+            // // Activate separator after 40% of pause time
+            // if (pausePercent >= 0.40 && !digitalRead(bulbSeparatorPin)) {
+            //     digitalWrite(bulbSeparatorPin, HIGH);
+            // }
+            // 
+            // // Deactivate air push after 40% of pause time
+            // if (pausePercent >= 0.40 && digitalRead(bulbAirPushPin)) {
+            //     digitalWrite(bulbAirPushPin, LOW);
+            // }
+            
+            // Activate ram after 5% of pause time (only if bulb position sensor reads LOW)
+            if (pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent) {
+                digitalWrite(bulbRamPin, HIGH);
+                ramExtended = true;
+                ramRetracted = false;
+                bulbPresent = true;
             }
-            else{
-
+            else if(pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent){
+                machine.bulbPresent = false;
             }
             
+            // Deactivate ram after 95% of pause time
+            if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
+                digitalWrite(bulbRamPin, LOW);
+                machine.setShouldRevolverMove(true);
+            }
+            
+            // Only set system ready when ram is confirmed home and retracted
+            if (ramExtended && ramHome && !digitalRead(bulbRamPin)) {
+                machine.setBulbSystemReady(true);
+                ramExtended = false;
+                ramRetracted = true;
+            }
         }
-    } else {
-        // Motor is stopped - handle timing based on pause duration
-        unsigned long stopDuration = micros() - motorStopTime;
-        float pausePercent = (float)stopDuration / PAUSE_AFTER;
-        
-        // // Activate separator after 40% of pause time
-        // if (pausePercent >= 0.40 && !digitalRead(bulbSeparatorPin)) {
-        //     digitalWrite(bulbSeparatorPin, HIGH);
-        // }
-        
-        // // Deactivate air push after 40% of pause time
-        // if (pausePercent >= 0.40 && digitalRead(bulbAirPushPin)) {
-        //     digitalWrite(bulbAirPushPin, LOW);
-        // }
-        
-        // Activate ram after 5% of pause time (only if bulb position sensor reads LOW)
-        //TODO add after revolver stopped
-        if (pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent) {
-            //TODO: Error handle if no bulb is present. Right now the machine just stops. 
-            digitalWrite(bulbRamPin, HIGH);
-            ramExtended = true;
-            ramRetracted = false;
-            bulbPresent = true;
-        }
-        //todo add after revolver stopped
-        else if(pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent){
-            //TODO Log no bulb present 
-            machine.bulbPresent = false;
-            // machine.pause();
-            // pauseRequested = true;
-        }
-        
-        // Deactivate ram after 95% of pause time
-        if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
-            digitalWrite(bulbRamPin, LOW);
-        }
-        
-        // Only set system ready when ram is confirmed home and retracted
-        if (ramExtended && ramHome && !digitalRead(bulbRamPin)) {
-            machine.setBulbSystemReady(true);
-            ramExtended = false;
-            ramRetracted = true;
-        }
-    }
     }
     else{
         machine.setBulbSystemReady(true);
@@ -560,8 +584,10 @@ void setup() {
     digitalWrite(stepPin, LOW);
     digitalWrite(dropperEjectPin, LOW);
     //Revolver
-    pinMode(bulbRevolverStepperMotorPin, OUTPUT);
-    digitalWrite(bulbRevolverStepperMotorPin, LOW);
+    pinMode(revolverDIR, OUTPUT);
+    pinMode(revolverENA, OUTPUT);
+    pinMode(revolverPUL, OUTPUT);
+    digitalWrite(revolverENA, LOW);
 
     //Pneumatics
     delay(100);
