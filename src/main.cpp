@@ -234,7 +234,7 @@ void handleBulbSystem() {
         if (isMoving) {
             // Handle revolver movement
             unsigned long elapsedSteps = stepsTaken;
-            unsigned long totalMovementTime = micros() - motorStartTime;
+           // unsigned long totalMovementTime = micros() - motorStartTime;
             
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;

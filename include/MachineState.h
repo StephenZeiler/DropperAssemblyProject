@@ -18,13 +18,13 @@ public:
     long lastCautionResetTime = 0;
     bool printErrorLogs;
     bool revolverAtHome = false;
-    bool shouldRevolverMove = true;
+    bool revolverShouldMove = true;
 
 bool shouldRevolverMove(){
-    return shouldRevolverMove;
+    return revolverShouldMove;
 }
 void setShouldRevolverMove(bool shouldMove){
-    shouldRevolverMove = shouldMove;
+    revolverShouldMove = shouldMove;
 }
 bool isRevolverAtHome(){
     return revolverAtHome;
@@ -147,20 +147,20 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
        myNex.writeStr("errorTxt.txt", fullLog);
     }
 }
-bool setBackgroundColorError(EasyNex myNex){
-    String stringFromNextion;
-    myNex.NextionListen();
-    stringFromNextion = myNex.readStr("errorTxt.txt");
-    if(stringFromNextion!=""){
-        myNex.writeNum("Logs.bco", 63488);
-    }
-    else{
-        myNex.writeNum("Logs.bco", 50712);
-    }
-    //Yellow 65504
-    //Grey 50712
-    //red 63488
-}
+// bool setBackgroundColorError(EasyNex myNex){
+//     String stringFromNextion;
+//     myNex.NextionListen();
+//     stringFromNextion = myNex.readStr("errorTxt.txt");
+//     if(stringFromNextion!=""){
+//         myNex.writeNum("Logs.bco", 63488);
+//     }
+//     else{
+//         myNex.writeNum("Logs.bco", 50712);
+//     }
+//     //Yellow 65504
+//     //Grey 50712
+//     //red 63488
+// }
 };
 
 #endif
