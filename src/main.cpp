@@ -634,8 +634,12 @@ void loop() {
     
     if (machine.isStopped) return;
     if (machine.needsHoming || machine.revolverEmpty) {
-        fillRevolver();
-        homeMachine();
+        if(machine.revolverEmpty){
+            fillRevolver();
+        }
+        if(machine.needsHoming){
+            homeMachine();
+        }
         return;
     }
     
