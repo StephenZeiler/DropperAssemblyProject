@@ -115,7 +115,7 @@ long prevRevolverMicros = 0;
 int revolverStep = 1;
 long revolverSpeed = 2000;
 void runRevolverMotor() {
-  digitalWrite(revolverDIR, HIGH);
+  digitalWrite(revolverDIR, LOW);
   long currentMicros = micros(); // Update time inside the check
   if ((currentMicros - prevRevolverMicros) > revolverSpeed) {
     if (revolverStep == 1) {
