@@ -633,7 +633,7 @@ void loop() {
     handlePipetSystem();  // Make sure this is uncommented
     
     if (machine.isStopped) return;
-    if (machine.needsHoming && machine.revolverEmpty) {
+    if (machine.needsHoming || machine.revolverEmpty) {
         fillRevolver();
         homeMachine();
         return;
