@@ -614,24 +614,23 @@ int i = 0;
 void loop() {
 
 
-    runRevolverMotor();
-    // startTime = millis();
-    // machine.setErrorLogs(myNex, startTime);
-    // handleButtons();
-    // handleBulbSystem();
-    // //handleCapInjection();
-    // handleDropperSystem();
-    // handlePipetSystem();  // Make sure this is uncommented
+    startTime = millis();
+    machine.setErrorLogs(myNex, startTime);
+    handleButtons();
+    handleBulbSystem();
+    //handleCapInjection();
+    handleDropperSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-    // if (machine.isStopped) return;
-    // if (machine.needsHoming) {
-    //     homeMachine();
-    //     return;
-    // }
+    if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        homeMachine();
+        return;
+    }
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+    if (machine.inProduction) {
+        stepMotor();
+    }
 
 // i++;
 //myNex.writeStr("cautiontTxt.txt+", (String)i+"\\r");
