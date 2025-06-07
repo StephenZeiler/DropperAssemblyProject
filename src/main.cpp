@@ -582,7 +582,7 @@ void setup() {
     pinMode(revolverENA, OUTPUT);
     pinMode(revolverPUL, OUTPUT);
     digitalWrite(revolverPUL, LOW);
-    digitalWrite(revolverENA, HIGH);
+    digitalWrite(revolverENA, LOW);
 
     //Pneumatics
     delay(100);
