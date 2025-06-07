@@ -503,7 +503,16 @@ void stepMotor() {
         }
     }
 }
-
+void fillRevolver(){
+    bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
+    bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
+    if(!bulbPresent && revolverSensor){
+        runRevolverMotor();
+    }
+    else{
+        machine.revolverFilled();
+    }
+}
 void handleButtons() {
     static unsigned long lastDebounceTime = 0;
     const unsigned long debounceDelay = 50;
@@ -623,7 +632,8 @@ void loop() {
     handlePipetSystem();  // Make sure this is uncommented
     
     if (machine.isStopped) return;
-    if (machine.needsHoming) {
+    if (machine.needsHoming && machine.revolverEmpty) {
+        fillRevolver();
         homeMachine();
         return;
     }

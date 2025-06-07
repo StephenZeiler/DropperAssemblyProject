@@ -9,6 +9,7 @@ public:
     bool isStopped = true;
     bool inProduction = false;
     bool needsHoming = true;
+    bool revolverEmpty = true;
     int positionsMoved = 0;
     bool bulbSystemReady = true;
     bool dropperSystemReady = true;  // Add this line
@@ -52,6 +53,7 @@ bool canBulbProcessStart(){
     void start() {
         if (isStopped) {
             needsHoming = true;
+            revolverEmpty = true;
             isStopped = false;
             inProduction = true;
         } else if (isPaused) {
@@ -72,11 +74,15 @@ bool canBulbProcessStart(){
         isPaused = false;
         inProduction = false;
         needsHoming = true;
+        revolverEmpty = true;
         
     }
     
     void homingComplete() {
         needsHoming = false;
+    }
+    void revolverFilled() {
+        revolverEmpty = false;
     }
     // Check if all pneumatics are ready
     bool isReadyToMove() {
@@ -86,6 +92,7 @@ bool canBulbProcessStart(){
         //capInjectionReady &&
         pipetSystemReady &&
         !needsHoming && 
+        !revolverEmpty &&
         !isPaused && 
         !isStopped;
     }
