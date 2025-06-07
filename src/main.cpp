@@ -113,7 +113,7 @@ int currentHomePosition = 0;
 MachineState machine;
 long prevRevolverMicros = 0;  
 int revolverStep = 1;
-long revolverSpeed = 750;
+long revolverSpeed = 500;
 void runRevolverMotor() {
   digitalWrite(revolverDIR, LOW);
   long currentMicros = micros(); // Update time inside the check
