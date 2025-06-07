@@ -113,26 +113,25 @@ int currentHomePosition = 0;
 MachineState machine;
 long prevRevolverMicros = 0;  
 int revolverStep = 1;
-long revolverSpeed = 1000;
+long revolverSpeed = 2000;
 void runRevolverMotor()
 {
-    long currentMicros = micros();
+long currentMicros = micros();
   digitalWrite(revolverDIR, HIGH);
   for (int x = 0; x < 1; x++)
   {
-if((currentMicros - prevRevolverMicros)> revolverSpeed)
-  {
-    if(revolverStep ==1){
-    digitalWrite(revolverPUL, HIGH);
-      ++revolverStep;
+    if((currentMicros - prevRevolverMicros)> revolverSpeed)
+    {
+        if(revolverStep ==1){
+        digitalWrite(revolverPUL, HIGH);
+        ++revolverStep;
+        }
+        else if(revolverStep ==2){
+            digitalWrite(revolverPUL, LOW);
+            revolverStep = 1;
+        }
+        prevRevolverMicros = currentMicros; 
     }
-    else if(revolverStep ==2){
-      digitalWrite(revolverPUL, LOW);
-      revolverStep = 1;
-    }
-  prevRevolverMicros = currentMicros; 
-  
-  }
   }
 }
 void handlePipetSystem() {
@@ -587,6 +586,7 @@ void setup() {
     pinMode(revolverDIR, OUTPUT);
     pinMode(revolverENA, OUTPUT);
     pinMode(revolverPUL, OUTPUT);
+    digitalWrite(revolverPUL, LOW);
     digitalWrite(revolverENA, LOW);
 
     //Pneumatics
