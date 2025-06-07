@@ -164,7 +164,6 @@ void handlePipetSystem() {
         if (isMoving) {
             // Motor is moving - handle twister activation after 25% of movement
             unsigned long elapsedSteps = stepsTaken;
-            //unsigned long totalMovementTime = micros() - motorStartTime;
             
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
@@ -237,55 +236,13 @@ void handleBulbSystem() {
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
-            }
-                     
-            // Original commented out code remains unchanged
-            // if(machine.shouldRevolverMove())
-            // {
-            //     if(revolverSensor == HIGH){
-            //         //MOVE
-            //     }
-            // }
-            // else if(revolverSensor == LOW){
-            // 
-            // }
-            // 
-            // if(revolverSensor == LOW && !machine.isRevolverAtHome(){
-            //     machine.setRevolverPosition(true);
-            // }
-            // 
-            // if(!machine.isRevolverAtHome()){
-            //     //run machine
-            // }
-            // 
-            // 
-            // if(!machine.isRevolverAtHome()){
-            //     if(revolverSensor == HIGH){
-            //     //TODO: run motor
-            //     }
-            //     else if(LOW && !machine.isRevolverAtHome()){
-            //         machine.setRevolverPosition(true);
-            //     }
-            //     else{
-            // 
-            //     }
-            //     
-            // }
-        } else {
+            }                     
+        }        
+        else {
             // Motor is stopped - handle timing based on pause duration
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
             
-            // Original commented out code remains unchanged
-            // // Activate separator after 40% of pause time
-            // if (pausePercent >= 0.40 && !digitalRead(bulbSeparatorPin)) {
-            //     digitalWrite(bulbSeparatorPin, HIGH);
-            // }
-            // 
-            // // Deactivate air push after 40% of pause time
-            // if (pausePercent >= 0.40 && digitalRead(bulbAirPushPin)) {
-            //     digitalWrite(bulbAirPushPin, LOW);
-            // }
             
             // Activate ram after 5% of pause time (only if bulb position sensor reads LOW)
             if (pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent && !revolverSensor) {
@@ -347,39 +304,6 @@ void handleDropperSystem() {
             break;
     }
 }
-
-// void handleCapInjection() {
-//     static bool lastMotorState = false;
-    
-//     // Detect motor deceleration completion
-//     if (lastMotorState && !isMoving) {
-//         if (currentCapState == CAP_IDLE) {
-//             currentCapState = CAP_INJECTING;
-//             digitalWrite(capInjectPin, HIGH);
-//             dropperStateStartTime = micros();
-//             machine.setCapInjectionReady(false);
-//         }
-//     }
-//     lastMotorState = isMoving;
-    
-//     // State machine transitions
-//     switch (currentCapState) {
-//         case CAP_INJECTING:
-//             if (micros() - dropperStateStartTime >= 250000) { // 0.125s
-//                 currentCapState = CAP_RETRACTING;
-//                 digitalWrite(capInjectPin, LOW);
-//                 machine.setCapInjectionReady(true);
-//                 currentCapState = CAP_IDLE;
-//             }
-//             break;
-            
-//         case CAP_RETRACTING:
-//         case CAP_IDLE:
-//             // No action needed
-//             break;
-//     }
-// }
-
 
 void updateSlotPositions() {
     for(int i = 0; i < 16; i++) {
