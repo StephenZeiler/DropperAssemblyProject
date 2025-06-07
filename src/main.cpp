@@ -506,11 +506,12 @@ void stepMotor() {
 void fillRevolver(){
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
     bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
-    if(!bulbPresent && revolverSensor){
-        runRevolverMotor();
+           
+    if (bulbPresent && !revolverSensor){
+        machine.revolverFilled();
     }
     else{
-        machine.revolverFilled();
+        runRevolverMotor();
     }
 }
 void handleButtons() {
