@@ -336,11 +336,10 @@ void processAssembly() {
 
 void homeMachine() {
     Serial.println("Homing started...");
-    //unsigned long stepDelay = 5000;
-    unsigned long stepDelay = 2000;
+    unsigned long stepDelay = 5000;
     unsigned long lastStep = micros();
     
-    //while(digitalRead(homeSensorPin) == HIGH) {
+    while(digitalRead(homeSensorPin) == HIGH) {
         if(micros() - lastStep >= stepDelay) {
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
@@ -353,7 +352,7 @@ void homeMachine() {
                 return;
             }
         }
-    //}
+    }
     if(digitalRead(homeSensorPin) == LOW){       
         digitalWrite(capInjectPin, HIGH);
       //  delay(1000);
@@ -551,8 +550,24 @@ void setup() {
 int i = 0;
 
 void loop() {
-homeMachine();
 
+ unsigned long stepDelay = 2500;
+    unsigned long lastStep = micros();
+    
+    while(digitalRead(homeSensorPin) == HIGH) {
+        if(micros() - lastStep >= stepDelay) {
+            digitalWrite(stepPin, HIGH);
+            delayMicroseconds(10);
+            digitalWrite(stepPin, LOW);
+            lastStep = micros();
+            
+            if(stopRequested) {
+                machine.stop();
+                stopRequested = false;
+                return;
+            }
+        }
+    }
     // startTime = millis();
     // machine.setErrorLogs(myNex, startTime);
     // handleButtons();
