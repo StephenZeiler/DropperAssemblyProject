@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include "SlotObject.h"
 #include "MachineState.h"
@@ -558,9 +559,9 @@ void loop() {
     
     if (machine.isStopped) return;
     if (machine.needsHoming || machine.revolverEmpty) {
-        // if(machine.revolverEmpty){
-        //     fillRevolver();
-        // }
+        if(machine.revolverEmpty){
+            fillRevolver();
+        }
         if(machine.needsHoming){
             homeMachine();
         }

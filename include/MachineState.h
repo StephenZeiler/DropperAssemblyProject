@@ -74,7 +74,7 @@ bool canBulbProcessStart(){
         isPaused = false;
         inProduction = false;
         needsHoming = true;
-        //revolverEmpty = true;
+        revolverEmpty = true;
         
     }
     
@@ -92,7 +92,7 @@ bool canBulbProcessStart(){
         //capInjectionReady &&
         pipetSystemReady &&
         !needsHoming && 
-       // !revolverEmpty &&
+        !revolverEmpty &&
         !isPaused && 
         !isStopped;
     }
