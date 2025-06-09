@@ -550,11 +550,11 @@ void setup() {
 int i = 0;
 
 void loop() {
-
+int tes = 0;
  unsigned long stepDelay = 2500;
     unsigned long lastStep = micros();
     
-    //while(digitalRead(homeSensorPin) == HIGH) {
+    while(tes==0) {
         if(micros() - lastStep >= stepDelay) {
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
