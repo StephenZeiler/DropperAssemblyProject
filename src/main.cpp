@@ -554,7 +554,7 @@ void loop() {
  unsigned long stepDelay = 2500;
     unsigned long lastStep = micros();
     
-    while(digitalRead(homeSensorPin) == HIGH) {
+    //while(digitalRead(homeSensorPin) == HIGH) {
         if(micros() - lastStep >= stepDelay) {
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
@@ -562,7 +562,7 @@ void loop() {
             lastStep = micros();
             
         }
-    }
+    //}
     // startTime = millis();
     // machine.setErrorLogs(myNex, startTime);
     // handleButtons();
