@@ -431,13 +431,15 @@ void stepMotor() {
 void fillRevolver(){
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
     bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
-           
-    if (bulbPresent && !revolverSensor){
+while(machine.revolverEmpty){
+ if (bulbPresent && !revolverSensor){
         machine.revolverFilled();
     }
     else{
         runRevolverMotor(750);
     }
+}
+   
 }
 void handleButtons() {
     static unsigned long lastDebounceTime = 0;
@@ -559,9 +561,9 @@ void loop() {
     
     if (machine.isStopped) return;
     if (machine.needsHoming || machine.revolverEmpty) {
-        // if(machine.revolverEmpty){
-        //     fillRevolver();
-        // }
+        if(machine.revolverEmpty){
+            fillRevolver();
+        }
         if(machine.needsHoming){
             homeMachine();
         }
