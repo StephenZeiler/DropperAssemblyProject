@@ -336,10 +336,11 @@ void processAssembly() {
 
 void homeMachine() {
     Serial.println("Homing started...");
-    unsigned long stepDelay = 5000;
+    //unsigned long stepDelay = 5000;
+    unsigned long stepDelay = 2000;
     unsigned long lastStep = micros();
     
-    while(digitalRead(homeSensorPin) == HIGH) {
+    //while(digitalRead(homeSensorPin) == HIGH) {
         if(micros() - lastStep >= stepDelay) {
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
@@ -352,7 +353,7 @@ void homeMachine() {
                 return;
             }
         }
-    }
+    //}
     if(digitalRead(homeSensorPin) == LOW){       
         digitalWrite(capInjectPin, HIGH);
       //  delay(1000);
@@ -550,30 +551,30 @@ void setup() {
 int i = 0;
 
 void loop() {
+homeMachine();
 
-
-    startTime = millis();
-    machine.setErrorLogs(myNex, startTime);
-    handleButtons();
-    handleBulbSystem();
-    //handleCapInjection();
-    handleDropperSystem();
-    handlePipetSystem();  // Make sure this is uncommented
+    // startTime = millis();
+    // machine.setErrorLogs(myNex, startTime);
+    // handleButtons();
+    // handleBulbSystem();
+    // //handleCapInjection();
+    // handleDropperSystem();
+    // handlePipetSystem();  // Make sure this is uncommented
     
-    if (machine.isStopped) return;
-    if (machine.needsHoming || machine.revolverEmpty) {
-        if(machine.revolverEmpty){
-            fillRevolver();
-        }
-        if(machine.needsHoming){
-            homeMachine();
-        }
-        return;
-    }
+    // if (machine.isStopped) return;
+    // if (machine.needsHoming || machine.revolverEmpty) {
+    //     if(machine.revolverEmpty){
+    //         fillRevolver();
+    //     }
+    //     if(machine.needsHoming){
+    //         homeMachine();
+    //     }
+    //     return;
+    // }
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
 
 // i++;
 //myNex.writeStr("cautiontTxt.txt+", (String)i+"\\r");
