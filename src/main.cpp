@@ -561,11 +561,6 @@ void loop() {
             digitalWrite(stepPin, LOW);
             lastStep = micros();
             
-            if(stopRequested) {
-                machine.stop();
-                stopRequested = false;
-                return;
-            }
         }
     }
     // startTime = millis();
