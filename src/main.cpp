@@ -562,6 +562,7 @@ int tes = 0;
             lastStep = micros();
             
         }
+    }
     //}
     // startTime = millis();
     // machine.setErrorLogs(myNex, startTime);
