@@ -429,10 +429,10 @@ void stepMotor() {
     }
 }
 void fillRevolver(){
+while(machine.revolverEmpty){
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
     bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
-while(machine.revolverEmpty){
-    if (!revolverSensor){
+    if (bulbPresent && !revolverSensor){
         machine.revolverFilled();
         break;
     }
