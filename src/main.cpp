@@ -432,7 +432,7 @@ void fillRevolver(){
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
     bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
 while(machine.revolverEmpty){
-    if (bulbPresent){
+    if (!revolverSensor){
         machine.revolverFilled();
         break;
     }
