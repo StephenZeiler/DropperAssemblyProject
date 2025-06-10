@@ -133,8 +133,8 @@ MachineState machine;
 
 // Revolver motor control with acceleration
 // Ultra-fast revolver motor driver
-#define MIN_DELAY 150      // 150µs = ~6,667 steps/sec (adjust for your motor)
-#define ACCEL_RATE 5       // Delay reduction per step (lower = faster acceleration)
+#define MIN_DELAY 400      // 150µs = ~6,667 steps/sec (adjust for your motor)
+#define ACCEL_RATE 100       // Delay reduction per step (lower = faster acceleration)
 
 unsigned long prevStepTime = 0;
 unsigned long currentDelay = 200;  // Initial slow speed (3000µs = safe start)
