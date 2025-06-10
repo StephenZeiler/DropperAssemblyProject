@@ -132,26 +132,30 @@ MachineState machine;
 // }
 
 // Revolver motor control with acceleration
-long prevRevolverMicros = 0;
-int revolverStep = 1;
-long currentSpeed = 0;        // Current delay between steps in microseconds
-//long targetSpeed = 1000;      // Minimum delay you want to achieve (start with a safe value)
-long acceleration = 50;       // How quickly to accelerate (lower = faster acceleration)
-bool accelerating = true;
+ long revolverStepInterval = 200; // Start with a conservative slow speed (10000µs = 100Hz)
+ long minStepInterval = 100; // Your motor's maximum speed (100µs = 10kHz)
+int acceleration = 15; // How aggressively to accelerate (lower = faster acceleration)
 
-void runRevolverMotor(long targetSpeed) {
-   long currentMicros = micros();
+void runRevolverMotor() {
+  static long prevRevolverMicros = 0;
+  static int revolverStepState = 1;
+  unsigned long currentMicros = micros();
   
-  if ((currentMicros - prevRevolverMicros) > currentSpeed) {
-    // Toggle step pin
-    digitalWrite(revolverPUL, !digitalRead(revolverPUL));
+  // Only proceed if it's time for the next step
+  if ((currentMicros - prevRevolverMicros) >= revolverStepInterval) {
+    // Toggle the step pin
+    digitalWrite(revolverPUL, (revolverStepState == 1) ? HIGH : LOW);
+    revolverStepState = (revolverStepState == 1) ? 2 : 1;
     
-    // Handle acceleration/deceleration
-    if (accelerating) {
-      if (currentSpeed > targetSpeed) {
-        currentSpeed -= acceleration;
-      } else {
-        currentSpeed = targetSpeed;
+    // Apply acceleration if not at max speed
+    if (revolverStepInterval > minStepInterval) {
+      // Reduce the interval (increase speed) based on acceleration factor
+      // Using inverse relationship for proper acceleration curve
+      revolverStepInterval = revolverStepInterval - (acceleration * revolverStepInterval) / (revolverStepInterval + acceleration);
+      
+      // Ensure we don't go below minimum interval
+      if (revolverStepInterval < minStepInterval) {
+        revolverStepInterval = minStepInterval;
       }
     }
     
@@ -269,7 +273,7 @@ void handleBulbSystem() {
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
-                runRevolverMotor(1000);
+                runRevolverMotor();
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
@@ -473,7 +477,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(800);
+        runRevolverMotor();
     }
 }
    
