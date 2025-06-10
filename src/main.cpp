@@ -542,7 +542,6 @@ void setup() {
     digitalWrite(bulbRamPin, LOW);
     digitalWrite(pipetRamPin, LOW);
      currentPipetState = PIPET_HOMING;
-
     updateSlotPositions();
      
 }
