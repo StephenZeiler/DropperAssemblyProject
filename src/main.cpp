@@ -136,7 +136,7 @@ unsigned long revolverStepInterval = 5000; // Start with a conservative slow spe
 unsigned long minStepInterval = 300; // Your motor's maximum speed (100µs = 10kHz)
 int acceleration = 25; // How aggressively to accelerate (lower = faster acceleration) 25
 
-void runRevolverMotor() {
+void runRevolverMotor(long minStepInterval, int acceleration, long revolverStepInterval) {
   static long prevRevolverMicros = 0;
   static int revolverStepState = 1;
   unsigned long currentMicros = micros();
@@ -273,7 +273,7 @@ void handleBulbSystem() {
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
-                runRevolverMotor();
+                runRevolverMotor(250,25,5000);
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
@@ -477,7 +477,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor();
+        runRevolverMotor(800,50,10000);
     }
 }
    
