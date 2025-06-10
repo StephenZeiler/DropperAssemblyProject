@@ -273,7 +273,7 @@ void handleBulbSystem() {
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
-                runRevolverMotor(250,25,5000);
+                runRevolverMotor(250,50,5000);
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
@@ -477,7 +477,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(800,50,10000);
+        runRevolverMotor(600,25,7000);
     }
 }
    
