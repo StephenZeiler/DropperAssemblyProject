@@ -132,30 +132,30 @@ MachineState machine;
 // }
 
 // Revolver motor control with acceleration
-long prevRevolverMicros = 0;
-int revolverStep = 1;
-long currentSpeed = 0;        // Current delay between steps in microseconds
-//long targetSpeed = 1000;      // Minimum delay you want to achieve (start with a safe value)
-long acceleration = 10;       // How quickly to accelerate (lower = faster acceleration)
-bool accelerating = true;
+#define MIN_DELAY 200    // 200µs = 5000 steps/sec (adjust based on motor limits)
+#define ACCEL_STEP 10    // How aggressively to accelerate (lower = faster ramp)
+#define START_DELAY 0 // Initial safe speed (1000µs = 1000 steps/sec)
 
-void runRevolverMotor(long targetSpeed) {
-   long currentMicros = micros();
+unsigned long prevStepTime = 0;
+unsigned long currentDelay = START_DELAY;
+bool isRunning = false;  // Built-in run state
+bool stepState = false;
+
+void runRevolverMotor() {
+  if (!isRunning) return;
   
-  if ((currentMicros - prevRevolverMicros) > currentSpeed) {
-    // Toggle step pin
-    digitalWrite(revolverPUL, !digitalRead(revolverPUL));
+  unsigned long now = micros();
+  if ((now - prevStepTime) >= currentDelay) {
+    // Toggle step pin (replace with PORT manipulation for max speed)
+    digitalWrite(revolverPUL, stepState = !stepState);
     
-    // Handle acceleration/deceleration
-    if (accelerating) {
-      if (currentSpeed > targetSpeed) {
-        currentSpeed -= acceleration;
-      } else {
-        currentSpeed = targetSpeed;
-      }
+    // Accelerate until we hit MIN_DELAY
+    if (currentDelay > MIN_DELAY) {
+      currentDelay -= ACCEL_STEP;
+      if (currentDelay < MIN_DELAY) currentDelay = MIN_DELAY;
     }
     
-    prevRevolverMicros = currentMicros;
+    prevStepTime = now;
   }
 }
 
@@ -269,7 +269,7 @@ void handleBulbSystem() {
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
-                runRevolverMotor(100);
+                runRevolverMotor();
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
@@ -473,7 +473,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(800);
+        runRevolverMotor();
     }
 }
    
