@@ -112,24 +112,60 @@ SlotObject slots[] = {
 int currentHomePosition = 0;
 
 MachineState machine;
-long prevRevolverMicros = 0;  
-int revolverStep = 1;
+// long prevRevolverMicros = 0;  
+// int revolverStep = 1;
 
-void runRevolverMotor(long speed) {
-  digitalWrite(revolverDIR, LOW);
-  long currentMicros = micros(); // Update time inside the check
-  if ((currentMicros - prevRevolverMicros) > speed) {
-    if (revolverStep == 1) {
-      digitalWrite(revolverPUL, HIGH);
-      revolverStep = 2;
-    } 
-    else if (revolverStep == 2) {
-      digitalWrite(revolverPUL, LOW);
-      revolverStep = 1;
+// void runRevolverMotor(long speed) {
+//   digitalWrite(revolverDIR, LOW);
+//   long currentMicros = micros(); // Update time inside the check
+//   if ((currentMicros - prevRevolverMicros) > speed) {
+//     if (revolverStep == 1) {
+//       digitalWrite(revolverPUL, HIGH);
+//       revolverStep = 2;
+//     } 
+//     else if (revolverStep == 2) {
+//       digitalWrite(revolverPUL, LOW);
+//       revolverStep = 1;
+//     }
+//     prevRevolverMicros = currentMicros;
+//   }
+// }
+
+// Revolver motor control with acceleration
+long prevRevolverMicros = 0;
+int revolverStep = 1;
+long currentSpeed = 0;        // Current delay between steps in microseconds
+//long targetSpeed = 1000;      // Minimum delay you want to achieve (start with a safe value)
+long acceleration = 50;       // How quickly to accelerate (lower = faster acceleration)
+bool accelerating = true;
+
+void runRevolverMotor(long targetSpeed) {
+   long currentMicros = micros();
+  
+  if ((currentMicros - prevRevolverMicros) > currentSpeed) {
+    // Toggle step pin
+    digitalWrite(revolverPUL, !digitalRead(revolverPUL));
+    
+    // Handle acceleration/deceleration
+    if (accelerating) {
+      if (currentSpeed > targetSpeed) {
+        currentSpeed -= acceleration;
+      } else {
+        currentSpeed = targetSpeed;
+      }
     }
+    
     prevRevolverMicros = currentMicros;
   }
 }
+
+// void setRevolverSpeed(long newSpeed, bool accel) {
+//   targetSpeed = newSpeed;
+//   accelerating = accel;
+//   if (!accel) {
+//     currentSpeed = newSpeed; // Immediate speed change
+//   }
+// }
 void handlePipetSystem() {
     static bool lastMotorState = false;
     static bool homingComplete = false;
@@ -233,7 +269,7 @@ void handleBulbSystem() {
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
-                runRevolverMotor(600);
+                runRevolverMotor(1000);
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
@@ -437,7 +473,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(750);
+        runRevolverMotor(1000);
     }
 }
    
