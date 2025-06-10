@@ -137,7 +137,7 @@ MachineState machine;
 #define ACCEL_RATE 5       // Delay reduction per step (lower = faster acceleration)
 
 unsigned long prevStepTime = 0;
-unsigned long currentDelay = 3000;  // Initial slow speed (3000µs = safe start)
+unsigned long currentDelay = 200;  // Initial slow speed (3000µs = safe start)
 bool stepState = false;
 
 void runRevolverMotor() {
