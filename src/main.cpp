@@ -132,33 +132,30 @@ MachineState machine;
 // }
 
 // Revolver motor control with acceleration
-#define MIN_DELAY 200    // 200µs = 5000 steps/sec (adjust based on motor limits)
-#define ACCEL_STEP 10    // How aggressively to accelerate (lower = faster ramp)
-#define START_DELAY 0 // Initial safe speed (1000µs = 1000 steps/sec)
+// Ultra-fast revolver motor driver
+#define MIN_DELAY 150      // 150µs = ~6,667 steps/sec (adjust for your motor)
+#define ACCEL_RATE 5       // Delay reduction per step (lower = faster acceleration)
 
 unsigned long prevStepTime = 0;
-unsigned long currentDelay = START_DELAY;
-bool isRunning = false;  // Built-in run state
+unsigned long currentDelay = 3000;  // Initial slow speed (3000µs = safe start)
 bool stepState = false;
 
 void runRevolverMotor() {
-  if (!isRunning) return;
-  
   unsigned long now = micros();
+  
   if ((now - prevStepTime) >= currentDelay) {
-    // Toggle step pin (replace with PORT manipulation for max speed)
-    digitalWrite(revolverPUL, stepState = !stepState);
+    // Ultra-fast pin toggling (Mega PK1 example)
+    PORTK ^= (1 << 1);  // Direct port toggle
     
-    // Accelerate until we hit MIN_DELAY
+    // Aggressive acceleration
     if (currentDelay > MIN_DELAY) {
-      currentDelay -= ACCEL_STEP;
+      currentDelay -= ACCEL_RATE;
       if (currentDelay < MIN_DELAY) currentDelay = MIN_DELAY;
     }
     
     prevStepTime = now;
   }
 }
-
 // void setRevolverSpeed(long newSpeed, bool accel) {
 //   targetSpeed = newSpeed;
 //   accelerating = accel;
