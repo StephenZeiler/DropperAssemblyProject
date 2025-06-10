@@ -585,7 +585,7 @@ void setup() {
 int i = 0;
 
 void loop() {
-runRevolverMotor(100);
+runRevolverMotor(800);
 
     // startTime = millis();
     // machine.setErrorLogs(myNex, startTime);
