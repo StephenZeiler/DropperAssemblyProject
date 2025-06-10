@@ -132,9 +132,9 @@ MachineState machine;
 // }
 
 // Revolver motor control with acceleration
-unsigned long revolverStepInterval = 10000; // Start with a conservative slow speed (10000µs = 100Hz)
+unsigned long revolverStepInterval = 5000; // Start with a conservative slow speed (10000µs = 100Hz)
 unsigned long minStepInterval = 400; // Your motor's maximum speed (100µs = 10kHz)
-int acceleration = 50; // How aggressively to accelerate (lower = faster acceleration)
+int acceleration = 25; // How aggressively to accelerate (lower = faster acceleration)
 
 void runRevolverMotor() {
   static long prevRevolverMicros = 0;
