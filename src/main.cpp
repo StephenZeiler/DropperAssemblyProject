@@ -477,7 +477,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(600,25,7000);
+        runRevolverMotor(600,15,7000);
     }
 }
    
