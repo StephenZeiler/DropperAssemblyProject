@@ -136,7 +136,7 @@ long prevRevolverMicros = 0;
 int revolverStep = 1;
 long currentSpeed = 0;        // Current delay between steps in microseconds
 //long targetSpeed = 1000;      // Minimum delay you want to achieve (start with a safe value)
-long acceleration = 50;       // How quickly to accelerate (lower = faster acceleration)
+long acceleration = 25;       // How quickly to accelerate (lower = faster acceleration)
 bool accelerating = true;
 
 void runRevolverMotor(long targetSpeed) {
