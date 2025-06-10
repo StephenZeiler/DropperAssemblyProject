@@ -269,7 +269,7 @@ void handleBulbSystem() {
             // Calculate percentage of movement completed
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
-                runRevolverMotor(1000);
+                runRevolverMotor(200);
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
@@ -473,7 +473,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(1000);
+        runRevolverMotor(800);
     }
 }
    
@@ -585,30 +585,29 @@ void setup() {
 int i = 0;
 
 void loop() {
-runRevolverMotor(200);
 
-    // startTime = millis();
-    // machine.setErrorLogs(myNex, startTime);
-    // handleButtons();
-    // handleBulbSystem();
-    // //handleCapInjection();
-    // handleDropperSystem();
-    // handlePipetSystem();  // Make sure this is uncommented
+    startTime = millis();
+    machine.setErrorLogs(myNex, startTime);
+    handleButtons();
+    handleBulbSystem();
+    //handleCapInjection();
+    handleDropperSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-    // if (machine.isStopped) return;
-    // if (machine.needsHoming || machine.revolverEmpty) {
-    //     if(machine.revolverEmpty){
-    //         fillRevolver();
-    //     }
-    //     if(machine.needsHoming){
-    //         homeMachine();
-    //     }
-    //     return;
-    // }
+    if (machine.isStopped) return;
+    if (machine.needsHoming || machine.revolverEmpty) {
+        if(machine.revolverEmpty){
+            fillRevolver();
+        }
+        if(machine.needsHoming){
+            homeMachine();
+        }
+        return;
+    }
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+    if (machine.inProduction) {
+        stepMotor();
+    }
 
 // i++;
 //myNex.writeStr("cautiontTxt.txt+", (String)i+"\\r");
