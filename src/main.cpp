@@ -275,7 +275,7 @@ void handleBulbSystem() {
             if(machine.shouldRevolverMove() && movementPercent >= .01){
                 //runRevolverMotor(300,15,400);
                 //runRevolverMotor(200,50000,300);
-                runRevolverMotor(300,30,500);
+                runRevolverMotor(500,30,700);
                 //runRevolverMotor(100,5,400);
             }
             if (revolverSensor == LOW && movementPercent >= .06){
@@ -480,7 +480,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(500,25,700);
+        runRevolverMotor(800,25,1000);
     }
 }
    
