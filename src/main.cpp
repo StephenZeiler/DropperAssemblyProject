@@ -274,7 +274,8 @@ void handleBulbSystem() {
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
                 //runRevolverMotor(300,15,400);
-                runRevolverMotor(200,50000,350);
+                //runRevolverMotor(200,50000,300);
+                runRevolverMotor(100,30,500);
             }
             if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
