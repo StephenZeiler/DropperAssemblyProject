@@ -608,6 +608,7 @@ void loop() {
         }
         if(machine.needsHoming){
             homeMachine();
+            delay(10000);
         }
         return;
     }
