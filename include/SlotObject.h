@@ -6,6 +6,7 @@ private:
     const int slotId;      // Permanent ID (1-16)
     bool hasError;
     int currentPosition;   // Dynamic position (0-15)
+    bool hasJunk;  
     
 public:
     SlotObject(int id);
@@ -14,10 +15,12 @@ public:
     int getId() const { return slotId; }
     int getPosition() const { return currentPosition; }
     bool getError() const { return hasError; }
-    
+    bool hasJunk() const {return hasJunk;}
+
     // Setters
     void setPosition(int position) { currentPosition = position % 16; }
     void setError(bool error) { hasError = error; }
+    void setJunk(bool hasJunk) {hasJunk = hasJunk;}
     
     // Position checks
     bool isAtHome() const { return currentPosition == 0; }

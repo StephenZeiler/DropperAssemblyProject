@@ -26,7 +26,7 @@ const unsigned long PAUSE_AFTER = 500000; // microseconds (keep same pause time)
 
 // Sensor
 const int homeSensorPin = 25;
-
+ const int pipetTipSensor = 31;
 // Motor state
 unsigned long lastStepTime = 0;
 unsigned long pauseStartTime = 0;
@@ -52,6 +52,9 @@ const int bulbRamPin = 39;
 
 //ejection pin
 const int dropperEjectPin = 47;
+
+//junk ejector
+const int junkEjectorPin = 49;
 
 //CAP injection
 const int capInjectPin = 35;
@@ -356,7 +359,6 @@ void updateSlotPositions() {
     }
     machine.IncrementPositionsMoved();
 }
-
 void processAssembly() {
     for(int i = 0; i < 16; i++) {
         if(slots[i].getError()) {
@@ -370,9 +372,24 @@ void processAssembly() {
             Serial.print("Processing cap injection at slot ");
             Serial.println(slots[i].getId());
         }
+         else if(slots[i].isAtPipetConfirm()) {
+            Serial.print("Processing bulb injection at slot ");
+            Serial.println(slots[i].getId());
+            if(pipetTipSensor == HIGH){
+                slots[i].setJunk(true);
+            }
+        }
         else if(slots[i].isAtBulbInjection()) {
             Serial.print("Processing bulb injection at slot ");
             Serial.println(slots[i].getId());
+        }
+        else if(slots[i].isAtJunkEjection()) {
+            Serial.print("Processing bulb injection at slot ");
+            Serial.println(slots[i].getId());
+            if(slots[i].hasJunk()){
+                //TODO Fire junk ejector
+                
+            }
         }
     }
 }
@@ -573,6 +590,7 @@ void setup() {
     pinMode(pipetTwisterPin, OUTPUT);
     pinMode(pipetRamPin, OUTPUT);
     pinMode(capInjectPin, OUTPUT);
+    pinMode(junkEjectorPin, OUTPUT);
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
     //sensors
@@ -580,6 +598,7 @@ void setup() {
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
     pinMode(bulbPositionSensorPin, INPUT);
+    pinMode(pipetTipSensor, INPUT);
 
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
     digitalWrite(bulbRamPin, LOW);

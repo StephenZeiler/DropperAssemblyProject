@@ -20,3 +20,38 @@ Releasing caps - When motor finds home for the first time then we need it to ope
 Log error and caution 
 
 what happens if bulb isnt present and machine stops? Does it slam down when a bulb is detected? Or go pause 
+
+
+PIN - 31
+
+pipetTipSensor = low then it can continue
+
+if high then it needs to kick out in in junk 
+
+the sensor is at slot 10 
+
+junk ejector is slot 14
+
+o
+________
+
+
+Slot 2 cap confirm - 
+
+PIN - 29
+
+capInSlotSensor LOW when cap is succcesfullyt injected.
+
+HIGH means it was not injected. 
+
+When it was not injected we dont want pipet or bulb place in slot and try again when it comes back around. 
+
+--------
+
+
+soemtyhijgn  still in slot sensor dont put anything in here
+
+
+-------------
+
+bulb in cap sensor 
