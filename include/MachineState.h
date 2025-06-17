@@ -51,6 +51,12 @@ bool canPipetProcessStart(){
 bool canPipetConfirmStart(){
     return positionsMoved > 9;
 }
+bool canBulbConfirmStart(){
+    return positionsMoved > 5;
+}
+bool canJunkEjectionStart(){
+    return positionsMoved > 13;
+}
 bool canDropperEjectionStart(){
     return positionsMoved > 12;
 }
@@ -95,7 +101,7 @@ bool canBulbProcessStart(){
     bool isReadyToMove() {
         return 
         bulbSystemReady &&  // Add other systems here with &&
-        dropperSystemReady &&  // Add this
+        //dropperSystemReady &&  // Add this
         //capInjectionReady &&
         pipetSystemReady &&
         !needsHoming && 

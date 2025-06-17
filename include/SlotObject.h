@@ -7,6 +7,7 @@ private:
     bool hasError;
     int currentPosition;   // Dynamic position (0-15)
     bool isJunk;
+    bool isMissingBulb;
     
 public:
     SlotObject(int id);
@@ -16,11 +17,13 @@ public:
     int getPosition() const { return currentPosition; }
     bool getError() const { return hasError; }
     bool hasJunk() const {return isJunk;}
+    bool hasMissingBulb() const {return isMissingBulb;}
 
     // Setters
     void setPosition(int position) { currentPosition = position % 16; }
     void setError(bool error) { hasError = error; }
     void setJunk(bool junk) {isJunk = junk;}
+    void setMissingBulb(bool missingBulb) {isMissingBulb = missingBulb;}
     
     // Position checks
     bool isAtHome() const { return currentPosition == 0; }
@@ -33,15 +36,6 @@ public:
     bool isAtCompletedEjection() const { return currentPosition == 13; }
     bool isAtJunkEjection() const { return currentPosition == 14; }
     bool isAtEmptyConfirm() const { return currentPosition == 15; }
-
-    int slotNumberByID(SlotObject slots[], int position)
-{
-     for(int i = 0; i < 16; i++) {
-        if(slots[i].getPosition()==position){
-            return slots[i].getId();
-        }
-     }
-}
 };
 
 #endif

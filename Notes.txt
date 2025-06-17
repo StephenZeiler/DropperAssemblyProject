@@ -61,9 +61,6 @@ soemtyhijgn  still in slot sensor dont put anything in here
 bulb in cap sensor 
 
 
-Only eject good droppers!
-
-
 Power for mechanics off but arduino is on should pikc this up and hault all processes. 
 
 
