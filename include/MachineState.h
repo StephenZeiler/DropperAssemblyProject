@@ -48,6 +48,12 @@ void ResetPositionsMoved(){
 bool canPipetProcessStart(){
     return positionsMoved > 8;
 }
+bool canPipetConfirmStart(){
+    return positionsMoved > 9;
+}
+bool canDropperEjectionStart(){
+    return positionsMoved > 12;
+}
 bool canBulbProcessStart(){
     return positionsMoved > 4;
 }

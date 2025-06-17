@@ -32,6 +32,10 @@ the sensor is at slot 10
 
 junk ejector is slot 14
 
+Junk ejector shouldnt start ejecting until the first pipet reaches the pipet confirm 
+
+Junkejector broke because the motor started to move again. 
+
 o
 ________
 
@@ -55,3 +59,13 @@ soemtyhijgn  still in slot sensor dont put anything in here
 -------------
 
 bulb in cap sensor 
+
+
+Only eject good droppers!
+
+
+Power for mechanics off but arduino is on should pikc this up and hault all processes. 
+
+
+caps arent allowing to go in
+

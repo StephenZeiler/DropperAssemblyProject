@@ -192,7 +192,6 @@ void handlePipetSystem() {
         }
         return;
     }
-
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
@@ -214,7 +213,8 @@ void handlePipetSystem() {
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             
             // Activate twister after 25% of movement
-            if (movementPercent >= 0.25 && digitalRead(pipetTwisterPin) == LOW) {
+            //if (movementPercent >= 0.25 && digitalRead(pipetTwisterPin) == LOW) { TEST Remove this line if issues uncomment
+            if (movementPercent >= 0.25 ) {
                 digitalWrite(pipetTwisterPin, HIGH);
             }
         } else {
@@ -231,7 +231,7 @@ void handlePipetSystem() {
             // Deactivate ram after 90% of pause time
             if (pausePercent >= 0.90 && digitalRead(pipetRamPin) == HIGH) {
                 digitalWrite(pipetRamPin, LOW);
-                machine.setPipetSystemReady(true);
+                machine.setPipetSystemReady(true);              
             }
             
             // Deactivate twister after 75% of pause time
@@ -242,15 +242,22 @@ void handlePipetSystem() {
         }
         else{
             machine.setPipetSystemReady(true);
+            if(isMoving)
+            digitalWrite(pipetTwisterPin, HIGH);
         }
     }
 }
 
 void motorPauseTime(){
     static unsigned long motorStopTime = 0;
+    static bool lastMotorState = false;
+     if (lastMotorState && !isMoving) {
+        motorStopTime = micros(); // Record when motor stopped
+    }
+    lastMotorState = isMoving;
     if(!isMoving){
         motorStopTime = micros();
-        unsigned long stopDuration = micros() - motorStopTime;
+        unsigned long stopDuration = micros() - pauseStartTime;
         motorPausePercent = (float)stopDuration / PAUSE_AFTER;
     }
 }
@@ -330,6 +337,8 @@ void handleBulbSystem() {
         machine.setBulbSystemReady(true);
     }
 }
+
+
 void handleDropperSystem() {
     static bool lastMotorState = false;
 
@@ -337,7 +346,9 @@ void handleDropperSystem() {
     if (lastMotorState && !isMoving) {
         if (currentDropperState == DROPPER_IDLE) {
             currentDropperState = DROPPER_EJECTING;
-            digitalWrite(dropperEjectPin, HIGH);
+            if(machine.canDropperEjectionStart()){ //todo: only eject good droppers
+                digitalWrite(dropperEjectPin, HIGH);
+            }
             dropperStateStartTime = micros();
             machine.setDropperSystemReady(false);
         }
@@ -370,6 +381,7 @@ void updateSlotPositions() {
     machine.IncrementPositionsMoved();
 }
 void processAssembly() {
+    motorPauseTime();
     for(int i = 0; i < 16; i++) {
         if(slots[i].getError()) {
             Serial.print(slots[i].getId());
@@ -380,9 +392,12 @@ void processAssembly() {
 
         }
         if(slots[i].isAtPipetConfirm()) {
-            if(pipetTipSensor == HIGH){
+            if(digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart()){
                 slots[i].setJunk(true);
-            }else{
+                String test = (String)i +   " slot has junk: "+ (String)slots[i].hasJunk() ;
+                myNex.writeStr("errorTxt.txt+", test +" \\r");
+            }
+            else{
                 
                 slots[i].setJunk(false);
             }
@@ -393,11 +408,18 @@ void processAssembly() {
         if(slots[i].isAtJunkEjection()) {
             if(slots[i].hasJunk()){
                 //TODO Fire junk ejector
+                String test = (String)i +   "Fired JUNK EJEcTOR" ;
+                myNex.writeStr("errorTxt.txt+", test +" \\r");
                 digitalWrite(junkEjectorPin, HIGH);
+                //delay(500);
+                //digitalWrite(junkEjectorPin, LOW);
+                //delay(500);
             }
             
         }
         if(motorPausePercent>.9){
+            String test = (String)i +   "Retracted Junk Ejector!" ;
+                myNex.writeStr("errorTxt.txt+", test +" \\r");
             //Shut off ejectors for junk etc.
             digitalWrite(junkEjectorPin, LOW);
         }
@@ -435,7 +457,7 @@ void homeMachine() {
     lastStepTime = micros();
     Serial.println("Homing complete - Slot 0 at Position 0");
 }
-
+bool puasedStateProcessing = false;
 void stepMotor() {
     unsigned long currentTime = micros();
     
@@ -461,14 +483,19 @@ void stepMotor() {
                 stepsTaken++;
                 
                 if (stepsTaken >= TOTAL_STEPS) {
+                    
                     isMoving = false;
                     pauseStartTime = currentTime;
                     stepsTaken = 0;
-                    currentHomePosition = (currentHomePosition + 1) % 16;
                     machine.resetAllPneumatics();
-
-                    updateSlotPositions();
-                    processAssembly();
+                   // if(puasedStateProcessing){
+                        currentHomePosition = (currentHomePosition + 1) % 16;
+                        updateSlotPositions();
+                        processAssembly();
+                        String test = "current position " + (String)currentHomePosition;
+                myNex.writeStr("errorTxt.txt+", test +" \\r");
+                        puasedStateProcessing= false;
+                   // }
                     
                     // Check if pause was requested during movement
                     if(pauseRequested) {
@@ -483,6 +510,9 @@ void stepMotor() {
                         stopRequested = false;
                         return;
                     }
+                }
+                else{
+                    puasedStateProcessing = true;
                 }
             }
             lastStepTime = currentTime;
@@ -507,7 +537,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(400,25,500);
+        runRevolverMotor(600,25,700);
     }
 }
    
@@ -624,7 +654,8 @@ void loop() {
 
     startTime = millis();
     motorPauseTime();
-    machine.setErrorLogs(myNex, startTime);
+   // machine.setErrorLogs(myNex, startTime);
+    //machine.setCautionLogs(myNex, startTime, slots);
     handleButtons();
     handleBulbSystem();
     //handleCapInjection();
