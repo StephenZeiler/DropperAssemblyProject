@@ -101,6 +101,7 @@ enum BulbState {
     BULB_RAM_EXTENDING,
     BULB_RAM_RETRACTING
 };
+float motorPausePercent;
 BulbState currentBulbState = BULB_IDLE;
 unsigned long bulbStateStartTime = 0;
 bool motorDecelerated = false;
@@ -244,6 +245,15 @@ void handlePipetSystem() {
         }
     }
 }
+
+void motorPauseTime(){
+    static unsigned long motorStopTime = 0;
+    if(!isMoving){
+        motorStopTime = micros();
+        unsigned long stopDuration = micros() - motorStopTime;
+        motorPausePercent = (float)stopDuration / PAUSE_AFTER;
+    }
+}
 void handleBulbSystem() {
     static bool lastMotorState = false;
     static unsigned long motorStopTime = 0;
@@ -362,34 +372,34 @@ void updateSlotPositions() {
 void processAssembly() {
     for(int i = 0; i < 16; i++) {
         if(slots[i].getError()) {
-            Serial.print("Slot ");
             Serial.print(slots[i].getId());
-            Serial.println(" has error - skipping");
             continue;
         }
         
         if(slots[i].isAtCapInjection()) {
-            Serial.print("Processing cap injection at slot ");
-            Serial.println(slots[i].getId());
+
         }
-         else if(slots[i].isAtPipetConfirm()) {
-            Serial.print("Processing bulb injection at slot ");
-            Serial.println(slots[i].getId());
+        if(slots[i].isAtPipetConfirm()) {
             if(pipetTipSensor == HIGH){
                 slots[i].setJunk(true);
+            }else{
+                
+                slots[i].setJunk(false);
             }
         }
-        else if(slots[i].isAtBulbInjection()) {
-            Serial.print("Processing bulb injection at slot ");
-            Serial.println(slots[i].getId());
+        if(slots[i].isAtBulbInjection()) {
+
         }
-        else if(slots[i].isAtJunkEjection()) {
-            Serial.print("Processing bulb injection at slot ");
-            Serial.println(slots[i].getId());
+        if(slots[i].isAtJunkEjection()) {
             if(slots[i].hasJunk()){
                 //TODO Fire junk ejector
-                
+                digitalWrite(junkEjectorPin, HIGH);
             }
+            
+        }
+        if(motorPausePercent>.9){
+            //Shut off ejectors for junk etc.
+            digitalWrite(junkEjectorPin, LOW);
         }
     }
 }
@@ -613,6 +623,7 @@ int i = 0;
 void loop() {
 
     startTime = millis();
+    motorPauseTime();
     machine.setErrorLogs(myNex, startTime);
     handleButtons();
     handleBulbSystem();

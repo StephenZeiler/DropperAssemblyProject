@@ -18,6 +18,7 @@ public:
     long lastErrorResetTime = 0;
     long lastCautionResetTime = 0;
     bool printErrorLogs;
+    bool printCautionLogs;
     bool revolverAtHome = false;
     bool revolverShouldMove = true;
 
@@ -138,9 +139,18 @@ bool bulbPresent = true;
 //
 //
 //Cautions
-void setCautionLogs(EasyNex myNex){
-    //myNex.writeStr("cautiontTxt.txt", "");
-    //myNex.writeStr("cautiontTxt.txt", (String)i+"\\r");
+void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]){
+    String fullLog = "";
+    for(int i = 0; i < 16; i++) {
+        if(slots[i].hasJunk()){
+             fullLog = fullLog + "Slot " + i + " has junk.\\r";
+        }
+    }
+        printCautionLogs = false;
+    if((currentMilliTime-lastErrorResetTime) >= 500){
+        lastErrorResetTime=currentMilliTime;
+       myNex.writeStr("cautionTxt.txt", fullLog);
+    }
 }
 
 void setErrorLogs(EasyNex myNex, long currentMilliTime){
@@ -154,6 +164,7 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
        myNex.writeStr("errorTxt.txt", fullLog);
     }
 }
+
 // bool setBackgroundColorError(EasyNex myNex){
 //     String stringFromNextion;
 //     myNex.NextionListen();
