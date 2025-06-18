@@ -165,8 +165,8 @@ void setSlotErrors(SlotObject slots[])
     for(int i = 0; i < 16; i++) {
         if(slots[i].hasJunk() || slots[i].hasMissingBulb() || slots[i].hasMissingCap() ){
             slots[i].setError(true);
-              String test = (String)i +   " Error!!: "+ " Junk: " + (String)slots[i].hasJunk() + " Bulb: " + (String)slots[i].hasMissingBulb() + " cap: " + (String)slots[i].hasMissingCap();
-        myNex.writeStr("errorTxt.txt+", test +" \\r");
+        //       String test = (String)i +   " Error!!: "+ " Junk: " + (String)slots[i].hasJunk() + " Bulb: " + (String)slots[i].hasMissingBulb() + " cap: " + (String)slots[i].hasMissingCap();
+        // myNex.writeStr("errorTxt.txt+", test +" \\r");
         }
         else{
             slots[i].setError(false);
@@ -478,10 +478,6 @@ void machineTracker(){
 
     
     motorPauseTime();
-    // int slotIdBulbInCapConfirm = getSlotIdByPosition(slots, 6);
-    // int slotIdPipetConfirm = getSlotIdByPosition(slots, 10);
-    // int slotIdDropeprEjection = getSlotIdByPosition(slots, 13);
-    // int slotIdJunkEjection = getSlotIdByPosition(slots, 14);
     if(digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart()){
         slots[slotIdPipetConfirm].setJunk(true);        
         // String test = (String)slotIdPipetConfirm +   " slot has junk: "+ (String)slots[slotIdPipetConfirm].hasJunk() ;
@@ -517,17 +513,18 @@ void machineTracker(){
     }
     if(machine.canCheckForEmptyStart() && digitalRead(slotEmptySensor) == HIGH){
         slots[slotIdJunkConfirm].setFailedJunkEject(true);
-                String test = (String)slotIdJunkConfirm +   " failed junk: "+ (String)slots[slotIdJunkConfirm].hasFailedJunkEject() ;
-        myNex.writeStr("errorTxt.txt+", test +" \\r");
+        //         String test = (String)slotIdJunkConfirm +   " failed junk: "+ (String)slots[slotIdJunkConfirm].hasFailedJunkEject() ;
+        // myNex.writeStr("errorTxt.txt+", test +" \\r");
     }
     else{
         slots[slotIdJunkConfirm].setFailedJunkEject(false);
     }
     if(slots[slotIdFailedJunkEject].hasFailedJunkEject()){
         //TODO: STOP Machine.
-          String test = (String)slotIdFailedJunkEject +   " STOP "+ (String)slots[slotIdFailedJunkEject].hasFailedJunkEject() ;
-        myNex.writeStr("errorTxt.txt+", test +" \\r");
-        stopRequested = true;
+        //   String test = (String)slotIdFailedJunkEject +   " STOP "+ (String)slots[slotIdFailedJunkEject].hasFailedJunkEject() ;
+        // myNex.writeStr("errorTxt.txt+", test +" \\r");
+        machine.stop();
+        stopRequested = false;
     }
 }
 setSlotErrors(slots);
