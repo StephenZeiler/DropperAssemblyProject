@@ -45,23 +45,29 @@ void IncrementPositionsMoved(){
 void ResetPositionsMoved(){
     positionsMoved = 0;
 }
+bool canCapConfirmStart(){
+    return positionsMoved > 1;
+}
+bool canBulbProcessStart(){
+    return positionsMoved > 4;
+}
+bool canBulbConfirmStart(){
+    return positionsMoved > 5;
+}
 bool canPipetProcessStart(){
     return positionsMoved > 8;
 }
 bool canPipetConfirmStart(){
     return positionsMoved > 9;
 }
-bool canBulbConfirmStart(){
-    return positionsMoved > 5;
+bool canDropperEjectionStart(){
+    return positionsMoved > 12;
 }
 bool canJunkEjectionStart(){
     return positionsMoved > 13;
 }
-bool canDropperEjectionStart(){
-    return positionsMoved > 12;
-}
-bool canBulbProcessStart(){
-    return positionsMoved > 4;
+bool canCheckForEmptyStart(){
+    return positionsMoved > 14;
 }
     void start() {
         if (isStopped) {

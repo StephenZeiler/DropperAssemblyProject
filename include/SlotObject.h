@@ -4,10 +4,12 @@
 class SlotObject {
 private:
     const int slotId;      // Permanent ID (1-16)
-    bool hasError;
+    bool errorInSlot;
     int currentPosition;   // Dynamic position (0-15)
     bool isJunk;
     bool isMissingBulb;
+    bool isMissingCap;
+    bool isJunkEjectFail;
     
 public:
     SlotObject(int id);
@@ -15,18 +17,22 @@ public:
     // Getters
     int getId() const { return slotId; }
     int getPosition() const { return currentPosition; }
-    bool getError() const { return hasError; }
+    bool hasError() const { return errorInSlot; }
     bool hasJunk() const {return isJunk;}
     bool hasMissingBulb() const {return isMissingBulb;}
+    bool hasMissingCap() const {return isMissingCap;}
+    bool hasFailedJunkEject() const {return isJunkEjectFail;}
 
     // Setters
     void setPosition(int position) { currentPosition = position % 16; }
-    void setError(bool error) { hasError = error; }
+    void setError(bool error) { errorInSlot = error; }
     void setJunk(bool junk) {isJunk = junk;}
     void setMissingBulb(bool missingBulb) {isMissingBulb = missingBulb;}
+    void setMissingCap(bool missingCap) {isMissingCap = missingCap;}
+    void setFailedJunkEject(bool failedEject) {isJunkEjectFail = failedEject;}
     
     // Position checks
-    bool isAtHome() const { return currentPosition == 0; }
+    bool isAtFailedJunkEject() const { return currentPosition == 0; }
     bool isAtCapInjection() const { return currentPosition == 1; }
     bool isAtCapConfirm() const { return currentPosition == 2; }
     bool isAtBulbInjection() const { return currentPosition == 5; }
@@ -35,7 +41,7 @@ public:
     bool isAtPipetConfirm() const { return currentPosition == 10; }
     bool isAtCompletedEjection() const { return currentPosition == 13; }
     bool isAtJunkEjection() const { return currentPosition == 14; }
-    bool isAtEmptyConfirm() const { return currentPosition == 15; }
+    bool isAtJunkEjectConfirm() const { return currentPosition == 15; }
 };
 
 #endif

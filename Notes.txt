@@ -11,43 +11,17 @@ Keep logic to home the pipet twister using the sensor. This will give a good sta
 
 Todo: 
 
-Empty stop - When this button is pushed go to home but finish production. We need to close capFeed once stop.
-
-One step mode - push button and it moves one step at a time assembling
-
-Releasing caps - When motor finds home for the first time then we need it to open cap shoot and pause one second. This will allow a cap to get in the first slot before assembly begins. pin 35. capFeed. 
-
 Log error and caution 
-
-what happens if bulb isnt present and machine stops? Does it slam down when a bulb is detected? Or go pause 
-
-
-PIN - 31
-
-pipetTipSensor = low then it can continue
-
-if high then it needs to kick out in in junk 
-
-the sensor is at slot 10 
-
-junk ejector is slot 14
-
-Junk ejector shouldnt start ejecting until the first pipet reaches the pipet confirm 
-
-Junkejector broke because the motor started to move again. 
-
-o
-________
 
 
 Slot 2 cap confirm - 
 
 PIN - 29
 
-capInSlotSensor LOW when cap is succcesfullyt injected.
+capInSlotSensor 
 
-HIGH means it was not injected. 
-
+cap in slot =  HIGH 
+no cap in slot = LOW
 When it was not injected we dont want pipet or bulb place in slot and try again when it comes back around. 
 
 --------
@@ -58,11 +32,10 @@ soemtyhijgn  still in slot sensor dont put anything in here
 
 -------------
 
-bulb in cap sensor 
-
 
 Power for mechanics off but arduino is on should pikc this up and hault all processes. 
 
 
 caps arent allowing to go in
 
+Makes it to check if an errored on is ejected and it was then clear slot errors, reset empty values and junk values...otherwise stop machine.
