@@ -17,11 +17,19 @@ public:
     bool pipetSystemReady = true;  // Add this line
     long lastErrorResetTime = 0;
     long lastCautionResetTime = 0;
+    long lastDropperCompleteResetTime = 0;
+    long lastrunTimeResetTime = 0;
     bool printErrorLogs;
     bool printCautionLogs;
     bool revolverAtHome = false;
     bool revolverShouldMove = true;
-
+    int totalDroppersComplete = 0;
+void incrementDroppersCompleted(){
+    totalDroppersComplete = totalDroppersComplete++;
+}
+int getCompletedDropperCnt(){
+    return totalDroppersComplete;
+}
 bool shouldRevolverMove(){
     return revolverShouldMove;
 }
@@ -157,17 +165,37 @@ bool bulbPresent = true;
 //
 //
 //Cautions
-void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]){
-    String fullLog = "";
-    for(int i = 0; i < 16; i++) {
-        if(slots[i].hasJunk()){
-             fullLog = fullLog + "Slot " + i + " has junk.\\r";
-        }
+void updateMachineDisplayInfo(EasyNex myNex, long currentMilliTime, SlotObject slots[]){
+  
+    setRunTimeDisplay(myNex, currentMilliTime);
+    setDropperCntDisplay (myNex, currentMilliTime);
+    setErrorLogs(myNex, currentMilliTime);
+    setCautionLogs(myNex, currentMilliTime, slots);
+}
+void setRunTimeDisplay(EasyNex myNex, long currentMilliTime){
+     unsigned long currentUptime = millis() - currentMilliTime;
+    // Convert to total seconds
+    unsigned long totalSeconds = currentUptime / 1000;
+    
+    // Calculate time components
+    unsigned long hours = totalSeconds / 3600;
+    unsigned int minutes = (totalSeconds % 3600) / 60;
+    
+    // Format as "hours minutes" with hours up to 5 digits
+    char timeString[20]; // Enough for 5-digit hours + " hours " + 2-digit minutes + " minutes" + null
+    sprintf(timeString, "%lu hours %02d minutes", hours, minutes);
+    String display = String(timeString);
+    if((currentMilliTime-lastrunTimeResetTime) >= 500){
+        lastrunTimeResetTime=currentMilliTime;
+        myNex.writeStr("t2.txt", display);
     }
-        printCautionLogs = false;
-    if((currentMilliTime-lastErrorResetTime) >= 500){
-        lastErrorResetTime=currentMilliTime;
-       myNex.writeStr("cautionTxt.txt", fullLog);
+}
+
+void setDropperCntDisplay(EasyNex myNex, long currentMilliTime){
+    String display = (String)getCompletedDropperCnt();
+    if((currentMilliTime-lastDropperCompleteResetTime) >= 500){
+        lastDropperCompleteResetTime=currentMilliTime;
+        myNex.writeStr("t4.txt", display);
     }
 }
 
@@ -176,22 +204,44 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime){
     if(!bulbPresent){
         fullLog = fullLog + "No bulb detected for injection!\\r";
     }
-        printErrorLogs = false;
+    printErrorLogs = false;
     if((currentMilliTime-lastErrorResetTime) >= 500){
         lastErrorResetTime=currentMilliTime;
-       myNex.writeStr("errorTxt.txt", fullLog);
+        myNex.writeStr("errorTxt.txt", fullLog);
     }
 }
 
+void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]){
+    String fullLog = "";
+    for(int i = 0; i < 16; i++) {
+        if(slots[i].hasMissingCap()){
+            fullLog = fullLog + "Slot " + i + " has missing cap.\\r";
+        }
+        if(slots[i].hasMissingBulb()){
+             fullLog = fullLog + "Slot " + i + " has missing bulb.\\r";
+        }
+        if(slots[i].hasJunk()){
+             fullLog = fullLog + "Slot " + i + " has broken/missing pipet.\\r";
+        }
+        if(slots[i].hasFailedJunkEject()){
+             fullLog = fullLog + "Slot " + i + " failed to eject junk.\\r";
+        }
+    }
+        printCautionLogs = false;
+    if((currentMilliTime-lastCautionResetTime) >= 500){
+        lastCautionResetTime=currentMilliTime;
+       myNex.writeStr("cautionTxt.txt", fullLog);
+    }
+}
 // bool setBackgroundColorError(EasyNex myNex){
-//     String stringFromNextion;
-//     myNex.NextionListen();
-//     stringFromNextion = myNex.readStr("errorTxt.txt");
-//     if(stringFromNextion!=""){
-//         myNex.writeNum("Logs.bco", 63488);
-//     }
-//     else{
-//         myNex.writeNum("Logs.bco", 50712);
+    //     String stringFromNextion;
+    //     myNex.NextionListen();
+    //     stringFromNextion = myNex.readStr("errorTxt.txt");
+    //     if(stringFromNextion!=""){
+        //         myNex.writeNum("Logs.bco", 63488);
+        //     }
+        //     else{
+            //         myNex.writeNum("Logs.bco", 50712);
 //     }
 //     //Yellow 65504
 //     //Grey 50712

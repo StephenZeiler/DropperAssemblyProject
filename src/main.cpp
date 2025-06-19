@@ -474,9 +474,7 @@ void updateSlotPositions() {
 }
 
 void machineTracker(){
-    if(!isMoving){
-
-    
+    if(!isMoving){  
     motorPauseTime();
     if(digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart()){
         slots[slotIdPipetConfirm].setJunk(true);        
@@ -731,21 +729,7 @@ void handleButtons() {
     lastPauseState = pauseState;
     lastStopState = stopState;
 }
-String msToHMS(unsigned long milliseconds) {
-  // Convert to total seconds
-  unsigned long totalSeconds = milliseconds / 1000;
-  
-  // Calculate time components
-  unsigned int hours = totalSeconds / 3600;
-  unsigned int minutes = (totalSeconds % 3600) / 60;
-  unsigned int seconds = totalSeconds % 60;
-  
-  // Format as HH:MM:SS with leading zeros
-  char timeString[9]; // HH:MM:SS + null terminator
-  sprintf(timeString, "%02d:%02d:%02d", hours, minutes, seconds);
-  
-  return String(timeString);
-}
+
 
 
 void setup() {
@@ -805,13 +789,15 @@ void setup() {
 int i = 0;
 
 void loop() {
+    //unsigned long currentUptime = millis() - startTime;
     setSlotIdByPosition(slots);
     machineTracker();
 
     startTime = millis();
     motorPauseTime();
-   // machine.setErrorLogs(myNex, startTime);
-    //machine.setCautionLogs(myNex, startTime, slots);
+    machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    // machine.setErrorLogs(myNex, startTime);
+    // machine.setCautionLogs(myNex, startTime, slots);
     handleButtons();
     handleBulbSystem();
     //handleCapInjection();
@@ -843,7 +829,6 @@ void loop() {
 //myNex.writeStr("cautiontTxt.txt+", (String)i+"\\r");
 // myNex.writeStr("logTxt.txt", "test1\\r");
 // delay(2950);
-// unsigned long currentUptime = millis() - startTime;
 // String time = msToHMS(currentUptime);
 // myNex.writeStr("t2.txt", time);
 }
