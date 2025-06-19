@@ -10,6 +10,7 @@ private:
     bool isMissingBulb;
     bool isMissingCap;
     bool isJunkEjectFail;
+    bool shouldFinishProd;
     
 public:
     SlotObject(int id);
@@ -22,6 +23,7 @@ public:
     bool hasMissingBulb() const {return isMissingBulb;}
     bool hasMissingCap() const {return isMissingCap;}
     bool hasFailedJunkEject() const {return isJunkEjectFail;}
+    bool shouldFinishProduction() const {return shouldFinishProd;}
 
     // Setters
     void setPosition(int position) { currentPosition = position % 16; }
@@ -30,6 +32,7 @@ public:
     void setMissingBulb(bool missingBulb) {isMissingBulb = missingBulb;}
     void setMissingCap(bool missingCap) {isMissingCap = missingCap;}
     void setFailedJunkEject(bool failedEject) {isJunkEjectFail = failedEject;}
+    void setFinsihProduction(bool finish) {shouldFinishProd = finish;}
     
     // Position checks
     bool isAtFailedJunkEject() const { return currentPosition == 0; }

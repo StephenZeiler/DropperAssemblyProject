@@ -104,6 +104,9 @@ bool canCheckForEmptyStart(){
         revolverEmpty = true;
         
     }
+    void finishProduction() {
+        
+    }
     
     void homingComplete() {
         needsHoming = false;

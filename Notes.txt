@@ -11,19 +11,6 @@ Keep logic to home the pipet twister using the sensor. This will give a good sta
 
 Todo: 
 
-Log error and caution 
-
-
-Slot 2 cap confirm - 
-
-PIN - 29
-
-capInSlotSensor 
-
-cap in slot =  HIGH 
-no cap in slot = LOW
-When it was not injected we dont want pipet or bulb place in slot and try again when it comes back around. 
-
 --------
 
 
@@ -33,9 +20,14 @@ soemtyhijgn  still in slot sensor dont put anything in here
 -------------
 
 
-Power for mechanics off but arduino is on should pikc this up and hault all processes. 
+Power for mechanics off but arduino is on should pikc this up and hault all processes.  
 
 
 caps arent allowing to go in
 
 Makes it to check if an errored on is ejected and it was then clear slot errors, reset empty values and junk values...otherwise stop machine.
+
+
+TODO: MAKE SURE PAUSE BUTTON stops the machine homing
+
+TODO: Rework cap injection and include it in the requirements for finish proiducton button 
