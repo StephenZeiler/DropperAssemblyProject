@@ -702,7 +702,7 @@ void loop() {
 
     startTime = millis();
     motorPauseTime();
-    machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    //machine.updateMachineDisplayInfo(myNex, startTime, slots);
     // machine.setErrorLogs(myNex, startTime);
     // machine.setCautionLogs(myNex, startTime, slots);
     handleBulbSystem();
