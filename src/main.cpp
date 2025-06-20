@@ -422,7 +422,7 @@ void machineTracker(){
     if(!isMoving){  
     motorPauseTime();
     if(finishProductionButtonPin){
-        slots[slotIdCapInWheelInjection].setFinsihProduction(true);
+        //slots[slotIdCapInWheelInjection].setFinsihProduction(true);
     }
     if(digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart() && !slots[slotIdPipetConfirm].shouldFinishProduction()){
         slots[slotIdPipetConfirm].setJunk(true);        
@@ -453,9 +453,11 @@ void machineTracker(){
         digitalWrite(dropperEjectPin, HIGH);
     }
     if(motorPausePercent>.4){
-            //Shut off ejectors for junk etc.
-             digitalWrite(junkEjectorPin, LOW);
-             digitalWrite(dropperEjectPin, LOW);
+        String test = (String)slotIdDropeprEjection +   " Ejecting "+ (String)slots[slotIdDropeprEjection].hasFailedJunkEject() ;
+        myNex.writeStr("errorTxt.txt+", test +" \\r");
+        //Shut off ejectors for junk etc.
+        digitalWrite(junkEjectorPin, LOW);
+        digitalWrite(dropperEjectPin, LOW);
     }
     if(machine.canCheckForEmptyStart() && digitalRead(slotEmptySensor) == HIGH){
         slots[slotIdJunkConfirm].setFailedJunkEject(true);
