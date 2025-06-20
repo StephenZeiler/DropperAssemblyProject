@@ -452,7 +452,7 @@ void machineTracker(){
     if(machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction()){
         digitalWrite(dropperEjectPin, HIGH);
     }
-    if(motorPausePercent>.9){
+    if(motorPausePercent>.4){
             //Shut off ejectors for junk etc.
              digitalWrite(junkEjectorPin, LOW);
              digitalWrite(dropperEjectPin, LOW);
@@ -702,7 +702,9 @@ void loop() {
 
     startTime = millis();
     motorPauseTime();
-    //machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    if(!isMoving && motorPausePercent>.90){
+        machine.updateMachineDisplayInfo(myNex, startTime, slots);      
+    }
     // machine.setErrorLogs(myNex, startTime);
     // machine.setCautionLogs(myNex, startTime, slots);
     handleBulbSystem();
