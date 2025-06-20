@@ -169,7 +169,6 @@ bool bulbPresent = true;
 //
 //Cautions
 void updateMachineDisplayInfo(EasyNex myNex, long currentMilliTime, SlotObject slots[]){
-  
     setRunTimeDisplay(myNex, currentMilliTime);
     setDropperCntDisplay (myNex, currentMilliTime);
     setErrorLogs(myNex, currentMilliTime);
