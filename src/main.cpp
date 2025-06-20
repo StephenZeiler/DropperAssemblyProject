@@ -453,8 +453,6 @@ void machineTracker(){
         digitalWrite(dropperEjectPin, HIGH);
     }
     if(motorPausePercent>.4){
-        String test = (String)slotIdDropeprEjection +   " Ejecting "+ (String)slots[slotIdDropeprEjection].hasFailedJunkEject() ;
-        myNex.writeStr("errorTxt.txt+", test +" \\r");
         //Shut off ejectors for junk etc.
         digitalWrite(junkEjectorPin, LOW);
         digitalWrite(dropperEjectPin, LOW);
