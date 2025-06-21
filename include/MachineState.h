@@ -265,7 +265,7 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
         // Only update if there's something to display
         if(pos > 0) {
             lastCautionResetTime = currentMilliTime;
-            myNex.writeStr("cautionTxt.txt", fullLog);
+            myNex.writeStr("errorTxt.txt", fullLog);
         }
     }
 }
