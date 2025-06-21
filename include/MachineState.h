@@ -24,6 +24,7 @@ public:
     bool revolverAtHome = false;
     bool revolverShouldMove = true;
     int totalDroppersComplete = 0;
+    int timeLoggingDelay = 230;
 void incrementDroppersCompleted(){
     totalDroppersComplete = totalDroppersComplete++;
 }
@@ -208,7 +209,7 @@ void setRunTimeDisplay(EasyNex myNex, long currentMilliTime) {
 }
 
 void setDropperCntDisplay(EasyNex myNex, long currentMilliTime) {
-    if((currentMilliTime - lastDropperCompleteResetTime) >= 500) {
+    if((currentMilliTime - lastDropperCompleteResetTime) >= timeLoggingDelay) {
         // Using character buffers (Option 1)
         char countStr[12]; // Enough for 10 digits plus null terminator
         snprintf(countStr, sizeof(countStr), "%d", getCompletedDropperCnt());
@@ -219,7 +220,7 @@ void setDropperCntDisplay(EasyNex myNex, long currentMilliTime) {
 }
 
 void setErrorLogs(EasyNex myNex, long currentMilliTime) {
-    if((currentMilliTime - lastErrorResetTime) >= 500) {
+    if((currentMilliTime - lastErrorResetTime) >= timeLoggingDelay) {
         // Using character buffers (Option 1)
         char fullLog[256] = {0}; // Adjust size as needed
         int pos = 0;
@@ -237,7 +238,7 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime) {
 }
 
 void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
-    if((currentMilliTime - lastCautionResetTime) >= 500) {
+    if((currentMilliTime - lastCautionResetTime) >= timeLoggingDelay) {
         // Using character buffers (Option 1)
         char fullLog[1024] = {0}; // Adjust size based on maximum expected log size
         int pos = 0;
