@@ -509,7 +509,7 @@ void homeMachine() {
     machine.homingComplete();
     isMoving = true;
     lastStepTime = micros();
-    Serial.println("Homing complete - Slot 0 at Position 0");
+    //Serial.println("Homing complete - Slot 0 at Position 0");
 }
 bool puasedStateProcessing = false;
 void stepMotor() {
@@ -546,8 +546,8 @@ void stepMotor() {
                         currentHomePosition = (currentHomePosition + 1) % 16;
                         updateSlotPositions();
                        // processAssembly();
-                        String test = "current position " + (String)currentHomePosition;
-                myNex.writeStr("errorTxt.txt+", test +" \\r");
+                //         String test = "current position " + (String)currentHomePosition;
+                // myNex.writeStr("errorTxt.txt+", test +" \\r");
                        // puasedStateProcessing= false;
                    // }
                     
@@ -703,7 +703,7 @@ void loop() {
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
-        machine.updateMachineDisplayInfo(myNex, startTime, slots);      
+        machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
     // machine.setErrorLogs(myNex, startTime);
     // machine.setCautionLogs(myNex, startTime, slots);
