@@ -289,7 +289,7 @@ void handlePipetSystem() {
             
             // Deactivate ram after 90% of pause time
             //if (pausePercent >= 0.90 && digitalRead(pipetRamPin) == HIGH) { // TEST remove this comment if causing issues
-            if (pausePercent >= 0.90 ) {
+            if (pausePercent >= 0.90 && twisterAtHome) {
                 digitalWrite(pipetRamPin, LOW);
                 machine.setPipetSystemReady(true);              
             }
@@ -302,9 +302,8 @@ void handlePipetSystem() {
         }
         }
         else{
-            machine.setPipetSystemReady(true);
-            if(isMoving)
             digitalWrite(pipetTwisterPin, HIGH);
+            machine.setPipetSystemReady(true);
         }
     }
 }
