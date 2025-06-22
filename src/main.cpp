@@ -278,7 +278,7 @@ void handlePipetSystem() {
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
             
             // Activate ram after 5% of pause time
-            if (pausePercent >= 0.05 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW) {
+            if (pausePercent >= 0.01 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW) {
                 if(!slots[slotIdPipetInjection].hasError() || !slots[slotIdPipetInjection].shouldFinishProduction()){
                 //if(!slots[slotIdPipetInjection].hasMissingBulb()){
 
@@ -391,7 +391,7 @@ void handleBulbSystem() {
             }
             
             // Deactivate ram after 95% of pause time
-            if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
+            if (pausePercent >= 0.80 && digitalRead(bulbRamPin)) {
                 digitalWrite(bulbRamPin, LOW);
                 machine.setShouldRevolverMove(true);
             }
