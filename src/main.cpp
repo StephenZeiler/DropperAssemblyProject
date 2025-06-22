@@ -704,7 +704,7 @@ void loop() {
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
-        //machine.updateMachineDisplayInfo(myNex, startTime, slots);
+        machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
     // machine.setErrorLogs(myNex, startTime);
     // machine.setCautionLogs(myNex, startTime, slots);
