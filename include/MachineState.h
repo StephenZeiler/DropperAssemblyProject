@@ -54,6 +54,9 @@ void IncrementPositionsMoved(){
 void ResetPositionsMoved(){
     positionsMoved = 0;
 }
+bool canCapInjectStart(){
+    return positionsMoved >=0;
+}
 bool canCapConfirmStart(){
     return positionsMoved > 1;
 }
@@ -83,7 +86,6 @@ bool canCheckForEmptyStart(){
             needsHoming = true;
             revolverEmpty = true;
             isStopped = false;
-            inProduction = true;
         } else if (isPaused) {
             isPaused = false;
             inProduction = true;
@@ -121,7 +123,7 @@ bool canCheckForEmptyStart(){
         bulbSystemReady &&  // Add other systems here with &&
         //dropperSystemReady &&  // Add this
         //capInjectionReady &&
-        pipetSystemReady &&
+        //pipetSystemReady &&
         !needsHoming && 
         !revolverEmpty &&
         !isPaused && 
@@ -238,38 +240,44 @@ void setErrorLogs(EasyNex myNex, long currentMilliTime) {
 }
 
 void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
-    if((currentMilliTime - lastCautionResetTime) >= timeLoggingDelay) {
-        // Using character buffers (Option 1)
-        char fullLog[1024] = {0}; // Adjust size based on maximum expected log size
+    if ((currentMilliTime - lastCautionResetTime) >= timeLoggingDelay) {
+        char fullLog[1024] = {0}; // Buffer for full log
         int pos = 0;
-        
-        for(int i = 0; i < 16; i++) {
-            if(slots[i].hasMissingCap()) {
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "Slot %d has missing cap.\\r", i);
+
+        for (int i = 0; i < 16; i++) {
+            if (slots[i].hasMissingCap()) {
+                String msg = "Slot " + String(slots[i].getId()) + " has missing cap.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
-            if(slots[i].hasMissingBulb()) {
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "Slot %d has missing bulb.\\r", i);
+
+            if (slots[i].hasMissingBulb()) {
+                String msg = "Slot " + String(slots[i].getId()) + " has missing bulb.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
-            if(slots[i].hasJunk()) {
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "Slot %d has broken/missing pipet.\\r", i);
+
+            if (slots[i].hasJunk()) {
+                String msg = "Slot " + String(slots[i].getId()) + " has broken/missing pipet.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
-            if(slots[i].hasFailedJunkEject()) {
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "Slot %d failed to eject junk.\\r", i);
+
+            if (slots[i].hasFailedJunkEject()) {
+                String msg = "Slot " + String(slots[i].getId()) + " failed to eject junk.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
-            
+
             // Prevent buffer overflow
-            if(pos >= (int)sizeof(fullLog) - 64) {
+            if (pos >= (int)sizeof(fullLog) - 64) {
                 break;
             }
         }
-        
-        // Only update if there's something to display
-        if(pos > 0) {
+
+        if (pos > 0) {
             lastCautionResetTime = currentMilliTime;
-            myNex.writeStr("errorTxt.txt", fullLog);
+            myNex.writeStr("cautionTxt.txt", fullLog);
         }
     }
 }
+
 
 
 

@@ -15,6 +15,7 @@ const int enablePin = 24;
 const int startButtonPin = 10;
 const int pauseButtonPin = 11;
 const int finishProductionButtonPin = 12;
+const int singleStepButtonPin = 7; //temp button test - going to monitor for single step 
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
@@ -34,6 +35,7 @@ int stepsTaken = 0;
 bool isMoving = false;
 bool stepHigh = false;
 bool pauseRequested = false;
+bool emptySlotsRequested = false;
 bool finsihProdRequested = false;
 
 // Bulb system pins
@@ -279,7 +281,7 @@ void handlePipetSystem() {
             
             // Activate ram after 5% of pause time
             if (pausePercent >= 0.01 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW) {
-                if(!slots[slotIdPipetInjection].hasError() || !slots[slotIdPipetInjection].shouldFinishProduction()){
+                if(!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction()){
                 //if(!slots[slotIdPipetInjection].hasMissingBulb()){
 
                     digitalWrite(pipetRamPin, HIGH);
@@ -295,13 +297,18 @@ void handlePipetSystem() {
                     machine.setPipetSystemReady(true);              
                 }
             }
-            
             // Deactivate twister after 75% of pause time
             //if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && !slots[slotIdPipetInjection].hasMissingBulb()) {
-            if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && (!slots[slotIdPipetInjection].hasError() || !slots[slotIdPipetInjection].shouldFinishProduction())) {
-                digitalWrite(pipetTwisterPin, LOW);
+                if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())) {
+                    digitalWrite(pipetTwisterPin, LOW);
+                }
             }
-        }
+            if(slots[slotIdPipetInjection].shouldFinishProduction()){
+                digitalWrite(pipetTwisterPin, HIGH);
+                if(twisterAtHome){
+                 machine.setPipetSystemReady(true);
+                }
+            }
         }
         else{
             digitalWrite(pipetTwisterPin, HIGH);
@@ -360,7 +367,7 @@ void handleBulbSystem() {
             float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
             if(machine.shouldRevolverMove() && movementPercent >= .01){
                 //if(!slots[slotIdBulbInjection].hasMissingCap()){
-                if(!slots[slotIdBulbInjection].hasError() || !slots[slotIdBulbInjection].shouldFinishProduction()){
+                if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
                     runRevolverMotor(300,15,400);
                 }
                 //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
@@ -379,7 +386,7 @@ void handleBulbSystem() {
             // Activate ram after 5% of pause time (only if bulb position sensor reads LOW)
             if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent && !revolverSensor) {
                // if(!slots[slotIdBulbInjection].hasMissingCap()){
-                if(!slots[slotIdBulbInjection].hasError() || !slots[slotIdBulbInjection].shouldFinishProduction()){
+                if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
                 digitalWrite(bulbRamPin, HIGH);
                 }
                 ramExtended = true;
@@ -422,8 +429,10 @@ void updateSlotPositions() {
 void machineTracker(){
     if(!isMoving){  
     motorPauseTime();
-    if(finishProductionButtonPin){
-        //slots[slotIdCapInWheelInjection].setFinsihProduction(true);
+    if(finsihProdRequested){
+        // String test = (String)"Finish production active" ;
+        // myNex.writeStr("errorTxt.txt+",  "Finish prod active \\r");
+        slots[slotIdCapInWheelInjection].setFinsihProduction(true);
     }
     if(digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart() && !slots[slotIdPipetConfirm].shouldFinishProduction()){
         slots[slotIdPipetConfirm].setJunk(true);        
@@ -453,15 +462,18 @@ void machineTracker(){
     if(machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction()){
         digitalWrite(dropperEjectPin, HIGH);
     }
-    if(motorPausePercent>.4){
-        //Shut off ejectors for junk etc.
-        digitalWrite(junkEjectorPin, LOW);
-        digitalWrite(dropperEjectPin, LOW);
-    }
+    // if(motorPausePercent>.4){
+    //     //Shut off ejectors for junk etc.
+    //     digitalWrite(junkEjectorPin, LOW);
+    //     digitalWrite(dropperEjectPin, LOW);
+    // }
     if(machine.canCheckForEmptyStart() && digitalRead(slotEmptySensor) == HIGH){
         slots[slotIdJunkConfirm].setFailedJunkEject(true);
         //         String test = (String)slotIdJunkConfirm +   " failed junk: "+ (String)slots[slotIdJunkConfirm].hasFailedJunkEject() ;
         // myNex.writeStr("errorTxt.txt+", test +" \\r");
+    }
+    else if(machine.canCheckForEmptyStart() && digitalRead(slotEmptySensor) == LOW){
+        slots[slotIdJunkConfirm].setFailedJunkEject(false);
     }
     else{
         slots[slotIdJunkConfirm].setFailedJunkEject(false);
@@ -471,16 +483,27 @@ void machineTracker(){
         slots[slotIdJunkConfirm].setError(false);
     }
     if(slots[slotIdFailedJunkEject].hasFailedJunkEject()){
-        //TODO: STOP Machine.
-        //   String test = (String)slotIdFailedJunkEject +   " STOP "+ (String)slots[slotIdFailedJunkEject].hasFailedJunkEject() ;
-        // myNex.writeStr("errorTxt.txt+", test +" \\r");
         machine.stop();
-        //stopRequested = false;
     }
+    if(slots[slotIdJunkEjection].shouldFinishProduction()){ 
+        machine.pause();
+    }
+}
+if(isMoving || machine.isStopped || machine.isPaused){
+        //Shut off ejectors for junk etc.
+        digitalWrite(junkEjectorPin, LOW);
+        digitalWrite(dropperEjectPin, LOW);
 }
 setSlotErrors(slots);
 }
-
+void handleCapInjection(){
+if(machine.inProduction && !slots[slotIdCapInWheelInjection].hasError() && !slots[slotIdCapInWheelInjection].shouldFinishProduction()){
+    digitalWrite(capInjectPin, HIGH);
+}
+else{
+    digitalWrite(capInjectPin, LOW);
+}
+}
 void homeMachine() {
     Serial.println("Homing started...");
     unsigned long stepDelay = 5000;
@@ -488,6 +511,7 @@ void homeMachine() {
     
     while(digitalRead(homeSensorPin) == HIGH) {
         if(micros() - lastStep >= stepDelay) {
+            digitalWrite(junkEjectorPin, HIGH);
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
             digitalWrite(stepPin, LOW);
@@ -500,13 +524,15 @@ void homeMachine() {
             // }
         }
     }
-    if(digitalRead(homeSensorPin) == LOW ){       
-        digitalWrite(capInjectPin, HIGH);
+    if(digitalRead(homeSensorPin) == LOW ){ 
+        machine.inProduction = true;    
+        digitalWrite(junkEjectorPin, LOW);  
+        //digitalWrite(capInjectPin, HIGH);
       //  delay(1000);
     }
     
     currentHomePosition = 0;
-    updateSlotPositions();
+    //updateSlotPositions();
     machine.homingComplete();
     isMoving = true;
     lastStepTime = micros();
@@ -553,11 +579,7 @@ void stepMotor() {
                    // }
                     
                     // Check if pause was requested during movement
-                    if(pauseRequested) {
-                        machine.pause();
-                        pauseRequested = false;
-                        return;
-                    }
+
                     
                     // Check if stop was requested
                     // if(finsihProdRequested && currentHomePosition == 0) {
@@ -573,6 +595,11 @@ void stepMotor() {
             lastStepTime = currentTime;
         }
     } else {
+            if(pauseRequested) {
+                machine.pause();
+                pauseRequested = false;
+                return;
+            }
         // Only start moving if ALL systems are ready AND pause time has elapsed
         if (machine.isReadyToMove() && (currentTime - pauseStartTime >= PAUSE_AFTER)) {
             // Additional safety check - confirm ram is home before moving
@@ -607,6 +634,7 @@ void handleButtons() {
     bool startState = digitalRead(startButtonPin);
     bool pauseState = digitalRead(pauseButtonPin);
     bool finishState = digitalRead(finishProductionButtonPin);
+    //bool finishState = digitalRead(singleStepButtonPin);
     
     // Only check buttons if debounce time has passed
     if (millis() - lastDebounceTime < debounceDelay) return;
@@ -618,7 +646,6 @@ void handleButtons() {
         pauseRequested = false;
         finsihProdRequested = false;
     }
-    
     // Pause button pressed
     if (pauseState == HIGH && lastPauseState == LOW && !machine.isStopped && !machine.isPaused) {
         lastDebounceTime = millis();
@@ -636,12 +663,31 @@ void handleButtons() {
     lastPauseState = pauseState;
     lastFinishState = finishState;
 }
-
-
+void emptySlots() {
+    const unsigned long stepDelay = 4000; // 5ms per step = 200 steps in ~1 second
+    digitalWrite(junkEjectorPin, HIGH);
+int i = 0;
+    while(i<=3500){
+        if(digitalRead(pauseButtonPin)){
+            break;
+        }
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(10); // pulse width
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(stepDelay); // delay between steps
+        ++i;
+}
+    digitalWrite(junkEjectorPin, LOW);
+}
+void trigger1() {//empty slots trigger
+    if(!machine.inProduction){
+        emptySlots();
+    }
+}
 
 void setup() {
     //Serial.begin(115200);
-     myNex.begin(9600); 
+     myNex.begin(115200); 
       
     // Initialize pins
     pinMode(stepPin, OUTPUT);
@@ -651,6 +697,7 @@ void setup() {
     pinMode(startButtonPin, OUTPUT);
     pinMode(pauseButtonPin, OUTPUT);
     pinMode(finishProductionButtonPin, OUTPUT);
+    pinMode(singleStepButtonPin, OUTPUT);
 
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW);
@@ -686,28 +733,32 @@ void setup() {
 
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
     digitalWrite(bulbRamPin, LOW);
+    digitalWrite(capInjectPin, LOW);
     digitalWrite(pipetRamPin, LOW);
     digitalWrite(junkEjectorPin, LOW);
-     currentPipetState = PIPET_HOMING;
+    currentPipetState = PIPET_HOMING;
     updateSlotPositions();
-     
+    
 }
 
 int i = 0;
 
 void loop() {
+    myNex.NextionListen();
     //unsigned long currentUptime = millis() - startTime;
     handleButtons();
+    handleCapInjection();
     setSlotIdByPosition(slots);
     machineTracker();
 
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
-        //machine.updateMachineDisplayInfo(myNex, startTime, slots);
+       machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
     // machine.setErrorLogs(myNex, startTime);
     // machine.setCautionLogs(myNex, startTime, slots);
+    
     handleBulbSystem();
     handlePipetSystem();  // Make sure this is uncommented
     
@@ -725,12 +776,11 @@ void loop() {
     if (machine.inProduction) {
         stepMotor();
     }
-
-// if(digitalRead(capInWheel)==HIGH){
-// digitalWrite(dropperEjectPin, HIGH);
+// if(digitalRead(finishProductionButtonPin)){
+// digitalWrite(capInjectPin, HIGH);
 // }
 // else{
-// digitalWrite(dropperEjectPin, LOW);
+// digitalWrite(capInjectPin, LOW);
 // }
 // i++;
 //myNex.writeStr("cautiontTxt.txt+", (String)i+"\\r");
