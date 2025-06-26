@@ -24,12 +24,22 @@ public:
     bool revolverAtHome = false;
     bool revolverShouldMove = true;
     int totalDroppersComplete = 0;
+    int totalErroredDroppers = 0;
     int timeLoggingDelay = 230;
+    bool statusStateChange = false;
+    String status = "";
+
 void incrementDroppersCompleted(){
-    totalDroppersComplete = totalDroppersComplete++;
+    totalDroppersComplete++;
+}
+void incrementErroredDroppers(){
+    totalErroredDroppers++;
 }
 int getCompletedDropperCnt(){
     return totalDroppersComplete;
+}
+int getErrorDropperCnt(){
+    return totalErroredDroppers;
 }
 bool shouldRevolverMove(){
     return revolverShouldMove;
@@ -86,6 +96,7 @@ bool canCheckForEmptyStart(){
             needsHoming = true;
             revolverEmpty = true;
             isStopped = false;
+            inProduction = true;
         } else if (isPaused) {
             isPaused = false;
             inProduction = true;
@@ -105,7 +116,6 @@ bool canCheckForEmptyStart(){
         inProduction = false;
         needsHoming = true;
         revolverEmpty = true;
-        
     }
     void finishProduction() {
         
@@ -172,13 +182,17 @@ bool bulbPresent = true;
 //
 //Cautions
 
-
+void updateStatus(EasyNex myNex, String newStatus){
+    status=newStatus;
+    statusStateChange = true;
+    setStatusDisplay(myNex);
+}
 void updateMachineDisplayInfo(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
     static uint8_t displayCounter = 0;  
     // Stagger the updates (Option 3)
     switch(displayCounter) {
         case 0: 
-            setRunTimeDisplay(myNex, currentMilliTime); 
+            //setRunTimeDisplay(myNex, currentMilliTime); 
             break;
         case 1: 
             setDropperCntDisplay(myNex, currentMilliTime); 
@@ -211,16 +225,32 @@ void setRunTimeDisplay(EasyNex myNex, long currentMilliTime) {
 }
 
 void setDropperCntDisplay(EasyNex myNex, long currentMilliTime) {
-    if((currentMilliTime - lastDropperCompleteResetTime) >= timeLoggingDelay) {
+    if((currentMilliTime - lastDropperCompleteResetTime) >= 60000) {
         // Using character buffers (Option 1)
-        char countStr[12]; // Enough for 10 digits plus null terminator
-        snprintf(countStr, sizeof(countStr), "%d", getCompletedDropperCnt());
-        
+        char countCompletedStr[12]; // Enough for 10 digits plus null terminator
+        snprintf(countCompletedStr, sizeof(countCompletedStr), "%d", getCompletedDropperCnt());
+        myNex.writeStr("completedTxt.txt", countCompletedStr);
+
+        char countErrorStr[12];
+        snprintf(countErrorStr, sizeof(countErrorStr), "%d", getErrorDropperCnt());
+        myNex.writeStr("junkTxt.txt", countErrorStr);
         lastDropperCompleteResetTime = currentMilliTime;
-        myNex.writeStr("t4.txt", countStr);
+        //snprintf(countStr, sizeof(countStr), "%d", getErrorDropperCnt());
     }
 }
+void setStatusDisplay(EasyNex myNex) {
+        // Using character buffers (Option 1)
+    if(statusStateChange){
+        char fullLog[1024] = {0}; // Buffer for full log
+        int pos = 0;
 
+             String msg = status;
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            
+            myNex.writeStr("statusTxt.txt", fullLog);
+    }
+    statusStateChange = false;
+}
 void setErrorLogs(EasyNex myNex, long currentMilliTime) {
     if((currentMilliTime - lastErrorResetTime) >= timeLoggingDelay) {
         // Using character buffers (Option 1)

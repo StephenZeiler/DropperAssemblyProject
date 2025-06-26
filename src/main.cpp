@@ -15,7 +15,8 @@ const int enablePin = 24;
 const int startButtonPin = 10;
 const int pauseButtonPin = 11;
 const int finishProductionButtonPin = 12;
-const int singleStepButtonPin = 7; //temp button test - going to monitor for single step 
+const int speedButtonPin = 8;
+const int emptySlotsButtonPin = 9;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
@@ -23,7 +24,13 @@ const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same accelerat
 const int DECEL_STEPS = 20;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
 const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
 const int MAX_STEP_DELAY = 800;  // microseconds (keep same for start speed) - was 2000
-const unsigned long PAUSE_AFTER = 50000; // microseconds (keep same pause time)
+unsigned long PAUSE_AFTER = 50000; // microseconds (keep same pause time)
+
+// Fast values
+#define PAUSE_AFTER_FAST     1000000 //one second
+
+#define PAUSE_AFTER_SLOW     50000
+
 
 // Sensor
 const int homeSensorPin = 25;
@@ -112,6 +119,11 @@ float motorPausePercent;
 BulbState currentBulbState = BULB_IDLE;
 unsigned long bulbStateStartTime = 0;
 bool motorDecelerated = false;
+
+int motorSpeedMode = 0;       // 0 = slow, 1 = fast
+int lastSw0Val = -1;          // Track last known switch state
+const uint8_t SW0_PAGE_ID = 0; // Replace with actual page ID
+const uint8_t SW0_COMPONENT_ID = 10; // Replace with actual component ID
 
 // Slot tracking
 
@@ -426,8 +438,10 @@ void updateSlotPositions() {
     machine.IncrementPositionsMoved();
 }
 
+bool shouldRunTracker = true;
 void machineTracker(){
-    if(!isMoving){  
+    if(!isMoving && shouldRunTracker){  
+    shouldRunTracker = false;
     motorPauseTime();
     if(finsihProdRequested){
         // String test = (String)"Finish production active" ;
@@ -457,11 +471,16 @@ void machineTracker(){
 
     if(machine.canJunkEjectionStart()){
         digitalWrite(junkEjectorPin, HIGH);
+        if(slots[slotIdJunkEjection].hasError()){
+            machine.incrementErroredDroppers();
+        }
     }
      
     if(machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction()){
+        machine.incrementDroppersCompleted();
         digitalWrite(dropperEjectPin, HIGH);
     }
+
     // if(motorPausePercent>.4){
     //     //Shut off ejectors for junk etc.
     //     digitalWrite(junkEjectorPin, LOW);
@@ -474,19 +493,20 @@ void machineTracker(){
     }
     else if(machine.canCheckForEmptyStart() && digitalRead(slotEmptySensor) == LOW){
         slots[slotIdJunkConfirm].setFailedJunkEject(false);
-    }
-    else{
-        slots[slotIdJunkConfirm].setFailedJunkEject(false);
         slots[slotIdJunkConfirm].setJunk(false);
         slots[slotIdJunkConfirm].setMissingBulb(false);
         slots[slotIdJunkConfirm].setMissingCap(false);
         slots[slotIdJunkConfirm].setError(false);
     }
+    
+    
     if(slots[slotIdFailedJunkEject].hasFailedJunkEject()){
         machine.stop();
     }
     if(slots[slotIdJunkEjection].shouldFinishProduction()){ 
         machine.pause();
+        digitalWrite(junkEjectorPin, LOW);
+        digitalWrite(dropperEjectPin, LOW);
     }
 }
 if(isMoving || machine.isStopped || machine.isPaused){
@@ -504,12 +524,16 @@ else{
     digitalWrite(capInjectPin, LOW);
 }
 }
-void homeMachine() {
-    Serial.println("Homing started...");
+void homeMachine() {   
     unsigned long stepDelay = 5000;
     unsigned long lastStep = micros();
-    
     while(digitalRead(homeSensorPin) == HIGH) {
+        digitalWrite(capInjectPin, LOW);
+        if(!digitalRead(pauseButtonPin)){
+            machine.stop();
+            machine.updateStatus( myNex, "Homing Stopped");
+            break;
+        }
         if(micros() - lastStep >= stepDelay) {
             digitalWrite(junkEjectorPin, HIGH);
             digitalWrite(stepPin, HIGH);
@@ -564,7 +588,7 @@ void stepMotor() {
                 stepsTaken++;
                 
                 if (stepsTaken >= TOTAL_STEPS) {
-                    
+                    shouldRunTracker = true;
                     isMoving = false;
                     pauseStartTime = currentTime;
                     stepsTaken = 0;
@@ -622,7 +646,42 @@ while(machine.revolverEmpty){
         runRevolverMotor(600,25,700);
     }
 }
-   
+
+}
+void emptySlots() {
+    machine.updateStatus( myNex, "Emptying Slots");
+    const unsigned long stepDelay = 4000; // 5ms per step = 200 steps in ~1 second
+    digitalWrite(junkEjectorPin, HIGH);
+    digitalWrite(pipetTwisterPin, LOW);
+int i = 0;
+    while(i<=3500){
+        if(!digitalRead(pauseButtonPin)){
+            machine.stop();
+            machine.updateStatus( myNex, "Emptying Stopped");
+            break;
+        }
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(10); // pulse width
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(stepDelay); // delay between steps
+        ++i;
+}
+machine.updateStatus( myNex, "Emptying Completed");
+    digitalWrite(junkEjectorPin, LOW);
+    digitalWrite(pipetTwisterPin, HIGH);
+    machine.stop();
+}
+void handleSpeedButton(){
+    if (!digitalRead(speedButtonPin)) {
+    PAUSE_AFTER = PAUSE_AFTER_FAST;
+  } else {
+    PAUSE_AFTER = PAUSE_AFTER_SLOW;
+  }    
+}
+void handleEmptySlots(){
+    if(!machine.inProduction && !digitalRead(emptySlotsButtonPin)){
+        emptySlots();
+    }
 }
 void handleButtons() {
     static unsigned long lastDebounceTime = 0;
@@ -638,22 +697,28 @@ void handleButtons() {
     
     // Only check buttons if debounce time has passed
     if (millis() - lastDebounceTime < debounceDelay) return;
-    
+    handleSpeedButton();
+    handleEmptySlots();
     // Start button pressed (HIGH when pushed)
-    if (startState == HIGH && lastStartState == LOW) {
+    if (startState == LOW && lastStartState == HIGH) {
         lastDebounceTime = millis();
         machine.start();
         pauseRequested = false;
         finsihProdRequested = false;
+        machine.updateStatus(myNex,"In Production");
     }
     // Pause button pressed
-    if (pauseState == HIGH && lastPauseState == LOW && !machine.isStopped && !machine.isPaused) {
+    if (pauseState == LOW && lastPauseState == HIGH && !machine.isStopped && !machine.isPaused) {
+        machine.updateStatus(myNex, "Paused");
         lastDebounceTime = millis();
         pauseRequested = true;
     }
     
     // finsih button pressed
-    if (finishState == HIGH && lastFinishState == LOW && !machine.isStopped) {
+    if (finishState == LOW && lastFinishState == HIGH && !machine.isStopped) {
+        if(machine.inProduction){
+            machine.updateStatus(myNex, "End Production");
+        }
         lastDebounceTime = millis();
         finsihProdRequested = true;
     }
@@ -663,28 +728,11 @@ void handleButtons() {
     lastPauseState = pauseState;
     lastFinishState = finishState;
 }
-void emptySlots() {
-    const unsigned long stepDelay = 4000; // 5ms per step = 200 steps in ~1 second
-    digitalWrite(junkEjectorPin, HIGH);
-int i = 0;
-    while(i<=3500){
-        if(digitalRead(pauseButtonPin)){
-            break;
-        }
-        digitalWrite(stepPin, HIGH);
-        delayMicroseconds(10); // pulse width
-        digitalWrite(stepPin, LOW);
-        delayMicroseconds(stepDelay); // delay between steps
-        ++i;
-}
-    digitalWrite(junkEjectorPin, LOW);
-}
-void trigger1() {//empty slots trigger
-    if(!machine.inProduction){
-        emptySlots();
-    }
-}
-
+// void trigger1() {//empty slots trigger
+//     if(!machine.inProduction){
+//         emptySlots();
+//     }
+// }
 void setup() {
     //Serial.begin(115200);
      myNex.begin(115200); 
@@ -694,10 +742,11 @@ void setup() {
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
    
-    pinMode(startButtonPin, OUTPUT);
-    pinMode(pauseButtonPin, OUTPUT);
-    pinMode(finishProductionButtonPin, OUTPUT);
-    pinMode(singleStepButtonPin, OUTPUT);
+    pinMode(startButtonPin, INPUT_PULLUP);
+    pinMode(pauseButtonPin, INPUT_PULLUP);
+    pinMode(finishProductionButtonPin, INPUT_PULLUP);
+    pinMode(emptySlotsButtonPin, INPUT_PULLUP);
+    pinMode(speedButtonPin, INPUT_PULLUP);
 
     digitalWrite(enablePin, LOW);
     digitalWrite(dirPin, LOW);
@@ -741,10 +790,12 @@ void setup() {
     
 }
 
+
 int i = 0;
 
 void loop() {
-    myNex.NextionListen();
+    
+    //myNex.NextionListen();
     //unsigned long currentUptime = millis() - startTime;
     handleButtons();
     handleCapInjection();
@@ -765,10 +816,15 @@ void loop() {
     if (machine.isStopped) return;
     if (machine.needsHoming || machine.revolverEmpty) {
         if(machine.revolverEmpty){
+            machine.updateStatus(myNex,"Revolver homing");
             fillRevolver();
         }
         if(machine.needsHoming){
+            machine.updateStatus(myNex,"Motor Homing");
             homeMachine();
+        }
+        if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
+            machine.updateStatus(myNex,"In Production");
         }
         return;
     }
