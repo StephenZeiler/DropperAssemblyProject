@@ -440,6 +440,14 @@ void updateSlotPositions() {
 
 bool shouldRunTracker = true;
 void machineTracker(){
+    static bool lastMotorState = false;
+    static unsigned long motorStopTime = 0;
+     if (lastMotorState && !isMoving) {
+        motorStopTime = micros(); // Record when motor stopped
+    }
+    lastMotorState = isMoving;
+    unsigned long stopDuration = micros() - motorStopTime;
+
     if(!isMoving && shouldRunTracker){  
     shouldRunTracker = false;
     motorPauseTime();
@@ -470,7 +478,12 @@ void machineTracker(){
     }
 
     if(machine.canJunkEjectionStart()){
-        digitalWrite(junkEjectorPin, HIGH);
+        if(stopDuration < 100000 && !isMoving){
+            digitalWrite(junkEjectorPin, HIGH);
+        }
+        else{
+             digitalWrite(junkEjectorPin, LOW);
+        }
         if(slots[slotIdJunkEjection].hasError()){
             machine.incrementErroredDroppers();
         }
@@ -478,7 +491,13 @@ void machineTracker(){
      
     if(machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction()){
         machine.incrementDroppersCompleted();
-        digitalWrite(dropperEjectPin, HIGH);
+        if(stopDuration < 100000 && !isMoving){
+            digitalWrite(dropperEjectPin, HIGH);
+        }
+        else{
+            digitalWrite(dropperEjectPin, LOW);
+        }
+        
     }
 
     // if(motorPausePercent>.4){
