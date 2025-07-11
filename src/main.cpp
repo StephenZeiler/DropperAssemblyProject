@@ -554,7 +554,7 @@ void homeMachine() {
             break;
         }
         if(micros() - lastStep >= stepDelay) {
-            digitalWrite(junkEjectorPin, HIGH);
+            //digitalWrite(junkEjectorPin, HIGH);
             digitalWrite(stepPin, HIGH);
             delayMicroseconds(10);
             digitalWrite(stepPin, LOW);
