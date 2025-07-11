@@ -528,7 +528,7 @@ if(isMoving || machine.isStopped || machine.isPaused){
         digitalWrite(dropperEjectPin, LOW);
 }
 setSlotErrors(slots);
- if(stopDuration > 10000){
+ if(stopDuration > 100000){
             digitalWrite(junkEjectorPin, LOW);
             digitalWrite(dropperEjectPin, LOW);
 }
