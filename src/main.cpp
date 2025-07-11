@@ -478,7 +478,7 @@ void machineTracker(){
     }
 
     if(machine.canJunkEjectionStart()){
-        if(stopDuration < 35000 && !isMoving){
+        if(stopDuration < 30000 && !isMoving){
             digitalWrite(junkEjectorPin, HIGH);
         }
         if(slots[slotIdJunkEjection].hasError()){
@@ -488,7 +488,7 @@ void machineTracker(){
      
     if(machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction()){
         machine.incrementDroppersCompleted();
-        if(stopDuration < 35000 && !isMoving){
+        if(stopDuration < 30000 && !isMoving){
             digitalWrite(dropperEjectPin, HIGH);
         }
         
@@ -528,7 +528,7 @@ if(isMoving || machine.isStopped || machine.isPaused){
         digitalWrite(dropperEjectPin, LOW);
 }
 setSlotErrors(slots);
- if(stopDuration > 35000){
+ if(stopDuration > 30000){
             digitalWrite(junkEjectorPin, LOW);
             digitalWrite(dropperEjectPin, LOW);
 }
