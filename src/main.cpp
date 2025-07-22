@@ -20,7 +20,7 @@ const int emptySlotsButtonPin = 9;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
-const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140
+const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
 const int DECEL_STEPS = 20;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
 const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
 const int MAX_STEP_DELAY = 800;  // microseconds (keep same for start speed) - was 2000
@@ -668,14 +668,19 @@ while(machine.revolverEmpty){
 void emptySlots() {
     machine.updateStatus( myNex, "Emptying Slots");
     const unsigned long stepDelay = 4000; // 5ms per step = 200 steps in ~1 second
-    digitalWrite(junkEjectorPin, HIGH);
     digitalWrite(pipetTwisterPin, LOW);
 int i = 0;
-    while(i<=3500){
+    while(i<=3200){ //full rotation based on 16 slots 200 per slot
         if(!digitalRead(pauseButtonPin)){
             machine.stop();
             machine.updateStatus( myNex, "Emptying Stopped");
             break;
+        }
+        if(i%200 == 0){
+            digitalWrite(junkEjectorPin, HIGH);
+            delay(200);
+            digitalWrite(junkEjectorPin, LOW);
+            delay(200);
         }
         digitalWrite(stepPin, HIGH);
         delayMicroseconds(10); // pulse width
