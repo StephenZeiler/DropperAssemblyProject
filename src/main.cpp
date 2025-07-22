@@ -410,7 +410,7 @@ void handleBulbSystem() {
             }
             
             // Deactivate ram after 95% of pause time
-            if (pausePercent >= 0.80 && digitalRead(bulbRamPin)) {
+            if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
                 digitalWrite(bulbRamPin, LOW);
                 machine.setShouldRevolverMove(true);
             }
