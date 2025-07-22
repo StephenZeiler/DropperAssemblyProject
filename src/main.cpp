@@ -29,7 +29,7 @@ unsigned long PAUSE_AFTER = 300000; // microseconds (keep same pause time)
 // Fast values
 #define PAUSE_AFTER_FAST     1000000 //one second
 
-#define PAUSE_AFTER_SLOW     50000
+#define PAUSE_AFTER_SLOW     300000
 
 
 // Sensor
