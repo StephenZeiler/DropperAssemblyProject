@@ -24,12 +24,12 @@ const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same accelerat
 const int DECEL_STEPS = 20;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
 const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
 const int MAX_STEP_DELAY = 800;  // microseconds (keep same for start speed) - was 2000
-unsigned long PAUSE_AFTER = 200000; // microseconds (keep same pause time)
+unsigned long PAUSE_AFTER = 80000; // microseconds (keep same pause time)
 
 // Fast values
-#define PAUSE_AFTER_FAST     1000000 //one second
+#define PAUSE_AFTER_FAST     80000 //one second
 
-#define PAUSE_AFTER_SLOW     200000
+#define PAUSE_AFTER_SLOW     1000000
 
 
 // Sensor
@@ -478,7 +478,7 @@ void machineTracker(){
     }
 
     if(machine.canJunkEjectionStart()){
-        if(stopDuration < 30000 && !isMoving){
+        if(stopDuration < 18000 && !isMoving){
             digitalWrite(junkEjectorPin, HIGH);
         }
         if(slots[slotIdJunkEjection].hasError()){
@@ -488,7 +488,7 @@ void machineTracker(){
      
     if(machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction()){
         machine.incrementDroppersCompleted();
-        if(stopDuration < 30000 && !isMoving){
+        if(stopDuration < 18000 && !isMoving){
             digitalWrite(dropperEjectPin, HIGH);
         }
         
@@ -528,7 +528,7 @@ if(isMoving || machine.isStopped || machine.isPaused){
         digitalWrite(dropperEjectPin, LOW);
 }
 setSlotErrors(slots);
- if(stopDuration > 30000){
+ if(stopDuration > 18000){
             digitalWrite(junkEjectorPin, LOW);
             digitalWrite(dropperEjectPin, LOW);
 }
@@ -695,9 +695,9 @@ machine.updateStatus( myNex, "Emptying Completed");
 }
 void handleSpeedButton(){
     if (!digitalRead(speedButtonPin)) {
-    PAUSE_AFTER = PAUSE_AFTER_FAST;
-  } else {
     PAUSE_AFTER = PAUSE_AFTER_SLOW;
+  } else {
+    PAUSE_AFTER = PAUSE_AFTER_FAST;
   }    
 }
 void handleEmptySlots(){
