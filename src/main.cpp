@@ -20,8 +20,8 @@ const int emptySlotsButtonPin = 9;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
-const int ACCEL_STEPS = 80;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
-const int DECEL_STEPS = 10;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
+const int ACCEL_STEPS = 178;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
+const int DECEL_STEPS = 22;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
 const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
 const int MAX_STEP_DELAY = 400;  // microseconds (keep same for start speed) - was 2000
 unsigned long PAUSE_AFTER = 100000; // microseconds (keep same pause time)
@@ -385,8 +385,9 @@ void handleBulbSystem() {
                 //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
 
             }
-            if (revolverSensor == LOW && movementPercent >= .10){
+            if (revolverSensor == LOW && movementPercent >= .06){
                 machine.setShouldRevolverMove(false); 
+                //machine.revolverCompletedMove = true;
             }                     
         }        
         else {
@@ -413,6 +414,7 @@ void handleBulbSystem() {
             if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
                 digitalWrite(bulbRamPin, LOW);
                 machine.setShouldRevolverMove(true);
+               // machine.revolverCompletedMove = false;
             }
             
             // Only set system ready when ram is confirmed home and retracted

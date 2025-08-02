@@ -26,6 +26,7 @@ public:
     int totalDroppersComplete = 0;
     int totalErroredDroppers = 0;
     int timeLoggingDelay = 230;
+    bool revolverCompletedMove = false;
     bool statusStateChange = false;
     String status = "";
 
