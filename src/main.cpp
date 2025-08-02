@@ -216,48 +216,33 @@ MachineState machine;
 // unsigned long minStepInterval = 300; // Your motor's maximum speed (100µs = 10kHz)
 // int acceleration = 25; // How aggressively to accelerate (lower = faster acceleration) 25
 
-void runRevolverMotor(long minStepInterval, int acceleration, long initialStepInterval, int totalSteps) {
-  static unsigned long prevMicros = 0;
-  static int stepState = 1;
-  static int stepsTaken = 0;
-  unsigned long now = micros();
-
-  // Initialize current step interval to initial value at start
-  static long currentInterval = initialStepInterval;
-  static bool isRunning = true; // set to false when done
-
-  if (!isRunning) return; // stop if not running
-
-  if ((now - prevMicros) >= currentInterval) {
+void runRevolverMotor(long minStepInterval, int acceleration, long revolverStepInterval) {
+  static long prevRevolverMicros = 0;
+  static int revolverStepState = 1;
+  unsigned long currentMicros = micros();
+  
+  // Only proceed if it's time for the next step
+  if ((currentMicros - prevRevolverMicros) >= revolverStepInterval) {
     // Toggle the step pin
-    digitalWrite(revolverPUL, (stepState == 1) ? HIGH : LOW);
-    stepState = (stepState == 1) ? 2 : 1;
-
-    // Only count steps on rising edge
-    if (stepState == 1) {
-      stepsTaken++;
-      if (stepsTaken >= totalSteps) {
-        // Reached target steps; stop or reset as needed
-        isRunning = false;
-        return;
-      }
-    }
-
-    // Adjust speed (acceleration)
-    if (currentInterval > minStepInterval) {
-      // Use a simple acceleration formula
-      long newInterval = currentInterval - (acceleration * currentInterval) / (currentInterval + acceleration);
+    digitalWrite(revolverPUL, (revolverStepState == 1) ? HIGH : LOW);
+    revolverStepState = (revolverStepState == 1) ? 2 : 1;
+    
+    // Apply acceleration if not at max speed
+    if (revolverStepInterval > minStepInterval) {
+      // Reduce the interval (increase speed) based on acceleration factor
+      // Using inverse relationship for proper acceleration curve
+      revolverStepInterval = revolverStepInterval - (acceleration * revolverStepInterval) / (revolverStepInterval + acceleration);
       
-      // Clamp to minStepInterval
-      if (newInterval < minStepInterval) {
-        newInterval = minStepInterval;
+      // Ensure we don't go below minimum interval
+      if (revolverStepInterval < minStepInterval) {
+        revolverStepInterval = minStepInterval;
       }
-      currentInterval = newInterval;
     }
-
-    prevMicros = now;
+    
+    prevRevolverMicros = currentMicros;
   }
 }
+
 void handlePipetSystem() {
     static bool lastMotorState = false;
     static bool homingComplete = false;
@@ -395,12 +380,12 @@ void handleBulbSystem() {
             if(machine.shouldRevolverMove() && movementPercent >= .01){
                 //if(!slots[slotIdBulbInjection].hasMissingCap()){
                 if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
-                    runRevolverMotor(20, 50, 50, 200);
+                    runRevolverMotor(300,15,400);
                 }
                 //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
 
             }
-            if (revolverSensor == LOW && movementPercent >= .30 && !machine.revolverCompletedMove){
+            if (revolverSensor == LOW && movementPercent >= .30 && movementPercent >= .30 && !machine.revolverCompletedMove){
                 machine.setShouldRevolverMove(false); 
                 machine.revolverCompletedMove = true;
             }                     
@@ -663,8 +648,7 @@ while(machine.revolverEmpty){
         break;
     }
     else{
-        runRevolverMotor(600, 30, 700, 300);
-        //runRevolverMotor(600,25,700);
+        runRevolverMotor(600,25,700);
     }
 }
 
