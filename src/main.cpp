@@ -20,10 +20,10 @@ const int emptySlotsButtonPin = 9;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
-const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
-const int DECEL_STEPS = 20;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
+const int ACCEL_STEPS = 80;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
+const int DECEL_STEPS = 10;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
 const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
-const int MAX_STEP_DELAY = 800;  // microseconds (keep same for start speed) - was 2000
+const int MAX_STEP_DELAY = 400;  // microseconds (keep same for start speed) - was 2000
 unsigned long PAUSE_AFTER = 100000; // microseconds (keep same pause time)
 
 // Fast values
@@ -610,24 +610,8 @@ void stepMotor() {
                     pauseStartTime = currentTime;
                     stepsTaken = 0;
                     machine.resetAllPneumatics();
-                   // if(puasedStateProcessing){
                         currentHomePosition = (currentHomePosition + 1) % 16;
                         updateSlotPositions();
-                       // processAssembly();
-                //         String test = "current position " + (String)currentHomePosition;
-                // myNex.writeStr("errorTxt.txt+", test +" \\r");
-                       // puasedStateProcessing= false;
-                   // }
-                    
-                    // Check if pause was requested during movement
-
-                    
-                    // Check if stop was requested
-                    // if(finsihProdRequested && currentHomePosition == 0) {
-                    //     machine.stop();
-                    //     finsihProdRequested = false;
-                    //     return;
-                    // }
                 }
                 else{
                     puasedStateProcessing = true;
