@@ -385,9 +385,9 @@ void handleBulbSystem() {
                 //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
 
             }
-            if (revolverSensor == LOW && movementPercent >= .15){
+            if (revolverSensor == LOW && movementPercent >= .30 && !machine.revolverCompletedMove){
                 machine.setShouldRevolverMove(false); 
-                //machine.revolverCompletedMove = true;
+                machine.revolverCompletedMove = true;
             }                     
         }        
         else {
@@ -414,7 +414,7 @@ void handleBulbSystem() {
             if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
                 digitalWrite(bulbRamPin, LOW);
                 machine.setShouldRevolverMove(true);
-               // machine.revolverCompletedMove = false;
+                machine.revolverCompletedMove = false;
             }
             
             // Only set system ready when ram is confirmed home and retracted
