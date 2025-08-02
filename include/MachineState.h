@@ -31,7 +31,7 @@ public:
     String status = "";
 
 void incrementDroppersCompleted(){
-    totalDroppersComplete++;
+    totalDroppersComplete++; 
 }
 void incrementErroredDroppers(){
     totalErroredDroppers++;
