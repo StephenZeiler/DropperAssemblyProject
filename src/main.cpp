@@ -385,7 +385,7 @@ void handleBulbSystem() {
                 //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
 
             }
-            if (revolverSensor == LOW && movementPercent >= .1){
+            if (revolverSensor == LOW && movementPercent >= .15){
                 machine.setShouldRevolverMove(false); 
                 //machine.revolverCompletedMove = true;
             }                     
