@@ -568,8 +568,10 @@ void homeMachine() {
     if(digitalRead(homeSensorPin) == LOW ){ 
         machine.inProduction = true;    
         digitalWrite(junkEjectorPin, LOW);  
-        //digitalWrite(capInjectPin, HIGH);
-      //  delay(1000);
+        digitalWrite(capInjectPin, HIGH);
+        delay(500);
+        digitalWrite(capInjectPin, LOW);
+        delay(250);
     }
     
     currentHomePosition = 0;
