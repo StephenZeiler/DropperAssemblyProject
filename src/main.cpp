@@ -395,7 +395,7 @@ void handleBulbSystem() {
             if(machine.shouldRevolverMove() && movementPercent >= .01){
                 //if(!slots[slotIdBulbInjection].hasMissingCap()){
                 if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
-                    runRevolverMotor(300, 20, 400, 200);
+                    runRevolverMotor(20, 50, 50, 200);
                 }
                 //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
 
