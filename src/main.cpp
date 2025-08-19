@@ -919,7 +919,8 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
-fillRevolver();
+//fillRevolver();
+runRevolverMotor(600, 25, 700);
 
 
 
