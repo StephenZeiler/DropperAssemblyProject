@@ -711,10 +711,10 @@ void fillRevolver() {
       delay(20); // 0.10 s
 
       digitalWrite(revolverLoader, HIGH);
-      delay(50);  // 0.10 s
+      delay(30);  // 0.10 s
 
       digitalWrite(revolverLoader, LOW);
-      delay(30);   // 0.10 s
+      delay(15);   // 0.10 s
 
       digitalWrite(revolverPreLoader, LOW);
       delay(20);  // 0.10 s
@@ -722,7 +722,7 @@ void fillRevolver() {
       armed = false;               // don’t fire again until we leave index
     } else {
       // Keep the motor stepping continuously
-      runRevolverMotor(300,15,400);
+      runRevolverMotor(600, 25, 700);
     }
 
     // Re-arm ONLY after we leave index
