@@ -692,42 +692,36 @@ void stepMotor() {
     }
 }
 void fillRevolver() {
-  static bool armed = true;  // allows one fire per visit to index (LOW)
+  static bool armed = true;
+
+  const uint16_t debounceMs = 15;
+  static bool     debouncedSensor = HIGH;   // HIGH = away, LOW = at index
+  static bool     lastRawSensor   = HIGH;
+  static uint32_t lastFlipMs      = 0;
 
   while (machine.revolverEmpty) {
-    bool bulbPresent = digitalRead(bulbPositionSensorPin);
-    bool sensorLowAtIndex = digitalRead(bulbRevolverPositionDiscPin); // LOW = at index
+    bool bulbPresent = (digitalRead(bulbPositionSensorPin) == HIGH);
+    bool sensorRaw   = digitalRead(bulbRevolverPositionDiscPin); // LOW = at index
 
-    // Done condition: bulb present AND we're at index
-    if (bulbPresent && !sensorLowAtIndex) {
-      machine.revolverFilled();
-      break;
-    }
+    uint32_t now = millis();
+    if (sensorRaw != lastRawSensor) { lastRawSensor = sensorRaw; lastFlipMs = now; }
+    else if ((now - lastFlipMs) >= debounceMs) { debouncedSensor = lastRawSensor; }
 
-    if (!sensorLowAtIndex && armed) {
+    bool atIndex = (debouncedSensor == LOW);
 
-      // fire sequence
-      //digitalWrite(revolverPreLoader, HIGH);
-      //delay(20);
+    if (bulbPresent && atIndex) { machine.revolverFilled(); break; }
 
-      digitalWrite(revolverLoader, HIGH);
-      delay(30);
-
-      digitalWrite(revolverLoader, LOW);
-      delay(10);   
-
-      //digitalWrite(revolverPreLoader, LOW);
-      //delay(20);  
-
-      armed = false;               // don’t fire again until we leave index
+    if (atIndex && armed) {
+      digitalWrite(revolverPreLoader, HIGH); delay(20);
+      digitalWrite(revolverLoader, HIGH);    delay(30);
+      digitalWrite(revolverLoader, LOW);     delay(10);
+      digitalWrite(revolverPreLoader, LOW);  delay(20);
+      armed = false;
     } else {
-      // Keep the motor stepping continuously
-      //runRevolverMotor(600, 25, 700);
       runRevolverMotor(1200, 25, 1400);
     }
 
-    // Re-arm ONLY after we leave index
-    if (sensorLowAtIndex) armed = true;
+    if (!atIndex) armed = true;
   }
 }
 
