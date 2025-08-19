@@ -906,7 +906,6 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
-delay(2000);
 fillRevolver();
 
 
