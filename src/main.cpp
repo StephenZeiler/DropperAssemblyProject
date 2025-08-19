@@ -709,16 +709,16 @@ void fillRevolver() {
 
       // fire sequence
       digitalWrite(revolverPreLoader, HIGH);
-      delayMicroseconds(1000000);   // 0.10 s
+      delay(1000); // 0.10 s
 
       digitalWrite(revolverLoader, HIGH);
-      delayMicroseconds(1000000);   // 0.10 s
+      delay(1000);  // 0.10 s
 
       digitalWrite(revolverLoader, LOW);
-      delayMicroseconds(1000000);   // 0.10 s
+      delay(1000);   // 0.10 s
 
       digitalWrite(revolverPreLoader, LOW);
-      delayMicroseconds(1000000);   // 0.10 s
+      delay(1000);  // 0.10 s
 
       armed = false;               // don’t fire again until we leave index
     } else {
