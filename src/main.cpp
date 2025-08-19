@@ -705,8 +705,7 @@ void fillRevolver() {
     }
 
     if (sensorLowAtIndex && armed) {
-      // optional settle
-      delay(3000); // 3 ms settle to avoid chatter (keep small)
+      //delay(3000); 
 
       // fire sequence
       digitalWrite(revolverPreLoader, HIGH);
