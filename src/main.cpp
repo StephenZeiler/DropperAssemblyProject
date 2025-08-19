@@ -692,7 +692,7 @@ void stepMotor() {
     }
 }
 void fillRevolver() {
-  static bool prevSensorLow = false; // NEW: remember last sensor state (LOW = at index)
+  static bool armed = true;  // allows one fire per visit to index (LOW)
 
   while (machine.revolverEmpty) {
     bool bulbPresent      = (digitalRead(bulbPositionSensorPin) == HIGH);
@@ -704,27 +704,31 @@ void fillRevolver() {
       break;
     }
 
-    // Fire loaders ONCE when we just arrive at index (HIGH -> LOW)
-    if (!prevSensorLow && sensorLowAtIndex) {
-      delay(3000);
+    if (sensorLowAtIndex && armed) {
+      // optional settle
+      delay(3000); // 3 ms settle to avoid chatter (keep small)
+
+      // fire sequence
       digitalWrite(revolverPreLoader, HIGH);
-      delayMicroseconds(100000);  // 0.02 s
+      delayMicroseconds(100000);   // 0.10 s
 
       digitalWrite(revolverLoader, HIGH);
-      delayMicroseconds(100000);  // 0.05 s
+      delayMicroseconds(100000);   // 0.10 s
 
       digitalWrite(revolverLoader, LOW);
-      delayMicroseconds(100000);  // 0.03 s
+      delayMicroseconds(100000);   // 0.10 s
 
       digitalWrite(revolverPreLoader, LOW);
-      delayMicroseconds(100000);  // 0.02 s
+      delayMicroseconds(100000);   // 0.10 s
+
+      armed = false;               // don’t fire again until we leave index
     } else {
       // Keep the motor stepping continuously
-      runRevolverMotor(600, 25, 700);  // <-- call EVERY iteration
+      runRevolverMotor(600, 25, 700);
     }
 
-    // Update edge detector
-    prevSensorLow = sensorLowAtIndex;
+    // Re-arm ONLY after we leave index
+    if (!sensorLowAtIndex) armed = true;
   }
 }
 
