@@ -708,16 +708,16 @@ void fillRevolver() {
     if (!prevSensorLow && sensorLowAtIndex) {
       delay(3000);
       digitalWrite(revolverPreLoader, HIGH);
-      delayMicroseconds(20000);  // 0.02 s
+      delayMicroseconds(100000);  // 0.02 s
 
       digitalWrite(revolverLoader, HIGH);
-      delayMicroseconds(50000);  // 0.05 s
+      delayMicroseconds(100000);  // 0.05 s
 
       digitalWrite(revolverLoader, LOW);
-      delayMicroseconds(30000);  // 0.03 s
+      delayMicroseconds(100000);  // 0.03 s
 
       digitalWrite(revolverPreLoader, LOW);
-      delayMicroseconds(20000);  // 0.02 s
+      delayMicroseconds(100000);  // 0.02 s
     } else {
       // Keep the motor stepping continuously
       runRevolverMotor(600, 25, 700);  // <-- call EVERY iteration
