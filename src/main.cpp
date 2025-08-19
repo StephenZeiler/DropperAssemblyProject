@@ -691,35 +691,48 @@ void stepMotor() {
         }
     }
 }
-void fillRevolver(){
-while(machine.revolverEmpty){
-    bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
-    bool revolverSensor = digitalRead(bulbRevolverPositionDiscPin);
-    if (bulbPresent && !revolverSensor){
-        machine.revolverFilled();
-        break;
+void fillRevolver() {
+  static bool hasMoved = false;
+  static bool prevSensorLow = false;  // remembers last state across loop calls
+
+  while (machine.revolverEmpty) {
+    const bool bulbPresent      = (digitalRead(bulbPositionSensorPin) == HIGH);
+    const bool sensorLowAtIndex = (digitalRead(bulbRevolverPositionDiscPin) == LOW); // LOW = at index
+
+    // Done condition: bulb present AND we're sitting at index (LOW)
+    if (bulbPresent && sensorLowAtIndex) {
+      machine.revolverFilled();
+      break;
     }
-    else{
-        static bool hasMoved = false;
-        if(!hasMoved){
-            runRevolverMotor(600,25,700);
-        }
-        else{
-            if(!revolverSensor){
-                digitalWrite(revolverPreLoader, HIGH);
-                delayMicroseconds(20000);
-                digitalWrite(revolverLoader, HIGH);
-                delayMicroseconds(50000);
-                digitalWrite(revolverLoader, LOW);
-                delayMicroseconds(30000);
-                digitalWrite(revolverPreLoader, LOW);
-                delayMicroseconds(20000);
-            }
-        }
+
+    if (!hasMoved) {
+      // Kick the motor to the next station
+      runRevolverMotor(600, 25, 700);
+      hasMoved = true;                      // <-- important: allow the loader branch to run next
+    } else {
+      // Fire loaders ONCE when we JUST ARRIVE at index (HIGH->LOW transition)
+      if (!prevSensorLow && sensorLowAtIndex) {
+        digitalWrite(revolverPreLoader, HIGH);
+        delayMicroseconds(20000);   // 0.02 s
+
+        digitalWrite(revolverLoader, HIGH);
+        delayMicroseconds(50000);   // 0.05 s
+
+        digitalWrite(revolverLoader, LOW);
+        delayMicroseconds(30000);   // 0.03 s
+
+        digitalWrite(revolverPreLoader, LOW);
+        delayMicroseconds(20000);   // 0.02 s
+
+        hasMoved = false;           // move again next iteration
+      }
     }
+
+    // update edge detector
+    prevSensorLow = sensorLowAtIndex;
+  }
 }
 
-}
 void emptySlots() {
     machine.updateStatus( myNex, "Emptying Slots");
     const unsigned long stepDelay = 4000; // 5ms per step = 200 steps in ~1 second
@@ -906,14 +919,8 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
-//fillRevolver();
+fillRevolver();
 
-digitalWrite(revolverPreLoader, HIGH);
-digitalWrite(revolverLoader, HIGH);
-delay(1000);
-digitalWrite(revolverPreLoader, LOW);
-digitalWrite(revolverLoader, LOW);
-delay(1000);
 
 
 
