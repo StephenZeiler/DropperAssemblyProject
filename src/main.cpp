@@ -722,8 +722,9 @@ void fillRevolver() {
       armed = false;               // don’t fire again until we leave index
     } else {
       // Keep the motor stepping continuously
-      runRevolverMotor(600, 25, 700);
+      //runRevolverMotor(600, 25, 700);
       //runRevolverMotor(1200, 25, 1400);
+      runRevolverMotor(1800, 25, 2100);
     }
 
     // Re-arm ONLY after we leave index
