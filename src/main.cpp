@@ -694,19 +694,45 @@ void stepMotor() {
 void fillRevolver() {
   static bool armed = true;  // allows one fire per visit to index (LOW)
 
-  while (machine.revolverEmpty) {
-    bool bulbPresent = digitalRead(bulbPositionSensorPin);
-    bool sensorLowAtIndex = digitalRead(bulbRevolverPositionDiscPin); // LOW = at index
+  // --- Debounce settings/state (minimal) ---
+  const uint16_t debounceMs = 15;          // tweak 10–30 ms if needed
 
-    // Done condition: bulb present AND we're at index
+  static int      idxDebounced   = HIGH;   // HIGH = away, LOW = at index
+  static int      idxLastRaw     = HIGH;
+  static uint32_t idxLastFlipMs  = 0;
+
+  static int      bulbDebounced  = LOW;    // LOW/HIGH depends on your wiring; we treat HIGH = present
+  static int      bulbLastRaw    = LOW;
+  static uint32_t bulbLastFlipMs = 0;
+  // -----------------------------------------
+
+  while (machine.revolverEmpty) {
+    uint32_t now = millis();
+
+    // --- Raw reads ---
+    int idxRaw  = digitalRead(bulbRevolverPositionDiscPin); // LOW = at index
+    int bulbRaw = digitalRead(bulbPositionSensorPin);       // HIGH = present (as in your code)
+
+    // --- Debounce index sensor ---
+    if (idxRaw != idxLastRaw) { idxLastRaw = idxRaw; idxLastFlipMs = now; }
+    else if ((now - idxLastFlipMs) >= debounceMs) { idxDebounced = idxLastRaw; }
+
+    // --- Debounce bulb sensor ---
+    if (bulbRaw != bulbLastRaw) { bulbLastRaw = bulbRaw; bulbLastFlipMs = now; }
+    else if ((now - bulbLastFlipMs) >= debounceMs) { bulbDebounced = bulbLastRaw; }
+
+    // Use debounced states
+    bool sensorLowAtIndex = (idxDebounced == LOW);   // LOW = at index
+    bool bulbPresent      = (bulbDebounced == HIGH); // HIGH = present
+
+    // Done condition: bulb present AND we're at index (debounced)
     if (bulbPresent && !sensorLowAtIndex) {
       machine.revolverFilled();
       break;
     }
 
     if (!sensorLowAtIndex && armed) {
-
-      // fire sequence
+      // fire sequence (your timings kept)
       //digitalWrite(revolverPreLoader, HIGH);
       //delay(20);
 
@@ -714,10 +740,10 @@ void fillRevolver() {
       delay(60);
 
       digitalWrite(revolverLoader, LOW);
-      delay(30);   
+      delay(30);
 
       //digitalWrite(revolverPreLoader, LOW);
-      //delay(20);  
+      //delay(20);
 
       armed = false;               // don’t fire again until we leave index
     } else {
@@ -727,7 +753,7 @@ void fillRevolver() {
       runRevolverMotor(1800, 25, 2100);
     }
 
-    // Re-arm ONLY after we leave index
+    // Re-arm ONLY after we leave index (using debounced state)
     if (sensorLowAtIndex) armed = true;
   }
 }
