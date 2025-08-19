@@ -695,16 +695,16 @@ void fillRevolver() {
   static bool armed = true;  // allows one fire per visit to index (LOW)
 
   while (machine.revolverEmpty) {
-    bool bulbPresent      = (digitalRead(bulbPositionSensorPin) == HIGH);
-    bool sensorLowAtIndex = (digitalRead(bulbRevolverPositionDiscPin) == LOW); // LOW = at index
+    bool bulbPresent = digitalRead(bulbPositionSensorPin);
+    bool sensorLowAtIndex = digitalRead(bulbRevolverPositionDiscPin); // LOW = at index
 
     // Done condition: bulb present AND we're at index
-    if (bulbPresent && sensorLowAtIndex) {
+    if (bulbPresent && !sensorLowAtIndex) {
       machine.revolverFilled();
       break;
     }
 
-    if (sensorLowAtIndex && armed) {
+    if (!sensorLowAtIndex && armed) {
       //delay(3000); 
 
       // fire sequence
@@ -727,7 +727,7 @@ void fillRevolver() {
     }
 
     // Re-arm ONLY after we leave index
-    if (!sensorLowAtIndex) armed = true;
+    if (sensorLowAtIndex) armed = true;
   }
 }
 
