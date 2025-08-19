@@ -711,10 +711,10 @@ void fillRevolver() {
       //delay(20);
 
       digitalWrite(revolverLoader, HIGH);
-      delay(30);
+      delay(60);
 
       digitalWrite(revolverLoader, LOW);
-      delay(10);   
+      delay(30);   
 
       //digitalWrite(revolverPreLoader, LOW);
       //delay(20);  
