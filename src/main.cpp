@@ -707,8 +707,8 @@ void fillRevolver() {
     if (!sensorLowAtIndex && armed) {
 
       // fire sequence
-      digitalWrite(revolverPreLoader, HIGH);
-      delay(20);
+      //digitalWrite(revolverPreLoader, HIGH);
+      //delay(20);
 
       digitalWrite(revolverLoader, HIGH);
       delay(30);
@@ -716,8 +716,8 @@ void fillRevolver() {
       digitalWrite(revolverLoader, LOW);
       delay(10);   
 
-      digitalWrite(revolverPreLoader, LOW);
-      delay(20);  
+      //digitalWrite(revolverPreLoader, LOW);
+      //delay(20);  
 
       armed = false;               // don’t fire again until we leave index
     } else {
