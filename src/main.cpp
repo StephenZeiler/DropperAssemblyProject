@@ -270,11 +270,11 @@ void handleRevolverSystem(){
                 digitalWrite(revolverLoader, HIGH);
                 preloaderActive = false;  // reset for next trigger
             }
-            if(pausePercent >= .95){
-                digitalWrite(revolverPreLoader, LOW);
-            }
-            if(pausePercent >= .7){
+            if(pausePercent >= .6){
                 digitalWrite(revolverLoader, LOW);
+            }
+            if(pausePercent >= .75){
+                digitalWrite(revolverPreLoader, LOW);
             }
         } 
     }
@@ -722,7 +722,8 @@ void fillRevolver() {
       armed = false;               // don’t fire again until we leave index
     } else {
       // Keep the motor stepping continuously
-      runRevolverMotor(600, 25, 700);
+      //runRevolverMotor(600, 25, 700);
+      runRevolverMotor(1200, 25, 1400);
     }
 
     // Re-arm ONLY after we leave index
@@ -917,6 +918,7 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
+
 fillRevolver();
 
 
