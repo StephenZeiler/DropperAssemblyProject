@@ -835,7 +835,7 @@ void setup() {
     pinMode(revolverPUL, OUTPUT);
     digitalWrite(revolverPUL, LOW);
     digitalWrite(revolverENA, LOW);
-    digitalWrite(revolverDIR, LOW);
+    digitalWrite(revolverDIR, HIGH);
 
     //Pneumatics
     delay(100);
@@ -906,7 +906,15 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
-fillRevolver();
+//fillRevolver();
+
+digitalWrite(revolverPreLoader, HIGH);
+digitalWrite(revolverLoader, HIGH);
+delay(1000);
+digitalWrite(revolverPreLoader, LOW);
+digitalWrite(revolverLoader, LOW);
+delay(1000);
+
 
 
 
