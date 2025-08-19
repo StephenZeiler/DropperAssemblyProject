@@ -706,6 +706,7 @@ void fillRevolver() {
 
     // Fire loaders ONCE when we just arrive at index (HIGH -> LOW)
     if (!prevSensorLow && sensorLowAtIndex) {
+      delay(3000);
       digitalWrite(revolverPreLoader, HIGH);
       delayMicroseconds(20000);  // 0.02 s
 
