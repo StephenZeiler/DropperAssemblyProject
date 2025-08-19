@@ -48,12 +48,15 @@ bool finsihProdRequested = false;
 // Bulb system pins
 const int bulbRamHomeSensorPin = 33;
 const int bulbPositionSensorPin = 26;
-const int bulbRevolverPositionSensorPin = 27;
+const int bulbRevolverPositionDiscPin = 27; //low means home
 
 //Revolver
 const int revolverPUL = 50;
 const int revolverDIR = 51;
 const int revolverENA = 52;
+
+const int revolverPreLoader = 37;
+const int revolverLoader = 41;
 
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
@@ -226,7 +229,6 @@ void runRevolverMotor(long minStepInterval, int acceleration, long revolverStepI
     // Toggle the step pin
     digitalWrite(revolverPUL, (revolverStepState == 1) ? HIGH : LOW);
     revolverStepState = (revolverStepState == 1) ? 2 : 1;
-    
     // Apply acceleration if not at max speed
     if (revolverStepInterval > minStepInterval) {
       // Reduce the interval (increase speed) based on acceleration factor
@@ -241,6 +243,42 @@ void runRevolverMotor(long minStepInterval, int acceleration, long revolverStepI
     
     prevRevolverMicros = currentMicros;
   }
+}
+
+void handleRevolverSystem(){
+    static bool lastMotorState = false;
+    static unsigned long motorStopTime = 0;
+        if (lastMotorState && !isMoving) {
+            motorStopTime = micros(); // Record when motor stopped
+            machine.setBulbSystemReady(false); // System not ready when motor stops
+        }
+        unsigned long stopDuration = micros() - motorStopTime;
+        float pausePercent = (float)stopDuration / PAUSE_AFTER;
+
+    if(digitalRead(bulbRevolverPositionDiscPin) == LOW){ //check if home
+        if(!isMoving){ // addcheck if a bulb is in poisition for pre loading
+            static bool preloaderActive = false;  // remembers value between calls
+            static unsigned long preloaderTime = 0;
+
+            if (!preloaderActive) {
+                digitalWrite(revolverPreLoader, HIGH);
+                preloaderTime = micros();
+                preloaderActive = true;
+            }
+
+            if (preloaderActive && millis() - preloaderTime >= 20000) {
+                digitalWrite(revolverLoader, HIGH);
+                preloaderActive = false;  // reset for next trigger
+            }
+            if(pausePercent >= .95){
+                digitalWrite(revolverPreLoader, LOW);
+            }
+            if(pausePercent >= .7){
+                digitalWrite(revolverLoader, LOW);
+            }
+        } 
+    }
+ lastMotorState = isMoving;
 }
 
 void handlePipetSystem() {
@@ -367,7 +405,7 @@ void handleBulbSystem() {
     // Read sensors
     bool ramHome = digitalRead(bulbRamHomeSensorPin); // HIGH if home
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
-    bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
+    bool revolverSensor = digitalRead(bulbRevolverPositionDiscPin);
     
     if(machine.canBulbProcessStart()){
         if (isMoving) {
@@ -656,13 +694,28 @@ void stepMotor() {
 void fillRevolver(){
 while(machine.revolverEmpty){
     bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
-    bool revolverSensor = digitalRead(bulbRevolverPositionSensorPin);
+    bool revolverSensor = digitalRead(bulbRevolverPositionDiscPin);
     if (bulbPresent && !revolverSensor){
         machine.revolverFilled();
         break;
     }
     else{
-        runRevolverMotor(600,25,700);
+        static bool hasMoved = false;
+        if(!hasMoved){
+            runRevolverMotor(600,25,700);
+        }
+        else{
+            if(!revolverSensor){
+                digitalWrite(revolverPreLoader, HIGH);
+                delayMicroseconds(20000);
+                digitalWrite(revolverLoader, HIGH);
+                delayMicroseconds(50000);
+                digitalWrite(revolverLoader, LOW);
+                delayMicroseconds(30000);
+                digitalWrite(revolverPreLoader, LOW);
+                delayMicroseconds(20000);
+            }
+        }
     }
 }
 
@@ -782,6 +835,7 @@ void setup() {
     pinMode(revolverPUL, OUTPUT);
     digitalWrite(revolverPUL, LOW);
     digitalWrite(revolverENA, LOW);
+    digitalWrite(revolverDIR, LOW);
 
     //Pneumatics
     delay(100);
@@ -795,7 +849,7 @@ void setup() {
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
     //sensors
-    pinMode(bulbRevolverPositionSensorPin, INPUT);
+    pinMode(bulbRevolverPositionDiscPin, INPUT);
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
     pinMode(bulbPositionSensorPin, INPUT);
@@ -819,43 +873,44 @@ int i = 0;
 
 void loop() {
     
-    //myNex.NextionListen();
-    //unsigned long currentUptime = millis() - startTime;
-    handleButtons();
-    handleCapInjection();
-    setSlotIdByPosition(slots);
-    machineTracker();
+    // handleButtons();
+    // handleCapInjection();
+    // setSlotIdByPosition(slots);
+    // machineTracker();
 
-    startTime = millis();
-    motorPauseTime();
-    if(!isMoving && motorPausePercent>.90){
-       machine.updateMachineDisplayInfo(myNex, startTime, slots);
-    }
-    // machine.setErrorLogs(myNex, startTime);
-    // machine.setCautionLogs(myNex, startTime, slots);
+    // startTime = millis();
+    // motorPauseTime();
+    // if(!isMoving && motorPausePercent>.90){
+    //    machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    // }
     
-    handleBulbSystem();
-    handlePipetSystem();  // Make sure this is uncommented
+    // handleBulbSystem();
+    // handlePipetSystem();  // Make sure this is uncommented
     
-    if (machine.isStopped) return;
-    if (machine.needsHoming || machine.revolverEmpty) {
-        if(machine.revolverEmpty){
-            machine.updateStatus(myNex,"Revolver homing");
-            fillRevolver();
-        }
-        if(machine.needsHoming){
-            machine.updateStatus(myNex,"Motor Homing");
-            homeMachine();
-        }
-        if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
-            machine.updateStatus(myNex,"In Production");
-        }
-        return;
-    }
+    // if (machine.isStopped) return;
+    // if (machine.needsHoming || machine.revolverEmpty) {
+    //     if(machine.revolverEmpty){
+    //         machine.updateStatus(myNex,"Revolver homing");
+    //         fillRevolver();
+    //     }
+    //     if(machine.needsHoming){
+    //         machine.updateStatus(myNex,"Motor Homing");
+    //         homeMachine();
+    //     }
+    //     if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
+    //         machine.updateStatus(myNex,"In Production");
+    //     }
+    //     return;
+    // }
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
+
+fillRevolver();
+
+
+
 // if(digitalRead(finishProductionButtonPin)){
 // digitalWrite(capInjectPin, HIGH);
 // }
