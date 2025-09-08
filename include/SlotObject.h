@@ -38,7 +38,8 @@ public:
     bool isAtFailedJunkEject() const { return currentPosition == 0; }
     bool isAtCapInjection() const { return currentPosition == 1; }
     bool isAtCapConfirm() const { return currentPosition == 2; }
-    bool isAtBulbInjection() const { return currentPosition == 5; }
+    bool isAtBulbPreLoad() const { return currentPosition == 5; }
+    bool isAtBulbInjection() const { return currentPosition == 6; }
     bool isAtBulbConfirm() const { return currentPosition == 6; }
     bool isAtPipetInjection() const { return currentPosition == 9; }
     bool isAtPipetConfirm() const { return currentPosition == 10; }

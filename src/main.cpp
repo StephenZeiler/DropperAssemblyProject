@@ -47,16 +47,11 @@ bool finsihProdRequested = false;
 
 // Bulb system pins
 const int bulbRamHomeSensorPin = 33;
-const int bulbPositionSensorPin = 26;
-const int bulbRevolverPositionDiscPin = 27; //low means home
+const int bulbInPreLoadPosSensorPin = 26;
 
-//Revolver
-const int revolverPUL = 50;
-const int revolverDIR = 51;
-const int revolverENA = 52;
 
-const int revolverPreLoader = 37;
-const int revolverLoader = 41;
+const int bulbPreLoadCylinder = 37;
+const unsigned long PRELOAD_PULSE_US = 20000;
 
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
@@ -195,91 +190,6 @@ void setSlotErrors(SlotObject slots[])
 
 int currentHomePosition = 0;
 MachineState machine;
-// long prevRevolverMicros = 0;  
-// int revolverStep = 1;
-
-// void runRevolverMotor(long speed) {
-//   digitalWrite(revolverDIR, LOW);
-//   long currentMicros = micros(); // Update time inside the check
-//   if ((currentMicros - prevRevolverMicros) > speed) {
-//     if (revolverStep == 1) {
-//       digitalWrite(revolverPUL, HIGH);
-//       revolverStep = 2;
-//     } 
-//     else if (revolverStep == 2) {
-//       digitalWrite(revolverPUL, LOW);
-//       revolverStep = 1;
-//     }
-//     prevRevolverMicros = currentMicros;
-//   }
-// }
-
-// Revolver motor control with acceleration
-// unsigned long revolverStepInterval = 5000; // Start with a conservative slow speed (10000µs = 100Hz) 5000
-// unsigned long minStepInterval = 300; // Your motor's maximum speed (100µs = 10kHz)
-// int acceleration = 25; // How aggressively to accelerate (lower = faster acceleration) 25
-
-void runRevolverMotor(long minStepInterval, int acceleration, long revolverStepInterval) {
-  static long prevRevolverMicros = 0;
-  static int revolverStepState = 1;
-  unsigned long currentMicros = micros();
-  
-  // Only proceed if it's time for the next step
-  if ((currentMicros - prevRevolverMicros) >= revolverStepInterval) {
-    // Toggle the step pin
-    digitalWrite(revolverPUL, (revolverStepState == 1) ? HIGH : LOW);
-    revolverStepState = (revolverStepState == 1) ? 2 : 1;
-    // Apply acceleration if not at max speed
-    if (revolverStepInterval > minStepInterval) {
-      // Reduce the interval (increase speed) based on acceleration factor
-      // Using inverse relationship for proper acceleration curve
-      revolverStepInterval = revolverStepInterval - (acceleration * revolverStepInterval) / (revolverStepInterval + acceleration);
-      
-      // Ensure we don't go below minimum interval
-      if (revolverStepInterval < minStepInterval) {
-        revolverStepInterval = minStepInterval;
-      }
-    }
-    
-    prevRevolverMicros = currentMicros;
-  }
-}
-
-void handleRevolverSystem(){
-    static bool lastMotorState = false;
-    static unsigned long motorStopTime = 0;
-        if (lastMotorState && !isMoving) {
-            motorStopTime = micros(); // Record when motor stopped
-            machine.setBulbSystemReady(false); // System not ready when motor stops
-        }
-        unsigned long stopDuration = micros() - motorStopTime;
-        float pausePercent = (float)stopDuration / PAUSE_AFTER;
-
-    if(digitalRead(bulbRevolverPositionDiscPin) == LOW){ //check if home
-        if(!isMoving){ // addcheck if a bulb is in poisition for pre loading
-            static bool preloaderActive = false;  // remembers value between calls
-            static unsigned long preloaderTime = 0;
-
-            if (!preloaderActive) {
-                digitalWrite(revolverPreLoader, HIGH);
-                preloaderTime = micros();
-                preloaderActive = true;
-            }
-
-            if (preloaderActive && millis() - preloaderTime >= 20000) {
-                digitalWrite(revolverLoader, HIGH);
-                preloaderActive = false;  // reset for next trigger
-            }
-            if(pausePercent >= .6){
-                digitalWrite(revolverLoader, LOW);
-            }
-            if(pausePercent >= .75){
-                digitalWrite(revolverPreLoader, LOW);
-            }
-        } 
-    }
- lastMotorState = isMoving;
-}
 
 void handlePipetSystem() {
     static bool lastMotorState = false;
@@ -390,69 +300,86 @@ void handleBulbSystem() {
     static unsigned long motorStartTime = 0;
     static bool ramExtended = false;
     static bool ramRetracted = true;
-    
+
+    // NEW: preloader state (fires once per stop)
+    static bool preloadArmed = false;            // becomes true when we detect motor stopped
+    static bool preloadFiredThisStop = false;    // ensure only one fire per stop
+    static unsigned long preloadPulseStart = 0;  // for fast retract timing
+
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
         machine.setBulbSystemReady(false); // System not ready when motor stops
         ramRetracted = false; // Ram needs to retract again
+
+        // NEW: arm preloader for this stop
+        preloadArmed = true;
+        preloadFiredThisStop = false;
     }
     if (!lastMotorState && isMoving) {
         motorStartTime = micros(); // Record when motor started
+
+        // NEW: disarm on movement; will re-arm at next stop
+        preloadArmed = false;
     }
     lastMotorState = isMoving;
 
     // Read sensors
     bool ramHome = digitalRead(bulbRamHomeSensorPin); // HIGH if home
-    bool bulbPresent = digitalRead(bulbPositionSensorPin); // HIGH if present
-    bool revolverSensor = digitalRead(bulbRevolverPositionDiscPin);
-    
-    if(machine.canBulbProcessStart()){
-        if (isMoving) {
-            // Handle revolver movement
-            unsigned long elapsedSteps = stepsTaken;
-           // unsigned long totalMovementTime = micros() - motorStartTime;
-            
-            // Calculate percentage of movement completed
-            float movementPercent = (float)elapsedSteps / TOTAL_STEPS;
-            if(machine.shouldRevolverMove() && movementPercent >= .01){
-                //if(!slots[slotIdBulbInjection].hasMissingCap()){
-                if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
-                    runRevolverMotor(300,15,400);
-                }
-                //runRevolverMotor(500,30,700); faster but only for 400 steps/rev
+    bool bulbInPreload = digitalRead(bulbInPreLoadPosSensorPin); // HIGH if present
+    bool bulbInCap = digitalRead(bulbInCapSensor);
 
-            }
-            if (revolverSensor == LOW && movementPercent >= .06){
-                machine.setShouldRevolverMove(false); 
-            }                     
-        }        
-        else {
+    // ===================== NEW: Preloader one-shot =====================
+    // Condition: machine stopped, allowed to preload, sensor HIGH, and not yet fired this stop
+    if (!isMoving && preloadArmed && !preloadFiredThisStop
+        && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
+
+        // Extend preloader (fire) and immediately start retract timing
+        digitalWrite(bulbPreLoadCylinder, HIGH);
+        preloadPulseStart = micros();
+        preloadFiredThisStop = true; // ensure only once per stop
+
+            // NEW: mark preload ready as soon as we fire
+    machine.setBulbPreLoadReady(true);
+    }
+
+    // Fast retract: end the pulse as soon as we've met the minimum actuation time
+    if (digitalRead(bulbPreLoadCylinder) == HIGH) {
+        if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
+            digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
+        }
+    }
+    // If it hasn’t fired yet this stop, keep preload "not ready"
+if (!preloadFiredThisStop) {
+    machine.setBulbPreLoadReady(false);
+}
+    // ===================================================================
+
+    if(machine.canBulbProcessStart()){
+        if(!isMoving) {
             // Motor is stopped - handle timing based on pause duration
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
-            
-            
+
             // Activate ram after 5% of pause time (only if bulb position sensor reads LOW)
-            if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbPresent && !revolverSensor) {
+            if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap) {
                // if(!slots[slotIdBulbInjection].hasMissingCap()){
                 if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
-                digitalWrite(bulbRamPin, HIGH);
+                    digitalWrite(bulbRamPin, HIGH);
                 }
                 ramExtended = true;
                 ramRetracted = false;
-                bulbPresent = true;
             }
-            else if(pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbPresent){
+            else if(pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbInCap){
                 machine.bulbPresent = false;
+                //TODO: DOES THIS ADD VALUE?
             }
-            
+
             // Deactivate ram after 95% of pause time
             if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
                 digitalWrite(bulbRamPin, LOW);
-                machine.setShouldRevolverMove(true);
             }
-            
+
             // Only set system ready when ram is confirmed home and retracted
             if (ramExtended && ramHome && !digitalRead(bulbRamPin)) {
                 machine.setBulbSystemReady(true);
@@ -465,6 +392,7 @@ void handleBulbSystem() {
         machine.setBulbSystemReady(true);
     }
 }
+
 
 
 
@@ -691,72 +619,7 @@ void stepMotor() {
         }
     }
 }
-void fillRevolver() {
-  static bool armed = true;  // allows one fire per visit to index (LOW)
 
-  // --- Debounce settings/state (minimal) ---
-  const uint16_t debounceMs = 15;          // tweak 10–30 ms if needed
-
-  static int      idxDebounced   = HIGH;   // HIGH = away, LOW = at index
-  static int      idxLastRaw     = HIGH;
-  static uint32_t idxLastFlipMs  = 0;
-
-  static int      bulbDebounced  = LOW;    // LOW/HIGH depends on your wiring; we treat HIGH = present
-  static int      bulbLastRaw    = LOW;
-  static uint32_t bulbLastFlipMs = 0;
-  // -----------------------------------------
-
-  while (machine.revolverEmpty) {
-    uint32_t now = millis();
-
-    // --- Raw reads ---
-    int idxRaw  = digitalRead(bulbRevolverPositionDiscPin); // LOW = at index
-    int bulbRaw = digitalRead(bulbPositionSensorPin);       // HIGH = present (as in your code)
-
-    // --- Debounce index sensor ---
-    if (idxRaw != idxLastRaw) { idxLastRaw = idxRaw; idxLastFlipMs = now; }
-    else if ((now - idxLastFlipMs) >= debounceMs) { idxDebounced = idxLastRaw; }
-
-    // --- Debounce bulb sensor ---
-    if (bulbRaw != bulbLastRaw) { bulbLastRaw = bulbRaw; bulbLastFlipMs = now; }
-    else if ((now - bulbLastFlipMs) >= debounceMs) { bulbDebounced = bulbLastRaw; }
-
-    // Use debounced states
-    bool sensorLowAtIndex = (idxDebounced == LOW);   // LOW = at index
-    bool bulbPresent      = (bulbDebounced == HIGH); // HIGH = present
-
-    // Done condition: bulb present AND we're at index (debounced)
-    if (bulbPresent && !sensorLowAtIndex) {
-      machine.revolverFilled();
-      break;
-    }
-
-    if (!sensorLowAtIndex && armed) {
-      // fire sequence (your timings kept)
-      //digitalWrite(revolverPreLoader, HIGH);
-      //delay(20);
-
-      digitalWrite(revolverLoader, HIGH);
-      delay(60);
-
-      digitalWrite(revolverLoader, LOW);
-      delay(30);
-
-      //digitalWrite(revolverPreLoader, LOW);
-      //delay(20);
-
-      armed = false;               // don’t fire again until we leave index
-    } else {
-      // Keep the motor stepping continuously
-      //runRevolverMotor(600, 25, 700);
-      //runRevolverMotor(1200, 25, 1400);
-      runRevolverMotor(1000, 25, 1200);
-    }
-
-    // Re-arm ONLY after we leave index (using debounced state)
-    if (sensorLowAtIndex) armed = true;
-  }
-}
 
 
 void emptySlots() {
@@ -868,13 +731,6 @@ void setup() {
     digitalWrite(dirPin, LOW);
     digitalWrite(stepPin, LOW);
     digitalWrite(dropperEjectPin, LOW);
-    //Revolver
-    pinMode(revolverDIR, OUTPUT);
-    pinMode(revolverENA, OUTPUT);
-    pinMode(revolverPUL, OUTPUT);
-    digitalWrite(revolverPUL, LOW);
-    digitalWrite(revolverENA, LOW);
-    digitalWrite(revolverDIR, HIGH);
 
     //Pneumatics
     delay(100);
@@ -888,10 +744,8 @@ void setup() {
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
     //sensors
-    pinMode(bulbRevolverPositionDiscPin, INPUT);
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
-    pinMode(bulbPositionSensorPin, INPUT);
     pinMode(pipetTipSensor, INPUT);
     pinMode(bulbInCapSensor, INPUT);
     pinMode(capInWheel, INPUT);
@@ -927,11 +781,7 @@ void loop() {
     // handlePipetSystem();  // Make sure this is uncommented
     
     // if (machine.isStopped) return;
-    // if (machine.needsHoming || machine.revolverEmpty) {
-    //     if(machine.revolverEmpty){
-    //         machine.updateStatus(myNex,"Revolver homing");
-    //         fillRevolver();
-    //     }
+    // if (machine.needsHoming) {
     //     if(machine.needsHoming){
     //         machine.updateStatus(myNex,"Motor Homing");
     //         homeMachine();
@@ -945,10 +795,6 @@ void loop() {
     // if (machine.inProduction) {
     //     stepMotor();
     // }
-
-fillRevolver();
-
-
 
 
 

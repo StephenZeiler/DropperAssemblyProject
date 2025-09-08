@@ -9,11 +9,12 @@ public:
     bool isStopped = true;
     bool inProduction = false;
     bool needsHoming = true;
-    bool revolverEmpty = true;
+
     int positionsMoved = 0;
     bool bulbSystemReady = true;
     bool dropperSystemReady = true;  // Add this line
     bool capInjectionReady = true;
+    bool bulbPreLoadReady = true;
     bool pipetSystemReady = true;  // Add this line
     long lastErrorResetTime = 0;
     long lastCautionResetTime = 0;
@@ -21,8 +22,6 @@ public:
     long lastrunTimeResetTime = 0;
     bool printErrorLogs;
     bool printCautionLogs;
-    bool revolverAtHome = false;
-    bool revolverShouldMove = true;
     int totalDroppersComplete = 0;
     int totalErroredDroppers = 0;
     int timeLoggingDelay = 230;
@@ -41,18 +40,7 @@ int getCompletedDropperCnt(){
 int getErrorDropperCnt(){
     return totalErroredDroppers;
 }
-bool shouldRevolverMove(){
-    return revolverShouldMove;
-}
-void setShouldRevolverMove(bool shouldMove){
-    revolverShouldMove = shouldMove;
-}
-bool isRevolverAtHome(){
-    return revolverAtHome;
-}
-void setRevolverPosition(bool isAtHome){
-    revolverAtHome = isAtHome;
-}
+
 
     // Add more system flags here as needed:
     // bool capSystemReady = true;
@@ -70,8 +58,11 @@ bool canCapInjectStart(){
 bool canCapConfirmStart(){
     return positionsMoved > 1;
 }
-bool canBulbProcessStart(){
+bool canPreLoadBulbProcessStart(){
     return positionsMoved > 4;
+}
+bool canBulbProcessStart(){
+    return positionsMoved > 5;
 }
 bool canBulbConfirmStart(){
     return positionsMoved > 5;
@@ -94,7 +85,6 @@ bool canCheckForEmptyStart(){
     void start() {
         if (isStopped) {
             needsHoming = true;
-            revolverEmpty = true;
             isStopped = false;
             inProduction = true;
         } else if (isPaused) {
@@ -115,7 +105,6 @@ bool canCheckForEmptyStart(){
         isPaused = false;
         inProduction = false;
         needsHoming = true;
-        revolverEmpty = true;
     }
     void finishProduction() {
         
@@ -124,18 +113,15 @@ bool canCheckForEmptyStart(){
     void homingComplete() {
         needsHoming = false;
     }
-    void revolverFilled() {
-        revolverEmpty = false;
-    }
     // Check if all pneumatics are ready
     bool isReadyToMove() {
         return 
         bulbSystemReady &&  // Add other systems here with &&
         //dropperSystemReady &&  // Add this
         //capInjectionReady &&
-        //pipetSystemReady &&
+        bulbPreLoadReady &&
+        pipetSystemReady &&
         !needsHoming && 
-        !revolverEmpty &&
         !isPaused && 
         !isStopped;
     }
@@ -150,6 +136,9 @@ bool canCheckForEmptyStart(){
     }
     void setCapInjectionReady(bool ready) {
         capInjectionReady = ready;
+    }
+    void setBulbPreLoadReady(bool ready) {
+        bulbPreLoadReady = ready;
     }
     // Set individual system readiness
     void setBulbSystemReady(bool ready) {
@@ -167,6 +156,7 @@ bool canCheckForEmptyStart(){
         dropperSystemReady = false;  // Add this
         //capInjectionReady = false;
         pipetSystemReady = false;
+        bulbPreLoadReady = false;
         // capSystemReady = false;
         // etc...
     }
