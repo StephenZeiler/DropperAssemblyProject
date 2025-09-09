@@ -328,6 +328,7 @@ void handleBulbSystem() {
     bool ramHome = digitalRead(bulbRamHomeSensorPin); // HIGH if home
     bool bulbInPreload = digitalRead(bulbInPreLoadPosSensorPin); // HIGH if present
     bool bulbInCap = digitalRead(bulbInCapSensor);
+    bool preLoadCylinderHome = digitalRead(preLoadCylinderHomeSensorPin);
 
     // ===================== NEW: Preloader one-shot =====================
     // Condition: machine stopped, allowed to preload, sensor HIGH, and not yet fired this stop
@@ -352,7 +353,7 @@ void handleBulbSystem() {
             //     machine.setBulbPreLoadReady(true);
             // }
         }
-        if(digitalRead(preLoadCylinderHomeSensorPin) == LOW && micros() - preloadPulseStart> 20000){ //Is home
+        if(!preLoadCylinderHome && micros() - preloadPulseStart> 20000){ //Is home
                 machine.setBulbPreLoadReady(true);
         }
     }
@@ -750,7 +751,7 @@ void setup() {
     pinMode(junkEjectorPin, OUTPUT);
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
-    pinMode(preLoadCylinderHomeSensorPin, INPUT);
+    pinMode(preLoadCylinderHomeSensorPin, INPUT_PULLUP);
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
