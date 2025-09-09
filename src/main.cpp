@@ -336,7 +336,7 @@ void handleBulbSystem() {
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
 
         // Extend preloader (fire) and immediately start retract timing
-        digitalWrite(bulbPreLoadCylinder, LOW);
+        digitalWrite(bulbPreLoadCylinder, HIGH);
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
     
@@ -346,9 +346,9 @@ void handleBulbSystem() {
     }
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
-    if (digitalRead(bulbPreLoadCylinder) == LOW) {
-        if (micros() - preloadPulseStart >= 10000) {
-            digitalWrite(bulbPreLoadCylinder, HIGH); // retract ASAP
+    if (preloadFiredThisStop) {
+        if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
+            digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
             machine.setBulbPreLoadReady(true);
         }
     }
