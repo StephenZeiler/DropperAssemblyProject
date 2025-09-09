@@ -354,9 +354,9 @@ void handleBulbSystem() {
             // }
         }
         if(preLoadCylinderHome){
-            
+
         }
-        else(!preLoadCylinderHome && micros() - preloadPulseStart> 20000){ //Is home
+        else if(!preLoadCylinderHome && micros() - preloadPulseStart> 20000){ //Is home
                 machine.setBulbPreLoadReady(true);
         }
     }
