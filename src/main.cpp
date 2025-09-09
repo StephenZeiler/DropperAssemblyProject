@@ -353,7 +353,10 @@ void handleBulbSystem() {
             //     machine.setBulbPreLoadReady(true);
             // }
         }
-        if(!preLoadCylinderHome && micros() - preloadPulseStart> 20000){ //Is home
+        if(preLoadCylinderHome){
+            
+        }
+        else(!preLoadCylinderHome && micros() - preloadPulseStart> 20000){ //Is home
                 machine.setBulbPreLoadReady(true);
         }
     }
@@ -751,7 +754,7 @@ void setup() {
     pinMode(junkEjectorPin, OUTPUT);
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
-    pinMode(preLoadCylinderHomeSensorPin, INPUT_PULLUP);
+    pinMode(preLoadCylinderHomeSensorPin, INPUT);
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
