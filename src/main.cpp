@@ -339,9 +339,7 @@ void handleBulbSystem() {
         digitalWrite(bulbPreLoadCylinder, HIGH);
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
-
-            // NEW: mark preload ready as soon as we fire
-    machine.setBulbPreLoadReady(true);
+    
     }
     if(!machine.canPreLoadBulbProcessStart()){
        machine.setBulbPreLoadReady(true); 
@@ -349,8 +347,9 @@ void handleBulbSystem() {
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
     if (digitalRead(bulbPreLoadCylinder) == HIGH) {
-        if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
+        if (micros() - preloadPulseStart >= 10000) {
             digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
+            machine.setBulbPreLoadReady(true);
         }
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
