@@ -51,8 +51,8 @@ const int bulbInPreLoadPosSensorPin = 26; //HIGH = something blocking sensor
 
 
 const int bulbPreLoadCylinder = 37;
-const unsigned long PRELOAD_PULSE_US = 20000;
-
+//const unsigned long PRELOAD_PULSE_US = 20000;
+const unsigned long PRELOAD_PULSE_US = 2000000;
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
 const int bulbRamPin = 39;
