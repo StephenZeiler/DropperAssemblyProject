@@ -310,7 +310,6 @@ void handleBulbSystem() {
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
         machine.setBulbSystemReady(false); // System not ready when motor stops
-        machine.setBulbPreLoadReady(false);
         ramRetracted = false; // Ram needs to retract again
 
         // NEW: arm preloader for this stop
@@ -336,6 +335,7 @@ void handleBulbSystem() {
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
 
         // Extend preloader (fire) and immediately start retract timing
+        machine.setBulbPreLoadReady(false);
         digitalWrite(bulbPreLoadCylinder, HIGH);
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
