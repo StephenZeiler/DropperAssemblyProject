@@ -119,7 +119,7 @@ bool canCheckForEmptyStart(){
         bulbSystemReady &&  // Add other systems here with &&
         //dropperSystemReady &&  // Add this
         //capInjectionReady &&
-        //bulbPreLoadReady &&
+        bulbPreLoadReady &&
         pipetSystemReady &&
         !needsHoming && 
         !isPaused && 

@@ -310,6 +310,7 @@ void handleBulbSystem() {
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
         machine.setBulbSystemReady(false); // System not ready when motor stops
+        machine.setBulbPreLoadReady(false);
         ramRetracted = false; // Ram needs to retract again
 
         // NEW: arm preloader for this stop
@@ -341,6 +342,9 @@ void handleBulbSystem() {
 
             // NEW: mark preload ready as soon as we fire
     machine.setBulbPreLoadReady(true);
+    }
+    if(!machine.canPreLoadBulbProcessStart()){
+       machine.setBulbPreLoadReady(true); 
     }
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
