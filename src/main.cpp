@@ -349,7 +349,7 @@ void handleBulbSystem() {
     if (preloadFiredThisStop) {
         if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
             digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
-            if(digitalRead(preLoadCylinderHomeSensorPin) == HIGH){ //Is home
+            if(digitalRead(preLoadCylinderHomeSensorPin) == LOW){ //Is home
                 machine.setBulbPreLoadReady(true);
             }
         }
