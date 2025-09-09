@@ -796,7 +796,12 @@ void loop() {
     //     stepMotor();
     // }
 
-
+if(digitalRead(bulbInPreLoadPosSensorPin)== HIGH){
+    digitalWrite(bulbPreLoadCylinder, HIGH);
+    delay(1000);
+    digitalWrite(bulbPreLoadCylinder, LOW);
+    delay(1000);
+}
 
 // if(digitalRead(finishProductionButtonPin)){
 // digitalWrite(capInjectPin, HIGH);
