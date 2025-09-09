@@ -28,7 +28,7 @@ unsigned long PAUSE_AFTER = 100000; // microseconds (keep same pause time)
 
 // Fast values
 #define PAUSE_AFTER_FAST     100000 //one second
-
+ 
 #define PAUSE_AFTER_SLOW     1000000
 
 
@@ -52,7 +52,7 @@ const int preLoadCylinderHomeSensorPin = 53; //HIGH = something blocking sensor,
 
 const int bulbPreLoadCylinder = 37;
 //const unsigned long PRELOAD_PULSE_US = 20000;
-const unsigned long PRELOAD_PULSE_US = 50000;
+const unsigned long PRELOAD_PULSE_US = 80000;
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
 const int bulbRamPin = 39;
