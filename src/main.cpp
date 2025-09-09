@@ -353,7 +353,7 @@ void handleBulbSystem() {
             //     machine.setBulbPreLoadReady(true);
             // }
         }
-        if(digitalRead(preLoadCylinderHomeSensorPin) == LOW){ //Is home
+        if(digitalRead(preLoadCylinderHomeSensorPin) == LOW && micros() - preloadPulseStart> 20000){ //Is home
                 machine.setBulbPreLoadReady(true);
         }
     }
