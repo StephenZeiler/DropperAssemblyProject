@@ -354,7 +354,7 @@ void handleBulbSystem() {
         }
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
-if (!preloadFiredThisStop) {
+if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
     machine.setBulbPreLoadReady(false);
 }
     // ===================================================================
