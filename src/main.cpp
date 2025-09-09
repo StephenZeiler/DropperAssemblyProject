@@ -52,7 +52,7 @@ const int preLoadCylinderHomeSensorPin = 53; //HIGH = something blocking sensor,
 
 const int bulbPreLoadCylinder = 37;
 //const unsigned long PRELOAD_PULSE_US = 20000;
-const unsigned long PRELOAD_PULSE_US = 2000000;
+const unsigned long PRELOAD_PULSE_US = 50000;
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
 const int bulbRamPin = 39;
@@ -349,16 +349,10 @@ void handleBulbSystem() {
     if (preloadFiredThisStop) {
         if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
             digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
-            if(digitalRead(preLoadCylinderHomeSensorPin) == HIGH && micros() - preloadPulseStart> (PRELOAD_PULSE_US+80000)){ //Is home
+            if(digitalRead(preLoadCylinderHomeSensorPin) == LOW){ //Is home
                 machine.setBulbPreLoadReady(true);
             }
         }
-        // if(preLoadCylinderHome){
-
-        // }
-        // else if(!preLoadCylinderHome && micros() - preloadPulseStart> 20000){ //Is home
-        //         machine.setBulbPreLoadReady(true);
-        // }
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
 if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
