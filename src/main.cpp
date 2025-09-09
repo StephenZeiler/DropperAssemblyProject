@@ -353,9 +353,9 @@ void handleBulbSystem() {
             //     machine.setBulbPreLoadReady(true);
             // }
         }
-        if(digitalRead(preLoadCylinderHomeSensorPin) == HIGH){ //Is home
-                machine.setBulbPreLoadReady(true);
-        }
+        // if(digitalRead(preLoadCylinderHomeSensorPin) == HIGH){ //Is home
+        //         machine.setBulbPreLoadReady(true);
+        // }
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
 if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
