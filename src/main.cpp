@@ -48,11 +48,11 @@ bool finsihProdRequested = false;
 // Bulb system pins
 const int bulbRamHomeSensorPin = 33;
 const int bulbInPreLoadPosSensorPin = 26; //HIGH = something blocking sensor
-const int preLoadCylinderHomeSensorPin = 27; 
+const int preLoadCylinderHomeSensorPin = 27; //HIGH = something blocking sensor
 
 const int bulbPreLoadCylinder = 37;
-const unsigned long PRELOAD_PULSE_US = 20000;
-//const unsigned long PRELOAD_PULSE_US = 2000000;
+//const unsigned long PRELOAD_PULSE_US = 20000;
+const unsigned long PRELOAD_PULSE_US = 2000000;
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
 const int bulbRamPin = 39;
@@ -349,7 +349,9 @@ void handleBulbSystem() {
     if (preloadFiredThisStop) {
         if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
             digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
-            machine.setBulbPreLoadReady(true);
+            if(digitalRead(preLoadCylinderHomeSensorPin) == HIGH){ //Is home
+                machine.setBulbPreLoadReady(true);
+            }
         }
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
@@ -770,42 +772,42 @@ int i = 0;
 
 void loop() {
     
-    // handleButtons();
-    // handleCapInjection();
-    // setSlotIdByPosition(slots);
-    // machineTracker();
+    handleButtons();
+    handleCapInjection();
+    setSlotIdByPosition(slots);
+    machineTracker();
 
-    // startTime = millis();
-    // motorPauseTime();
-    // if(!isMoving && motorPausePercent>.90){
-    //    machine.updateMachineDisplayInfo(myNex, startTime, slots);
-    // }
+    startTime = millis();
+    motorPauseTime();
+    if(!isMoving && motorPausePercent>.90){
+       machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    }
     
-    // handleBulbSystem();
-    // handlePipetSystem();  // Make sure this is uncommented
+    handleBulbSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-    // if (machine.isStopped) return;
-    // if (machine.needsHoming) {
-    //     if(machine.needsHoming){
-    //         machine.updateStatus(myNex,"Motor Homing");
-    //         homeMachine();
-    //     }
-    //     if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
-    //         machine.updateStatus(myNex,"In Production");
-    //     }
-    //     return;
-    // }
+    if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        if(machine.needsHoming){
+            machine.updateStatus(myNex,"Motor Homing");
+            homeMachine();
+        }
+        if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
+            machine.updateStatus(myNex,"In Production");
+        }
+        return;
+    }
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+    if (machine.inProduction) {
+        stepMotor();
+    }
 
-if(digitalRead(preLoadCylinderHomeSensorPin)== HIGH){
-    digitalWrite(bulbPreLoadCylinder, HIGH);
-    delay(1000);
-    digitalWrite(bulbPreLoadCylinder, LOW);
-    delay(1000);
-}
+// if(digitalRead(preLoadCylinderHomeSensorPin)== HIGH){
+//     digitalWrite(bulbPreLoadCylinder, HIGH);
+//     delay(1000);
+//     digitalWrite(bulbPreLoadCylinder, LOW);
+//     delay(1000);
+// }
 
 // if(digitalRead(finishProductionButtonPin)){
 // digitalWrite(capInjectPin, HIGH);
