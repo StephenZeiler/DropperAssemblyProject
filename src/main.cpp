@@ -756,6 +756,7 @@ void setup() {
     digitalWrite(capInjectPin, LOW);
     digitalWrite(pipetRamPin, LOW);
     digitalWrite(junkEjectorPin, LOW);
+    digitalWrite(bulbPreLoadCylinder, LOW);
     currentPipetState = PIPET_HOMING;
     updateSlotPositions();
     
