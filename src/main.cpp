@@ -750,7 +750,7 @@ void setup() {
     pinMode(junkEjectorPin, OUTPUT);
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
-    pinMode(preLoadCylinderHomeSensorPin, INPUT); 
+    pinMode(preLoadCylinderHomeSensorPin, INPUT_PULLUP); 
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
