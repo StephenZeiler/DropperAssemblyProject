@@ -48,7 +48,7 @@ bool finsihProdRequested = false;
 // Bulb system pins
 const int bulbRamHomeSensorPin = 33;
 const int bulbInPreLoadPosSensorPin = 26; //HIGH = something blocking sensor
-const int preLoadCylinderHomeSensorPin = 27; //HIGH = something blocking sensor, LOW when home
+const int preLoadCylinderHomeSensorPin = 53; //HIGH = something blocking sensor, LOW when home
 
 const int bulbPreLoadCylinder = 37;
 //const unsigned long PRELOAD_PULSE_US = 20000;
@@ -353,7 +353,7 @@ void handleBulbSystem() {
             // }
         }
         if(digitalRead(preLoadCylinderHomeSensorPin) == LOW && micros() - preloadPulseStart> 20000){ //Is home
-                //machine.setBulbPreLoadReady(true);
+                machine.setBulbPreLoadReady(true);
         }
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
