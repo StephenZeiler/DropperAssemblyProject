@@ -331,6 +331,9 @@ void handleBulbSystem() {
 
     // ===================== NEW: Preloader one-shot =====================
     // Condition: machine stopped, allowed to preload, sensor HIGH, and not yet fired this stop
+    if(!machine.canPreLoadBulbProcessStart()){
+       machine.setBulbPreLoadReady(true); 
+    }
     if (!isMoving && preloadArmed && !preloadFiredThisStop
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
 
@@ -339,10 +342,6 @@ void handleBulbSystem() {
         digitalWrite(bulbPreLoadCylinder, HIGH);
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
-    
-    }
-    if(!machine.canPreLoadBulbProcessStart()){
-       machine.setBulbPreLoadReady(true); 
     }
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
@@ -751,6 +750,7 @@ void setup() {
     pinMode(junkEjectorPin, OUTPUT);
     //pinMode(bulbSeparatorPin, OUTPUT);
     pinMode(pipetTwisterHomeSensorPin, INPUT); // Use pullup if sensor is active LOW
+    pinMode(preLoadCylinderHomeSensorPin, INPUT); 
     //sensors
     pinMode(homeSensorPin, INPUT);
     pinMode(bulbRamHomeSensorPin, INPUT);
