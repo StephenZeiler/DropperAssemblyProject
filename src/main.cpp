@@ -33,10 +33,10 @@ const int DECEL_STEPS   = 15;    // 20 * 0.77 ≈ 15
 // const int DECEL_STEPS   = 13;    // was 20
 
 
-unsigned long PAUSE_AFTER = 120000; // microseconds (keep same pause time)
+unsigned long PAUSE_AFTER = 160000; // microseconds (keep same pause time)
 
 // Fast values
-#define PAUSE_AFTER_FAST     120000 //one second
+#define PAUSE_AFTER_FAST     160000 //one second
  
 #define PAUSE_AFTER_SLOW     1000000
 
@@ -61,7 +61,7 @@ const int preLoadCylinderHomeSensorPin = 53; //HIGH = something blocking sensor,
 
 const int bulbPreLoadCylinder = 37;
 //const unsigned long PRELOAD_PULSE_US = 20000;
-const unsigned long PRELOAD_PULSE_US = 120000;
+const unsigned long PRELOAD_PULSE_US = 160000;
 //const int bulbAirPushPin = 41; removed
 //const int bulbSeparatorPin = 37; removed
 const int bulbRamPin = 39;
