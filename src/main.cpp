@@ -31,7 +31,7 @@ const int MAX_STEP_DELAY = 355;  // was 533 → 533 * 2/3
 const int ACCEL_STEPS = 27;  // was 40 → 40 * 2/3
 const int DECEL_STEPS = 9;   // was 13 → 13 * 2/3
 
-unsigned long PAUSE_AFTER = 120000; // microseconds (keep same pause time)
+unsigned long PAUSE_AFTER = 50000; // microseconds (keep same pause time)
 
 // Fast values
 #define PAUSE_AFTER_FAST     100000 //one second
