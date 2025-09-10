@@ -20,16 +20,12 @@ const int emptySlotsButtonPin = 9;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
-const int MIN_STEP_DELAY = 32;   // 40 * 0.79 ≈ 32
-const int MAX_STEP_DELAY = 632;  // 800 * 0.79 ≈ 632
-const int ACCEL_STEPS   = 47;    // 60 * 0.79 ≈ 47
-const int DECEL_STEPS   = 16;    // 20 * 0.79 ≈ 16
 
 //30percentincrease
-// const int MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
-// const int MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
-// const int ACCEL_STEPS   = 46;    // 60 * 0.77 ≈ 46
-// const int DECEL_STEPS   = 15;    // 20 * 0.77 ≈ 15
+const int MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
+const int MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
+const int ACCEL_STEPS   = 46;    // 60 * 0.77 ≈ 46
+const int DECEL_STEPS   = 15;    // 20 * 0.77 ≈ 15
 
 // const int MIN_STEP_DELAY = 27;   // was 40
 // const int MAX_STEP_DELAY = 533;  // was 800
