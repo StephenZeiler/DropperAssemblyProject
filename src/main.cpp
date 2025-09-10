@@ -19,12 +19,13 @@ const int speedButtonPin = 8;
 const int emptySlotsButtonPin = 9;
 
 // Movement parameters
-// const int TOTAL_STEPS = 200;  // Changed from 100 to 200
+const int TOTAL_STEPS = 200;  // Changed from 100 to 200
 // const int MIN_STEP_DELAY = 27;   // was 40
 // const int MAX_STEP_DELAY = 533;  // was 800
 // const int ACCEL_STEPS   = 40;    // was 60
 // const int DECEL_STEPS   = 13;    // was 20
 
+// 2nd 50% speed increase (total ~2.25× faster than your original)
 const int MIN_STEP_DELAY = 18;   // was 27 → 27 * 2/3
 const int MAX_STEP_DELAY = 355;  // was 533 → 533 * 2/3
 const int ACCEL_STEPS = 27;  // was 40 → 40 * 2/3
