@@ -20,10 +20,14 @@ const int emptySlotsButtonPin = 9;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
-const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
-const int DECEL_STEPS = 20;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
-const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
-const int MAX_STEP_DELAY = 800;  // microseconds (keep sa me for start speed) - was 2000
+// const int ACCEL_STEPS = 60;  // Changed from 70 to 140 (maintains same acceleration ratio) - was 140v
+// const int DECEL_STEPS = 20;   // Changed from 30 to 60 (maintains same deceleration ratio) - was 60
+// const int MIN_STEP_DELAY = 40;   // microseconds (keep same for max speed) - was 100
+// const int MAX_STEP_DELAY = 800;  // microseconds (keep sa me for start speed) - was 2000
+const int MIN_STEP_DELAY = 27;   // was 40
+const int MAX_STEP_DELAY = 533;  // was 800
+const int ACCEL_STEPS   = 40;    // was 60
+const int DECEL_STEPS   = 13;    // was 20
 unsigned long PAUSE_AFTER = 120000; // microseconds (keep same pause time)
 
 // Fast values
