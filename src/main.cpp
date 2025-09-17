@@ -738,11 +738,6 @@ const uint8_t POT_EMA_ALPHA_NUM   = 1;  // EMA alpha = 1/8 (lower = smoother)
 const uint8_t POT_EMA_ALPHA_DEN   = 8;
 const unsigned long PAUSE_DEADBAND_US = 2000UL; // ignore tiny changes (<2 ms)
 
-void setup() {
-  pinMode(speedPotPin, INPUT);  // pot with fixed resistors -> INPUT is fine
-  // ... your other setup
-}
-
 // Call this once per loop (or before you start a new index)
 void updatePauseAfterFromPot() {
   static int ema = -1;  // -1 = uninitialized
@@ -783,6 +778,7 @@ void setup() {
      myNex.begin(115200); 
       
     // Initialize pins
+     pinMode(speedPotPin, INPUT); 
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
