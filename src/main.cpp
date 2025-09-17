@@ -40,6 +40,8 @@ unsigned long PAUSE_AFTER = 160000; // microseconds (keep same pause time)
  
 #define PAUSE_AFTER_SLOW     1000000
 
+//Potentiameter
+const int speedPotPin = A1;                   // wire your pot wiper here
 
 // Sensor
 const int homeSensorPin = 25;
@@ -690,7 +692,7 @@ void handleButtons() {
     
     // Only check buttons if debounce time has passed
     if (millis() - lastDebounceTime < debounceDelay) return;
-    handleSpeedButton();
+    //handleSpeedButton();
     handleEmptySlots();
     // Start button pressed (HIGH when pushed)
     if (startState == LOW && lastStartState == HIGH) {
@@ -726,6 +728,56 @@ void handleButtons() {
 //         emptySlots();
 //     }
 // }
+// ---- Config ----
+
+const unsigned long PAUSE_MIN_US = 160000UL;  // fastest allowed pause
+const unsigned long PAUSE_MAX_US = 1000000UL; // slowest allowed pause
+
+// Optional smoothing/hysteresis
+const uint8_t POT_EMA_ALPHA_NUM   = 1;  // EMA alpha = 1/8 (lower = smoother)
+const uint8_t POT_EMA_ALPHA_DEN   = 8;
+const unsigned long PAUSE_DEADBAND_US = 2000UL; // ignore tiny changes (<2 ms)
+
+void setup() {
+  pinMode(speedPotPin, INPUT);  // pot with fixed resistors -> INPUT is fine
+  // ... your other setup
+}
+
+// Call this once per loop (or before you start a new index)
+void updatePauseAfterFromPot() {
+  static int ema = -1;  // -1 = uninitialized
+  static unsigned long lastPause = PAUSE_AFTER;
+
+  int raw = analogRead(speedPotPin);     // 0..1023
+
+  // Exponential moving average to reduce jitter
+  if (ema < 0) {
+    ema = raw;
+  } else {
+    ema = (int)((long)ema * (POT_EMA_ALPHA_DEN - POT_EMA_ALPHA_NUM) +
+                (long)raw * POT_EMA_ALPHA_NUM) / POT_EMA_ALPHA_DEN;
+  }
+
+  // Map pot to pause: higher pot -> smaller pause (faster)
+  // If your knob works opposite, swap PAUSE_MIN_US and PAUSE_MAX_US in this formula.
+  unsigned long span = (PAUSE_MAX_US - PAUSE_MIN_US);
+  unsigned long mappedPause =
+      PAUSE_MAX_US - ( (unsigned long)ema * span ) / 1023UL;
+
+  // Clamp just in case
+  if (mappedPause < PAUSE_MIN_US) mappedPause = PAUSE_MIN_US;
+  if (mappedPause > PAUSE_MAX_US) mappedPause = PAUSE_MAX_US;
+
+  // Apply only if change is meaningful (deadband)
+  if ( (mappedPause > lastPause + PAUSE_DEADBAND_US) ||
+       (mappedPause + PAUSE_DEADBAND_US < lastPause) ) {
+    PAUSE_AFTER = mappedPause;
+    lastPause = mappedPause;
+    // Optional: debug
+    // Serial.print("PAUSE_AFTER set to "); Serial.println(PAUSE_AFTER);
+  }
+}
+
 void setup() {
     //Serial.begin(115200);
      myNex.begin(115200); 
@@ -781,7 +833,7 @@ void setup() {
 int i = 0;
 
 void loop() {
-    
+    updatePauseAfterFromPot(); 
     handleButtons();
     handleCapInjection();
     setSlotIdByPosition(slots);
