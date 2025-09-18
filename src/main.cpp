@@ -780,12 +780,19 @@ void updatePauseAfterFromPot() {
   }
 }
 
+void handleLowAirPressure(){ //When low air pressure is detected, pause machine and wait for start button
+    if(digitalRead(lowAirSensorPin)== HIGH){
+        machine.pause();
+        machine.updateStatus(myNex, "Low Air - Pause");
+    }
+}
+
 void setup() {
     //Serial.begin(115200);
      myNex.begin(115200); 
       
     // Initialize pins
-     pinMode(speedPotPin, INPUT); 
+    pinMode(speedPotPin, INPUT); 
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
     pinMode(enablePin, OUTPUT);
@@ -834,50 +841,54 @@ void setup() {
 
 
 int i = 0;
-bool test = true;
+
 void loop() {
-    // updatePauseAfterFromPot(); 
-    // handleButtons();
-    // handleCapInjection();
-    // setSlotIdByPosition(slots);
-    // machineTracker();
+    handleLowAirPressure();
+    updatePauseAfterFromPot(); 
+    handleButtons();
+    handleCapInjection();
+    setSlotIdByPosition(slots);
+    machineTracker();
 
-    // startTime = millis();
-    // motorPauseTime();
-    // if(!isMoving && motorPausePercent>.90){
-    //    machine.updateMachineDisplayInfo(myNex, startTime, slots);
-    // }
+    startTime = millis();
+    motorPauseTime();
+    if(!isMoving && motorPausePercent>.90){
+       machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    }
     
-    // handleBulbSystem();
-    // handlePipetSystem();  // Make sure this is uncommented
+    handleBulbSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-    // if (machine.isStopped) return;
-    // if (machine.needsHoming) {
-    //     if(machine.needsHoming){
-    //         machine.updateStatus(myNex,"Motor Homing");
-    //         homeMachine();
-    //     }
-    //     if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
-    //         machine.updateStatus(myNex,"In Production");
-    //     }
-    //     return;
-    // }
+    if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        if(machine.needsHoming){
+            machine.updateStatus(myNex,"Motor Homing");
+            homeMachine();
+        }
+        if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
+            machine.updateStatus(myNex,"In Production");
+        }
+        return;
+    }
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+    if (machine.inProduction) {
+        stepMotor();
+    }
 
-if(digitalRead(lowAirSensorPin)== HIGH){
- // delay between steps
- test = false;
-}
+// if(digitalRead(lowAirSensorPin)== HIGH){
+//  // delay between steps
+//  test = false;
+// }
+// else{
+//     test=true;
+// }
 
-if(test){
-        digitalWrite(stepPin, HIGH);
-        delayMicroseconds(10); // pulse width
-        digitalWrite(stepPin, LOW);
-        delayMicroseconds(4000);
-}
+// if(test){
+//         digitalWrite(stepPin, HIGH);
+//         delayMicroseconds(10); // pulse width
+//         digitalWrite(stepPin, LOW);
+//         delayMicroseconds(4000);
+// }
 
 
 // if(digitalRead(finishProductionButtonPin)){
