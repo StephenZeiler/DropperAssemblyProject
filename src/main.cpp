@@ -150,6 +150,7 @@ SlotObject slots[] = {
 };
 int slotIdCapInWheelInjection;
 int slotIdCapInWheelConfirm;
+int slotIdBulbPreLoad;
 int slotIdBulbInjection;
 int slotIdBulbInCapConfirm;
 int slotIdPipetInjection;
@@ -167,7 +168,10 @@ void setSlotIdByPosition(SlotObject slots[])
         if(slots[i].getPosition()==2){
             slotIdCapInWheelConfirm= slots[i].getId();
         }
-         if(slots[i].getPosition()==5){
+        if(slots[i].getPosition()==5){
+            slotIdBulbPreLoad= slots[i].getId();
+        }
+         if(slots[i].getPosition()==6){
             slotIdBulbInjection= slots[i].getId();
         }
         if(slots[i].getPosition()==6){
@@ -356,7 +360,9 @@ void handleBulbSystem() {
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
         // Extend preloader (fire) and immediately start retract timing
         machine.setBulbPreLoadReady(false);
-        digitalWrite(bulbPreLoadCylinder, HIGH);
+        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
+            digitalWrite(bulbPreLoadCylinder, HIGH);
+        }
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
     }
@@ -843,7 +849,7 @@ void setup() {
 int i = 0;
 
 void loop() {
-    handleLowAirPressure();
+    //handleLowAirPressure();
     updatePauseAfterFromPot(); 
     handleButtons();
     handleCapInjection();
