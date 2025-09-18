@@ -348,7 +348,6 @@ void handleBulbSystem() {
     }
     if (!isMoving && preloadArmed && !preloadFiredThisStop
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
-
         // Extend preloader (fire) and immediately start retract timing
         machine.setBulbPreLoadReady(false);
         digitalWrite(bulbPreLoadCylinder, HIGH);
@@ -358,7 +357,10 @@ void handleBulbSystem() {
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
     if (preloadFiredThisStop) {
-        if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
+        unsigned long stopDuration = micros() - motorStopTime;
+        float pausePercent = (float)stopDuration / PAUSE_AFTER;
+        //if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
+            if(pausePercent >= 0.01 && pausePercent < 0.95){
             digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
             if(digitalRead(preLoadCylinderHomeSensorPin) == LOW){ //Is home
                 machine.setBulbPreLoadReady(true);
