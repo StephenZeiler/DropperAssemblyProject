@@ -849,7 +849,7 @@ void setup() {
 int i = 0;
 
 void loop() {
-    //handleLowAirPressure();
+    handleLowAirPressure();
     updatePauseAfterFromPot(); 
     handleButtons();
     handleCapInjection();
