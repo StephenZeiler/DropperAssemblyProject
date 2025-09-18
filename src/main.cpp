@@ -33,8 +33,11 @@ const int DECEL_STEPS   = 15;    // 20 * 0.77 ≈ 15
 // const int DECEL_STEPS   = 13;    // was 20
 
 
-unsigned long PAUSE_AFTER = 160000; // microseconds (keep same pause time)
+unsigned long PAUSE_AFTER = 90000; // microseconds (keep same pause time)
 
+//Potentiameter low and high range
+const unsigned long PAUSE_MIN_US = 90000UL;  // fastest allowed pause
+const unsigned long PAUSE_MAX_US = 400000UL; // slowest allowed pause
 // Fast values
 #define PAUSE_AFTER_FAST     160000 //one second
  
@@ -732,8 +735,7 @@ void handleButtons() {
 // }
 // ---- Config ----
 
-const unsigned long PAUSE_MIN_US = 160000UL;  // fastest allowed pause
-const unsigned long PAUSE_MAX_US = 400000UL; // slowest allowed pause
+
 
 // Optional smoothing/hysteresis
 const uint8_t POT_EMA_ALPHA_NUM   = 1;  // EMA alpha = 1/8 (lower = smoother)
