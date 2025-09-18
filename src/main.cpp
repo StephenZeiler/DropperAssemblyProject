@@ -731,7 +731,7 @@ void handleButtons() {
 // ---- Config ----
 
 const unsigned long PAUSE_MIN_US = 160000UL;  // fastest allowed pause
-const unsigned long PAUSE_MAX_US = 1000000UL; // slowest allowed pause
+const unsigned long PAUSE_MAX_US = 400000UL; // slowest allowed pause
 
 // Optional smoothing/hysteresis
 const uint8_t POT_EMA_ALPHA_NUM   = 1;  // EMA alpha = 1/8 (lower = smoother)
