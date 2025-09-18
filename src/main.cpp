@@ -90,6 +90,9 @@ const int pipetRamPin = 43;
 const int pipetTwisterPin = 45;
 const int pipetTwisterHomeSensorPin = 28;  // Changed to pin 28
 
+//Low Air Sensor 
+const int lowAirSensorPin = 2; //Reads HIGH when no air.
+
 // Pipet system state
 enum PipetState {
     PIPET_HOMING,          // Initial homing state
@@ -831,45 +834,51 @@ void setup() {
 
 
 int i = 0;
-
+bool test = true;
 void loop() {
-    updatePauseAfterFromPot(); 
-    handleButtons();
-    handleCapInjection();
-    setSlotIdByPosition(slots);
-    machineTracker();
+    // updatePauseAfterFromPot(); 
+    // handleButtons();
+    // handleCapInjection();
+    // setSlotIdByPosition(slots);
+    // machineTracker();
 
-    startTime = millis();
-    motorPauseTime();
-    if(!isMoving && motorPausePercent>.90){
-       machine.updateMachineDisplayInfo(myNex, startTime, slots);
-    }
+    // startTime = millis();
+    // motorPauseTime();
+    // if(!isMoving && motorPausePercent>.90){
+    //    machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    // }
     
-    handleBulbSystem();
-    handlePipetSystem();  // Make sure this is uncommented
+    // handleBulbSystem();
+    // handlePipetSystem();  // Make sure this is uncommented
     
-    if (machine.isStopped) return;
-    if (machine.needsHoming) {
-        if(machine.needsHoming){
-            machine.updateStatus(myNex,"Motor Homing");
-            homeMachine();
-        }
-        if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
-            machine.updateStatus(myNex,"In Production");
-        }
-        return;
-    }
+    // if (machine.isStopped) return;
+    // if (machine.needsHoming) {
+    //     if(machine.needsHoming){
+    //         machine.updateStatus(myNex,"Motor Homing");
+    //         homeMachine();
+    //     }
+    //     if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
+    //         machine.updateStatus(myNex,"In Production");
+    //     }
+    //     return;
+    // }
     
-    if (machine.inProduction) {
-        stepMotor();
-    }
+    // if (machine.inProduction) {
+    //     stepMotor();
+    // }
 
-// if(digitalRead(preLoadCylinderHomeSensorPin)== HIGH){
-//     digitalWrite(bulbPreLoadCylinder, HIGH);
-//     delay(1000);
-//     digitalWrite(bulbPreLoadCylinder, LOW);
-//     delay(1000);
-// }
+if(digitalRead(lowAirSensorPin)== HIGH){
+ // delay between steps
+ test = false;
+}
+
+if(test){
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(10); // pulse width
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(4000);
+}
+
 
 // if(digitalRead(finishProductionButtonPin)){
 // digitalWrite(capInjectPin, HIGH);
