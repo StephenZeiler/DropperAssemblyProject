@@ -360,7 +360,7 @@ void handleBulbSystem() {
         unsigned long stopDuration = micros() - motorStopTime;
         float pausePercent = (float)stopDuration / PAUSE_AFTER;
         //if (micros() - preloadPulseStart >= PRELOAD_PULSE_US) {
-            if(pausePercent >= 0.01 && pausePercent < 0.95){
+            if(pausePercent >= 0.95){
             digitalWrite(bulbPreLoadCylinder, LOW); // retract ASAP
             if(digitalRead(preLoadCylinderHomeSensorPin) == LOW){ //Is home
                 machine.setBulbPreLoadReady(true);
