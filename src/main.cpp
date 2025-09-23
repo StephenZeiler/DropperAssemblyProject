@@ -18,19 +18,14 @@ const int finishProductionButtonPin = 12;
 const int speedButtonPin = 8;
 const int emptySlotsButtonPin = 9;
 
-//Production Supply Indicators
-const int pipetSupplySensorPin = 34; //Signal goes high when no pipet
-const int bulbSupplySensorPin = 40; //Signal goes high when no bulb
-const int capSupplySensorPin = 38; //Signal goes high when no cap
-
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
 
 //30percentincrease
-int MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
-int MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
-int ACCEL_STEPS   = 46;    // 60 * 0.77 ≈ 46
-int DECEL_STEPS   = 15;    // 20 * 0.77 ≈ 15
+const int MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
+const int MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
+const int ACCEL_STEPS   = 46;    // 60 * 0.77 ≈ 46
+const int DECEL_STEPS   = 15;    // 20 * 0.77 ≈ 15
 
 // const int MIN_STEP_DELAY = 27;   // was 40
 // const int MAX_STEP_DELAY = 533;  // was 800
@@ -44,8 +39,10 @@ unsigned long PAUSE_AFTER = 90000; // microseconds (keep same pause time)
 const unsigned long PAUSE_MIN_US = 90000UL;  // fastest allowed pause
 const unsigned long PAUSE_MAX_US = 400000UL; // slowest allowed pause
 // Fast values
+#define PAUSE_AFTER_FAST     160000 //one second
+ 
+#define PAUSE_AFTER_SLOW     1000000
 
-const unsigned long PAUSE_LOW_SUPPLY = 2000000UL;
 //Potentiameter
 const int speedPotPin = A1;                   // wire your pot wiper here
 
@@ -212,17 +209,6 @@ void setSlotErrors(SlotObject slots[])
     }
 }
 
-bool handleLowSupplies(){
-    if(digitalRead(capSupplySensorPin == HIGH)){
-        return true;
-    }
-    if(digitalRead(bulbSupplySensorPin == HIGH)){
-        return true;
-    }
-    if(digitalRead(pipetSupplySensorPin == HIGH)){
-        return true;
-    }
-}
 int currentHomePosition = 0;
 MachineState machine;
 
@@ -593,15 +579,6 @@ void homeMachine() {
 }
 bool puasedStateProcessing = false;
 void stepMotor() {
-
-    if(handleLowSupplies()){
-        MIN_STEP_DELAY = 31 * 8;   // ≈ 248
-        MAX_STEP_DELAY = 616 * 8;  // ≈ 4928
-    }
-    else{
-        MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
-        MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
-    }
     unsigned long currentTime = micros();
     
     if (isMoving) {
@@ -703,7 +680,13 @@ machine.updateStatus( myNex, "Emptying Completed");
     digitalWrite(pipetTwisterPin, HIGH);
     machine.stop();
 }
-
+void handleSpeedButton(){
+    if (!digitalRead(speedButtonPin)) {
+    PAUSE_AFTER = PAUSE_AFTER_SLOW;
+  } else {
+    PAUSE_AFTER = PAUSE_AFTER_FAST;
+  }    
+}
 void handleEmptySlots(){
     if(!machine.inProduction && !digitalRead(emptySlotsButtonPin)){
         emptySlots();
@@ -770,10 +753,6 @@ const unsigned long PAUSE_DEADBAND_US = 2000UL; // ignore tiny changes (<2 ms)
 
 // Call this once per loop (or before you start a new index)
 void updatePauseAfterFromPot() {
-    // if(handleLowSupplies()){
-    //     PAUSE_AFTER = PAUSE_LOW_SUPPLY;
-    // }
-    //else{
   static int ema = -1;  // -1 = uninitialized
   static unsigned long lastPause = PAUSE_AFTER;
 
@@ -805,7 +784,6 @@ void updatePauseAfterFromPot() {
     // Optional: debug
     // Serial.print("PAUSE_AFTER set to "); Serial.println(PAUSE_AFTER);
   }
-    //}
 }
 
 void handleLowAirPressure(){ //When low air pressure is detected, pause machine and wait for start button
@@ -903,8 +881,6 @@ void loop() {
         stepMotor();
     }
 
-
-// bool test = false;
 // if(digitalRead(lowAirSensorPin)== HIGH){
 //  // delay between steps
 //  test = false;
