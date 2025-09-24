@@ -869,7 +869,7 @@ void setup() {
 
 
 int i = 0;
-
+bool test = true;
 void loop() {
     // handleLowAirPressure();
     // updatePauseAfterFromPot(); 
@@ -904,7 +904,7 @@ void loop() {
     // }
 
 
-bool test = false;
+
 if(handleLowSupplies()){
  // delay between steps
  test = false;
