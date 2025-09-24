@@ -855,6 +855,9 @@ void setup() {
     pinMode(bulbInCapSensor, INPUT);
     pinMode(capInWheel, INPUT);
     pinMode(slotEmptySensor, INPUT);
+    pinMode(pipetSupplySensorPin, INPUT);
+    pinMode(bulbSupplySensorPin, INPUT);
+    pinMode(capSupplySensorPin, INPUT);
 
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
     digitalWrite(bulbRamPin, LOW);
