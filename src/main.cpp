@@ -527,7 +527,7 @@ void machineTracker(){
     
     
     if(slots[slotIdFailedJunkEject].hasFailedJunkEject()){
-        machine.stop();
+        machine.pause();
     }
     if(slots[slotIdJunkEjection].shouldFinishProduction()){ 
         machine.pause();
