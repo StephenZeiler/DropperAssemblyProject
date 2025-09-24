@@ -655,10 +655,14 @@ void stepMotor() {
         if(handleLowSupplies()){
             MIN_STEP_DELAY = 31 * 8;   // ≈ 248
             MAX_STEP_DELAY = 616 * 8;  // ≈ 4928
+            ACCEL_STEPS   = 46 * 8;    // 60 * 0.77 ≈ 46
+            DECEL_STEPS   = 15 *8;  
         }
         else{
             MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
             MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
+            ACCEL_STEPS   = 46;    // 60 * 0.77 ≈ 46
+            DECEL_STEPS   = 15;  
         }
             if(pauseRequested) {
                 machine.pause();
@@ -878,7 +882,7 @@ int i = 0;
 
 void loop() {
     handleLowAirPressure();
-    updatePauseAfterFromPot(); 
+    updatePauseAfterFromPot();
     handleButtons();
     handleCapInjection();
     setSlotIdByPosition(slots);
