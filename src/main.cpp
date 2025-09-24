@@ -909,7 +909,7 @@ void loop() {
 
 
 //if(handleLowSupplies()){
-    if(digitalRead(capSupplySensorPin)==HIGH){
+    if(digitalRead(bulbSupplySensorPin)==HIGH){
  // delay between steps
 }
 else{
