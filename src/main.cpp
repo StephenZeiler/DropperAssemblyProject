@@ -213,13 +213,13 @@ void setSlotErrors(SlotObject slots[])
 }
 
 bool handleLowSupplies(){
-    if(digitalRead(capSupplySensorPin == HIGH)){
+    if(digitalRead(capSupplySensorPin)== HIGH){
         return true;
     }
-    if(digitalRead(bulbSupplySensorPin == HIGH)){
+    if(digitalRead(bulbSupplySensorPin)== HIGH){
         return true;
     }
-    if(digitalRead(pipetSupplySensorPin == HIGH)){
+    if(digitalRead(pipetSupplySensorPin)== HIGH){
         return true;
     }
 }
