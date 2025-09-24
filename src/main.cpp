@@ -905,7 +905,7 @@ void loop() {
 
 
 bool test = false;
-if(digitalRead(lowAirSensorPin)== HIGH){
+(handleLowSupplies()){
  // delay between steps
  test = false;
 }
