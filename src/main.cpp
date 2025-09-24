@@ -905,7 +905,7 @@ void loop() {
 
 
 bool test = false;
-(handleLowSupplies()){
+if(handleLowSupplies()){
  // delay between steps
  test = false;
 }
