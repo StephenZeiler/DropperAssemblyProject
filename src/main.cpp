@@ -872,7 +872,7 @@ void setup() {
 
 
 int i = 0;
-bool test = true;
+
 void loop() {
     // handleLowAirPressure();
     // updatePauseAfterFromPot(); 
@@ -911,13 +911,8 @@ void loop() {
 //if(handleLowSupplies()){
     if(digitalRead(pipetRamPin)==HIGH){
  // delay between steps
- test = false;
 }
 else{
-    test=true;
-}
-
-if(test){
         digitalWrite(stepPin, HIGH);
         delayMicroseconds(10); // pulse width
         digitalWrite(stepPin, LOW);
