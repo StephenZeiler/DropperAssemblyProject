@@ -909,7 +909,7 @@ void loop() {
 
 
 //if(handleLowSupplies()){
-    if(digitalRead(pipetRamPin)==HIGH){
+    if(digitalRead(pipetSupplySensorPin)==HIGH){
  // delay between steps
 }
 else{
