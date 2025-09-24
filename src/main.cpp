@@ -216,11 +216,14 @@ bool handleLowSupplies(){
     if(digitalRead(capSupplySensorPin)== HIGH){
         return true;
     }
-    if(digitalRead(bulbSupplySensorPin)== HIGH){
+    else if(digitalRead(bulbSupplySensorPin)== HIGH){
         return true;
     }
-    if(digitalRead(pipetSupplySensorPin)== HIGH){
+    else if(digitalRead(pipetSupplySensorPin)== HIGH){
         return true;
+    }
+    else{
+        return false;
     }
 }
 int currentHomePosition = 0;
