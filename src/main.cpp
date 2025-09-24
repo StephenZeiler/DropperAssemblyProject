@@ -908,7 +908,8 @@ void loop() {
 
 
 
-if(handleLowSupplies()){
+//if(handleLowSupplies()){
+    if(digitalRead(pipetRamPin)==HIGH){
  // delay between steps
  test = false;
 }
