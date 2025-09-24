@@ -877,50 +877,50 @@ void setup() {
 int i = 0;
 
 void loop() {
-    // handleLowAirPressure();
-    // updatePauseAfterFromPot(); 
-    // handleButtons();
-    // handleCapInjection();
-    // setSlotIdByPosition(slots);
-    // machineTracker();
+    handleLowAirPressure();
+    updatePauseAfterFromPot(); 
+    handleButtons();
+    handleCapInjection();
+    setSlotIdByPosition(slots);
+    machineTracker();
 
-    // startTime = millis();
-    // motorPauseTime();
-    // if(!isMoving && motorPausePercent>.90){
-    //    machine.updateMachineDisplayInfo(myNex, startTime, slots);
-    // }
+    startTime = millis();
+    motorPauseTime();
+    if(!isMoving && motorPausePercent>.90){
+       machine.updateMachineDisplayInfo(myNex, startTime, slots);
+    }
     
-    // handleBulbSystem();
-    // handlePipetSystem();  // Make sure this is uncommented
+    handleBulbSystem();
+    handlePipetSystem();  // Make sure this is uncommented
     
-    // if (machine.isStopped) return;
-    // if (machine.needsHoming) {
-    //     if(machine.needsHoming){
-    //         machine.updateStatus(myNex,"Motor Homing");
-    //         homeMachine();
-    //     }
-    //     if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
-    //         machine.updateStatus(myNex,"In Production");
-    //     }
-    //     return;
-    // }
+    if (machine.isStopped) return;
+    if (machine.needsHoming) {
+        if(machine.needsHoming){
+            machine.updateStatus(myNex,"Motor Homing");
+            homeMachine();
+        }
+        if(!machine.needsHoming && !machine.isPaused  && !machine.isStopped){
+            machine.updateStatus(myNex,"In Production");
+        }
+        return;
+    }
     
-    // if (machine.inProduction) {
-    //     stepMotor();
-    // }
+    if (machine.inProduction) {
+        stepMotor();
+    }
 
 
 
-//if(handleLowSupplies()){
-    if(handleLowSupplies()){
- // delay between steps
-}
-else{
-        digitalWrite(stepPin, HIGH);
-        delayMicroseconds(10); // pulse width
-        digitalWrite(stepPin, LOW);
-        delayMicroseconds(4000);
-}
+// //if(handleLowSupplies()){
+//     if(handleLowSupplies()){
+//  // delay between steps
+// }
+// else{
+//         digitalWrite(stepPin, HIGH);
+//         delayMicroseconds(10); // pulse width
+//         digitalWrite(stepPin, LOW);
+//         delayMicroseconds(4000);
+// }
 
 
 // if(digitalRead(finishProductionButtonPin)){
