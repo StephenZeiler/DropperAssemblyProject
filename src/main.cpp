@@ -594,14 +594,6 @@ void homeMachine() {
 bool puasedStateProcessing = false;
 void stepMotor() {
 
-    if(handleLowSupplies()){
-        MIN_STEP_DELAY = 31 * 8;   // ≈ 248
-        MAX_STEP_DELAY = 616 * 8;  // ≈ 4928
-    }
-    else{
-        MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
-        MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
-    }
     unsigned long currentTime = micros();
     
     if (isMoving) {
@@ -657,6 +649,14 @@ void stepMotor() {
             lastStepTime = currentTime;
         }
     } else {
+        if(handleLowSupplies()){
+            MIN_STEP_DELAY = 31 * 8;   // ≈ 248
+            MAX_STEP_DELAY = 616 * 8;  // ≈ 4928
+        }
+        else{
+            MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
+            MAX_STEP_DELAY = 616;  // 800 * 0.77 ≈ 616
+        }
             if(pauseRequested) {
                 machine.pause();
                 pauseRequested = false;
