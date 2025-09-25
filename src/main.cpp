@@ -377,7 +377,7 @@ void handleBulbSystem() {
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
         // Extend preloader (fire) and immediately start retract timing
         machine.setBulbPreLoadReady(false);
-        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[slotIdBulbPreLoad-1].shouldFinishProduction()){
+        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[4].shouldFinishProduction()){
             machine.stop();
         }
         if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
