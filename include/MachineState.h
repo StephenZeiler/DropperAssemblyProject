@@ -185,7 +185,7 @@ void updateMachineDisplayInfo(EasyNex myNex, long currentMilliTime, SlotObject s
             //setRunTimeDisplay(myNex, currentMilliTime); 
             break;
         case 1: 
-            setDropperCntDisplay(myNex, currentMilliTime); 
+            //setDropperCntDisplay(myNex, currentMilliTime); 
             break;
         case 2: 
             //setErrorLogs(myNex, currentMilliTime); 
