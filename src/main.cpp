@@ -381,11 +381,11 @@ void handleBulbSystem() {
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
         // Extend preloader (fire) and immediately start retract timing
         machine.setBulbPreLoadReady(false);
-        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[test].shouldFinishProduction()){
-            machine.stop();
-        }
         if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
             digitalWrite(bulbPreLoadCylinder, HIGH);
+        }
+        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[test].shouldFinishProduction()){
+            machine.stop();
         }
         // else if(digitalRead(preLoadCylinderHomeSensorPin) == LOW && machine.inProduction && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
         //     machine.setBulbPreLoadReady(true);
