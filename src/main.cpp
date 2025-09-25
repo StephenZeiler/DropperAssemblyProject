@@ -892,6 +892,7 @@ int i = 0;
 
 void loop() {
     handleLowAirPressure();
+    machine.updateMachineDisplayInfo(myNex, startTime, slots);
     updatePauseAfterFromPot();
     handleButtons();
     handleCapInjection();
@@ -901,7 +902,7 @@ void loop() {
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
-       machine.updateMachineDisplayInfo(myNex, startTime, slots);
+       //machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
     
     handleBulbSystem();
