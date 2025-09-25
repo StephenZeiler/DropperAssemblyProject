@@ -351,7 +351,7 @@ void handleBulbSystem() {
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
-        machine.setBulbSystemReady(false); // System not ready when motor stops
+         // System not ready when motor stops
         ramRetracted = false; // Ram needs to retract again
 
         // NEW: arm preloader for this stop
@@ -360,7 +360,8 @@ void handleBulbSystem() {
     }
     if (!lastMotorState && isMoving) {
         motorStartTime = micros(); // Record when motor started
-
+        machine.setBulbSystemReady(false);
+        machine.setBulbPreLoadReady(false);
         // NEW: disarm on movement; will re-arm at next stop
         preloadArmed = false;
     }
@@ -380,7 +381,7 @@ void handleBulbSystem() {
     if (!isMoving && preloadArmed && !preloadFiredThisStop
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
         // Extend preloader (fire) and immediately start retract timing
-        machine.setBulbPreLoadReady(false);
+        
         if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
             digitalWrite(bulbPreLoadCylinder, HIGH);
         }
@@ -405,7 +406,7 @@ void handleBulbSystem() {
     }
     // If it hasn’t fired yet this stop, keep preload "not ready"
 if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
-    machine.setBulbPreLoadReady(false);
+    //machine.setBulbPreLoadReady(false);
 }
     // ===================================================================
 
@@ -897,14 +898,14 @@ void loop() {
     handleCapInjection();
     setSlotIdByPosition(slots);
     machineTracker();
-        //     if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbSystemReady){
-        //     myNex.writeStr("cautionTxt.txt+", "bulb\\r");
-        //     //myNex.writeStr("cautionTxt.txt", fullLog);
-        // }
-        //         if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
-        //     myNex.writeStr("cautionTxt.txt+", "preload\\r");
-        //     //myNex.writeStr("cautionTxt.txt", fullLog);
-        // }
+            if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbSystemReady){
+            
+            //myNex.writeStr("cautionTxt.txt", fullLog);
+        }
+                if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
+            myNex.writeStr("cautionTxt.txt+", "preload\\r");
+            //myNex.writeStr("cautionTxt.txt", fullLog);
+        }
                     if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
             myNex.writeStr("cautionTxt.txt+", "pipet\\r");
             //myNex.writeStr("cautionTxt.txt", fullLog);
