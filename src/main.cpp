@@ -390,7 +390,7 @@ void handleBulbSystem() {
         if(!isMoving && digitalRead(preLoadCylinderHomeSensorPin) == LOW && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
             machine.setBulbPreLoadReady(true);
         }
-        if (!slots[slotIdBulbPreLoad].shouldFinishProduction() && machine.bulbSystemReady){
+        if (slots[slotIdBulbPreLoad].shouldFinishProduction() && machine.bulbSystemReady){
             myNex.writeStr("cautiontTxt.txt+", "test\\r");
         }
 
