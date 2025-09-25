@@ -390,9 +390,6 @@ void handleBulbSystem() {
         if(!isMoving && digitalRead(preLoadCylinderHomeSensorPin) == LOW && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
             machine.setBulbPreLoadReady(true);
         }
-        if (slots[slotIdBulbPreLoad].shouldFinishProduction() && machine.bulbSystemReady){
-            myNex.writeStr("cautionTxt.txt", "test\\r");
-        }
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
     if (preloadFiredThisStop) {
@@ -900,7 +897,18 @@ void loop() {
     handleCapInjection();
     setSlotIdByPosition(slots);
     machineTracker();
-
+            if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbSystemReady){
+            myNex.writeStr("cautionTxt.txt+", "bulb\\r");
+            //myNex.writeStr("cautionTxt.txt", fullLog);
+        }
+                if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
+            myNex.writeStr("cautionTxt.txt+", "preload\\r");
+            //myNex.writeStr("cautionTxt.txt", fullLog);
+        }
+                    if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
+            myNex.writeStr("cautionTxt.txt+", "pipet\\r");
+            //myNex.writeStr("cautionTxt.txt", fullLog);
+        }
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
