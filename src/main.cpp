@@ -898,11 +898,11 @@ void loop() {
     handleCapInjection();
     setSlotIdByPosition(slots);
     machineTracker();
-            if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbSystemReady){
+            if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbSystemReady){
             myNex.writeStr("cautionTxt.txt+", "bulb\\r");
             //myNex.writeStr("cautionTxt.txt", fullLog);
         }
-                if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
+                if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbPreLoadReady){
             myNex.writeStr("cautionTxt.txt+", "preload\\r");
             //myNex.writeStr("cautionTxt.txt", fullLog);
         }
