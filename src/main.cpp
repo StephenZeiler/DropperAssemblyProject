@@ -901,10 +901,10 @@ void loop() {
         //     myNex.writeStr("cautionTxt.txt+", "bulb\\r");
         //     //myNex.writeStr("cautionTxt.txt", fullLog);
         // }
-                if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
-            myNex.writeStr("cautionTxt.txt+", "preload\\r");
-            //myNex.writeStr("cautionTxt.txt", fullLog);
-        }
+        //         if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
+        //     myNex.writeStr("cautionTxt.txt+", "preload\\r");
+        //     //myNex.writeStr("cautionTxt.txt", fullLog);
+        // }
                     if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
             myNex.writeStr("cautionTxt.txt+", "pipet\\r");
             //myNex.writeStr("cautionTxt.txt", fullLog);
