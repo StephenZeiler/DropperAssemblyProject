@@ -387,7 +387,7 @@ void handleBulbSystem() {
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
     }
-        if(!isMoving && digitalRead(preLoadCylinderHomeSensorPin) == LOW && machine.inProduction && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
+        if(!isMoving && digitalRead(preLoadCylinderHomeSensorPin) == LOW && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
             machine.setBulbPreLoadReady(true);
         }
 
