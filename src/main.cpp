@@ -384,15 +384,12 @@ void handleBulbSystem() {
         if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
             digitalWrite(bulbPreLoadCylinder, HIGH);
         }
-        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[test].shouldFinishProduction()){
-            machine.stop();
-        }
-        // else if(digitalRead(preLoadCylinderHomeSensorPin) == LOW && machine.inProduction && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
-        //     machine.setBulbPreLoadReady(true);
-        // }
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
     }
+        if(!isMoving && digitalRead(preLoadCylinderHomeSensorPin) == LOW && machine.inProduction && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
+            machine.setBulbPreLoadReady(true);
+        }
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
     if (preloadFiredThisStop) {
