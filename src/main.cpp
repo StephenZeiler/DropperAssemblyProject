@@ -899,7 +899,7 @@ void loop() {
     setSlotIdByPosition(slots);
     machineTracker();
             if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbSystemReady){
-            
+            myNex.writeStr("cautionTxt.txt+", "bulb\\r");
             //myNex.writeStr("cautionTxt.txt", fullLog);
         }
                 if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbPreLoadReady){
