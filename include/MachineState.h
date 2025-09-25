@@ -185,7 +185,7 @@ void updateMachineDisplayInfo(EasyNex myNex, long currentMilliTime, SlotObject s
             //setRunTimeDisplay(myNex, currentMilliTime); 
             break;
         case 1: 
-            //setDropperCntDisplay(myNex, currentMilliTime); 
+            setDropperCntDisplay(myNex, currentMilliTime); 
             break;
         case 2: 
             //setErrorLogs(myNex, currentMilliTime); 
@@ -266,15 +266,15 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
 
         for (int i = 0; i < 16; i++) {
             //test
-            if (slots[i].isAtPipetInjection() && slots[i].shouldFinishProduction() && pipetSystemReady){
-                String msg = String(slots[i].getId()) + " pipet ready\r\n";
-            }
-            if (slots[i].isAtBulbInjection() && slots[i].shouldFinishProduction() && bulbSystemReady){
-                String msg = String(slots[i].getId()) + " bulb ready\r\n";
-            }
-            if (slots[i].isAtBulbPreLoad() && slots[i].shouldFinishProduction() && bulbPreLoadReady){
-                String msg = String(slots[i].getId()) + "preload ready\r\n";
-            }
+            // if (slots[i].isAtPipetInjection() && slots[i].shouldFinishProduction() && pipetSystemReady){
+            //     String msg = String(slots[i].getId()) + " pipet ready\r\n";
+            // }
+            // if (slots[i].isAtBulbInjection() && slots[i].shouldFinishProduction() && bulbSystemReady){
+            //     String msg = String(slots[i].getId()) + " bulb ready\r\n";
+            // }
+            // if (slots[i].isAtBulbPreLoad() && slots[i].shouldFinishProduction() && bulbPreLoadReady){
+            //     String msg = String(slots[i].getId()) + "preload ready\r\n";
+            // }
 
             //test
             if (slots[i].hasMissingCap()) {
