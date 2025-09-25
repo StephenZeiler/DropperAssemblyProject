@@ -653,10 +653,10 @@ void stepMotor() {
         }
     } else {
         if(handleLowSupplies()){
-            MIN_STEP_DELAY = 31 * 8;   // ≈ 248
-            MAX_STEP_DELAY = 616 * 8;  // ≈ 4928
-            ACCEL_STEPS   = 46 * 8;    // 60 * 0.77 ≈ 46
-            DECEL_STEPS   = 15 *8;  
+            MIN_STEP_DELAY = 31 * 16; 
+            MAX_STEP_DELAY = 616 * 16; 
+            ACCEL_STEPS   = 46 * 16;    
+            DECEL_STEPS   = 15 *16;  
         }
         else{
             MIN_STEP_DELAY = 31;   // 40 * 0.77 ≈ 31
