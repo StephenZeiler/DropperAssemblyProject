@@ -422,9 +422,7 @@ if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
                 if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
                     digitalWrite(bulbRamPin, HIGH);
                 }
-                else if(ramHome && (slots[slotIdBulbInjection].hasError() || slots[slotIdBulbInjection].shouldFinishProduction())){
-                    machine.setBulbSystemReady(true);
-                }
+                
                 ramExtended = true;
                 ramRetracted = false;
             }
@@ -432,7 +430,9 @@ if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
                 machine.bulbPresent = false;
                 //TODO: DOES THIS ADD VALUE?
             }
-
+            if(ramHome && (slots[slotIdBulbInjection].hasError() || slots[slotIdBulbInjection].shouldFinishProduction())){
+                    machine.setBulbSystemReady(true);
+                }
             // Deactivate ram after 95% of pause time
             if (pausePercent >= 0.95 && digitalRead(bulbRamPin)) {
                 digitalWrite(bulbRamPin, LOW);
