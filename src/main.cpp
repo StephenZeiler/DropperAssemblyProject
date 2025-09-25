@@ -154,6 +154,7 @@ SlotObject slots[] = {
 int slotIdCapInWheelInjection;
 int slotIdCapInWheelConfirm;
 int slotIdBulbPreLoad;
+int test;
 int slotIdBulbInjection;
 int slotIdBulbInCapConfirm;
 int slotIdPipetInjection;
@@ -170,6 +171,9 @@ void setSlotIdByPosition(SlotObject slots[])
         }
         if(slots[i].getPosition()==2){
             slotIdCapInWheelConfirm= slots[i].getId();
+        }
+         if(slots[i].getPosition()==4){
+            test= slots[i].getId();
         }
         if(slots[i].getPosition()==5){
             slotIdBulbPreLoad= slots[i].getId();
@@ -377,7 +381,7 @@ void handleBulbSystem() {
         && machine.canPreLoadBulbProcessStart() && bulbInPreload) {
         // Extend preloader (fire) and immediately start retract timing
         machine.setBulbPreLoadReady(false);
-        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[4].shouldFinishProduction()){
+        if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && slots[test].shouldFinishProduction()){
             machine.stop();
         }
         if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
