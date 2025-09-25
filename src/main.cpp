@@ -380,6 +380,9 @@ void handleBulbSystem() {
         if(machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction()){
             digitalWrite(bulbPreLoadCylinder, HIGH);
         }
+        else if(digitalRead(preLoadCylinderHomeSensorPin) == LOW && machine.inProduction && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){ //has error just mark as ready to continue
+            machine.setBulbPreLoadReady(true);
+        }
         preloadPulseStart = micros();
         preloadFiredThisStop = true; // ensure only once per stop
     }
@@ -413,6 +416,9 @@ if (!preloadFiredThisStop && machine.canPreLoadBulbProcessStart()) {
                // if(!slots[slotIdBulbInjection].hasMissingCap()){
                 if(!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction()){
                     digitalWrite(bulbRamPin, HIGH);
+                }
+                else if(ramHome && (slots[slotIdBulbInjection].hasError() || slots[slotIdBulbInjection].shouldFinishProduction())){
+                    machine.setBulbSystemReady(true);
                 }
                 ramExtended = true;
                 ramRetracted = false;
@@ -653,7 +659,7 @@ void stepMotor() {
         }
     } else {
         if(handleLowSupplies()){
-            MIN_STEP_DELAY = 31 * 16; 
+            MIN_STEP_DELAY = 31 * 16; //Slow the system down by 16x when low on supplies
             MAX_STEP_DELAY = 616 * 16; 
             ACCEL_STEPS   = 46 * 16;    
             DECEL_STEPS   = 15 *16;  
