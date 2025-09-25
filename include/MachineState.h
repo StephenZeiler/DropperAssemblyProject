@@ -265,6 +265,18 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
         int pos = 0;
 
         for (int i = 0; i < 16; i++) {
+            //test
+            if (slots[i].isAtPipetInjection() && slots[i].shouldFinishProduction() && !pipetSystemReady){
+                String msg = String(slots[i].getId()) + " pipet system not ready\r\n";
+            }
+            if (slots[i].isAtBulbInjection() && slots[i].shouldFinishProduction() && !bulbSystemReady){
+                String msg = String(slots[i].getId()) + " bulb system not ready\r\n";
+            }
+            if (slots[i].isAtBulbPreLoad() && slots[i].shouldFinishProduction() && !bulbPreLoadReady){
+                String msg = String(slots[i].getId()) + " bulb preload system not ready\r\n";
+            }
+
+            //test
             if (slots[i].hasMissingCap()) {
                 String msg = "Slot " + String(slots[i].getId()) + " has missing cap.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
