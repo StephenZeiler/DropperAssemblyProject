@@ -391,7 +391,7 @@ void handleBulbSystem() {
             machine.setBulbPreLoadReady(true);
         }
         if (slots[slotIdBulbPreLoad].shouldFinishProduction() && machine.bulbSystemReady){
-            myNex.writeStr("cautiontTxt.txt+", "test\\r");
+            myNex.writeStr("cautionTxt.txt", "test\\r");
         }
 
     // Fast retract: end the pulse as soon as we've met the minimum actuation time
