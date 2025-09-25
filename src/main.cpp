@@ -347,7 +347,7 @@ void handleBulbSystem() {
     // Track motor state transitions
     if (lastMotorState && !isMoving) {
         motorStopTime = micros(); // Record when motor stopped
-        machine.setBulbSystemReady(false); // System not ready when motor stops
+        
         ramRetracted = false; // Ram needs to retract again
 
         // NEW: arm preloader for this stop
@@ -356,7 +356,7 @@ void handleBulbSystem() {
     }
     if (!lastMotorState && isMoving) {
         motorStartTime = micros(); // Record when motor started
-
+        machine.setBulbSystemReady(false); // System not ready when motor stops
         // NEW: disarm on movement; will re-arm at next stop
         preloadArmed = false;
     }
