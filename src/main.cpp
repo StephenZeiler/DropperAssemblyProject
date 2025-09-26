@@ -906,10 +906,10 @@ void loop() {
         //     myNex.writeStr("cautionTxt.txt+", "preload\\r");
         //     //myNex.writeStr("cautionTxt.txt", fullLog);
         // }
-        //             if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
-        //     myNex.writeStr("cautionTxt.txt+", "pipet\\r");
-        //     //myNex.writeStr("cautionTxt.txt", fullLog);
-        // }
+                    if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
+            myNex.writeStr("cautionTxt.txt+", "pipet\\r");
+            //myNex.writeStr("cautionTxt.txt", fullLog);
+        }
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
