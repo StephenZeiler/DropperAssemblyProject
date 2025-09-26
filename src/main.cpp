@@ -898,18 +898,18 @@ void loop() {
     handleCapInjection();
     setSlotIdByPosition(slots);
     machineTracker();
-            if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbSystemReady){
-            myNex.writeStr("cautionTxt.txt+", "bulb\\r");
-            //myNex.writeStr("cautionTxt.txt", fullLog);
-        }
-                if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbPreLoadReady){
-            myNex.writeStr("cautionTxt.txt+", "preload\\r");
-            //myNex.writeStr("cautionTxt.txt", fullLog);
-        }
-                    if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
-            myNex.writeStr("cautionTxt.txt+", "pipet\\r");
-            //myNex.writeStr("cautionTxt.txt", fullLog);
-        }
+        //     if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbSystemReady){
+        //     myNex.writeStr("cautionTxt.txt+", "bulb\\r");
+        //     //myNex.writeStr("cautionTxt.txt", fullLog);
+        // }
+        //         if (slots[slotIdBulbPreLoad].shouldFinishProduction() && !machine.bulbPreLoadReady){
+        //     myNex.writeStr("cautionTxt.txt+", "preload\\r");
+        //     //myNex.writeStr("cautionTxt.txt", fullLog);
+        // }
+        //             if (slots[slotIdPipetInjection].shouldFinishProduction() && !machine.pipetSystemReady){
+        //     myNex.writeStr("cautionTxt.txt+", "pipet\\r");
+        //     //myNex.writeStr("cautionTxt.txt", fullLog);
+        // }
     startTime = millis();
     motorPauseTime();
     if(!isMoving && motorPausePercent>.90){
