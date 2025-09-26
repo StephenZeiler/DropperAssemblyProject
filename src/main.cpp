@@ -276,6 +276,7 @@ void handlePipetSystem() {
             if (movementPercent >= 0.25 ) {
                 digitalWrite(pipetTwisterPin, HIGH);
             }
+            machine.setPipetSystemReady(false);
         } else {
             // Motor is stopped - handle ram and twister timing based on pause duration
             unsigned long stopDuration = micros() - motorStopTime;
@@ -287,8 +288,7 @@ void handlePipetSystem() {
                 //if(!slots[slotIdPipetInjection].hasMissingBulb()){
 
                     digitalWrite(pipetRamPin, HIGH);
-                }
-                machine.setPipetSystemReady(false);
+                }                
             }
             
             // Deactivate ram after 90% of pause time
@@ -305,7 +305,7 @@ void handlePipetSystem() {
                     digitalWrite(pipetTwisterPin, LOW);
                 }
             }
-            if(slots[slotIdPipetInjection].shouldFinishProduction()){
+            if(slots[slotIdPipetInjection].shouldFinishProduction() || slots[slotIdPipetInjection].hasError()){
                 digitalWrite(pipetTwisterPin, HIGH);
                 if(twisterAtHome){
                  machine.setPipetSystemReady(true);
