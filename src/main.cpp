@@ -22,6 +22,10 @@ const int emptySlotsButtonPin = 9;
 const int pipetSupplySensorPin = 34; //Signal goes high when no pipet
 const int bulbSupplySensorPin = 40; //Signal goes high when no bulb
 const int capSupplySensorPin = 38; //Signal goes high when no cap
+const int pipetLowSupplyLight = 42;
+const int bulbLowSupplyLight = 44;
+const int capLowSupplyLight = 46;
+const int lowSupplyBuzzer = 48;
 
 // Movement parameters
 const int TOTAL_STEPS = 200;  // Changed from 100 to 200
@@ -229,6 +233,34 @@ bool handleLowSupplies(){
     else{
         return false;
     }
+}
+void handleSupplyAlert() {
+  static unsigned long lastToggleTime = 0;
+  static bool flashState = false;
+
+  unsigned long now = millis();
+
+  // Toggle state every 500 ms
+  if (now - lastToggleTime >= 500) {
+    flashState = !flashState;
+    lastToggleTime = now;
+  }
+
+  bool capLow   = (digitalRead(capSupplySensorPin)   == HIGH);
+  bool bulbLow  = (digitalRead(bulbSupplySensorPin)  == HIGH);
+  bool pipetLow = (digitalRead(pipetSupplySensorPin) == HIGH);
+
+  // Set lights based on conditions
+  digitalWrite(capLowSupplyLight,   (capLow   && flashState) ? HIGH : LOW);
+  digitalWrite(bulbLowSupplyLight,  (bulbLow  && flashState) ? HIGH : LOW);
+  digitalWrite(pipetLowSupplyLight, (pipetLow && flashState) ? HIGH : LOW);
+
+  // Buzzer on if any supply low
+  if (capLow || bulbLow || pipetLow) {
+    digitalWrite(lowSupplyBuzzer, flashState ? HIGH : LOW);
+  } else {
+    digitalWrite(lowSupplyBuzzer, LOW);
+  }
 }
 int currentHomePosition = 0;
 MachineState machine;
@@ -893,7 +925,7 @@ void loop() {
     handleLowAirPressure();
     updatePauseAfterFromPot();
     handleButtons();
-    
+    handleSupplyAlert();
     setSlotIdByPosition(slots);
     machineTracker();
         //     if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbSystemReady){
