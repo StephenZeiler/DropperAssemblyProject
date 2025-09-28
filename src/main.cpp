@@ -893,7 +893,7 @@ void loop() {
     handleLowAirPressure();
     updatePauseAfterFromPot();
     handleButtons();
-    handleCapInjection();
+    
     setSlotIdByPosition(slots);
     machineTracker();
         //     if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbSystemReady){
@@ -913,7 +913,7 @@ void loop() {
     if(!isMoving && motorPausePercent>.90){
        machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
-    
+    handleCapInjection();
     handleBulbSystem();
     handlePipetSystem();  // Make sure this is uncommented
     
