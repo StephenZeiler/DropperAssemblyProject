@@ -476,7 +476,7 @@ void machineTracker(){
     if(finsihProdRequested){
         // String test = (String)"Finish production active" ;
         // myNex.writeStr("errorTxt.txt+",  "Finish prod active \\r");
-        slots[slotIdCapInWheelInjection].setFinsihProduction(true);
+        slots[slotIdFailedJunkEject].setFinsihProduction(true);
     }
     if(digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart() && !slots[slotIdPipetConfirm].shouldFinishProduction()){
         slots[slotIdPipetConfirm].setJunk(true);        
@@ -556,7 +556,7 @@ setSlotErrors(slots);
 }
 }
 void handleCapInjection(){
-if(machine.inProduction && !slots[slotIdCapInWheelInjection].hasError() && !slots[slotIdCapInWheelInjection].shouldFinishProduction()){
+if(machine.inProduction && !slots[slotIdFailedJunkEject].hasError() && !slots[slotIdFailedJunkEject].shouldFinishProduction()){
     digitalWrite(capInjectPin, HIGH);
 }
 else{
