@@ -306,7 +306,7 @@ void handlePipetSystem() {
                 }
             }
             if(slots[slotIdPipetInjection].shouldFinishProduction() || slots[slotIdPipetInjection].hasError()){
-                digitalWrite(pipetTwisterPin, HIGH);
+                digitalWrite(pipetTwisterPin, LOW);
                 if(twisterAtHome){
                  machine.setPipetSystemReady(true);
                 }
