@@ -235,7 +235,7 @@ bool handleLowSupplies(){
     }
 }
 void handleSupplyAlert() {
-  static unsigned long lastToggleTime = 0;
+   static unsigned long lastToggleTime = 0;
   static bool flashState = false;
 
   unsigned long now = millis();
@@ -250,16 +250,16 @@ void handleSupplyAlert() {
   bool bulbLow  = (digitalRead(bulbSupplySensorPin)  == HIGH);
   bool pipetLow = (digitalRead(pipetSupplySensorPin) == HIGH);
 
-  // Set lights based on conditions
-  digitalWrite(capLowSupplyLight,   (capLow   && flashState) ? HIGH : LOW);
-  digitalWrite(bulbLowSupplyLight,  (bulbLow  && flashState) ? HIGH : LOW);
-  digitalWrite(pipetLowSupplyLight, (pipetLow && flashState) ? HIGH : LOW);
+  // Active-low outputs (LOW = ON, HIGH = OFF)
+  digitalWrite(capLowSupplyLight,   (capLow   && flashState) ? LOW : HIGH);
+  digitalWrite(bulbLowSupplyLight,  (bulbLow  && flashState) ? LOW : HIGH);
+  digitalWrite(pipetLowSupplyLight, (pipetLow && flashState) ? LOW : HIGH);
 
-  // Buzzer on if any supply low
+  // Buzzer active if any supply low
   if (capLow || bulbLow || pipetLow) {
-    digitalWrite(lowSupplyBuzzer, flashState ? HIGH : LOW);
+    digitalWrite(lowSupplyBuzzer, flashState ? LOW : HIGH);
   } else {
-    digitalWrite(lowSupplyBuzzer, LOW);
+    digitalWrite(lowSupplyBuzzer, HIGH);  // OFF
   }
 }
 int currentHomePosition = 0;
