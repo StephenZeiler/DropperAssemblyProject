@@ -906,6 +906,7 @@ void setup() {
     pinMode(capLowSupplyLight, OUTPUT);
     pinMode(bulbLowSupplyLight, OUTPUT);
     pinMode(pipetLowSupplyLight, OUTPUT);
+    pinMode(lowSupplyBuzzer, OUTPUT);
 
 
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
