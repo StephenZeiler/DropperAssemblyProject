@@ -903,10 +903,6 @@ void setup() {
     pinMode(bulbSupplySensorPin, INPUT);
     pinMode(capSupplySensorPin, INPUT);
 
-    digitalWrite(pipetLowSupplyLight, HIGH); // OFF at boot
-    digitalWrite(bulbLowSupplyLight, HIGH); // OFF at boot
-    digitalWrite(capLowSupplyLight, HIGH); // OFF at boot
-    digitalWrite(lowSupplyBuzzer, HIGH); // OFF at boot
 
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
     digitalWrite(bulbRamPin, LOW);
