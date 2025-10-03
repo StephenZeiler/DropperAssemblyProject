@@ -235,33 +235,29 @@ bool handleLowSupplies(){
     }
 }
 void handleSupplyAlert() {
-   static unsigned long lastToggleTime = 0;
-  static bool flashState = false;
+  // CHANGED: removed toggle state + timing (no pulsing anymore)
+  // static unsigned long lastToggleTime = 0;
+  // static bool flashState = false;
+  // unsigned long now = millis();
+  // if (now - lastToggleTime >= 500) {
+  //   flashState = !flashState;
+  //   lastToggleTime = now;
+  // }
 
-  unsigned long now = millis();
+  bool capLow   = (digitalRead(capSupplySensorPin)   == HIGH);  // same logic
+  bool bulbLow  = (digitalRead(bulbSupplySensorPin)  == HIGH);  // same logic
+  bool pipetLow = (digitalRead(pipetSupplySensorPin) == HIGH);  // same logic
 
-  // Toggle state every 500 ms
-  if (now - lastToggleTime >= 500) {
-    flashState = !flashState;
-    lastToggleTime = now;
-  }
+  // CHANGED: active-low outputs; LOW = ON when supply is low, HIGH = OFF otherwise
+  digitalWrite(capLowSupplyLight,   capLow   ? LOW : HIGH);  // CHANGED
+  digitalWrite(bulbLowSupplyLight,  bulbLow  ? LOW : HIGH);  // CHANGED
+  digitalWrite(pipetLowSupplyLight, pipetLow ? LOW : HIGH);  // CHANGED
 
-  bool capLow   = (digitalRead(capSupplySensorPin)   == HIGH);
-  bool bulbLow  = (digitalRead(bulbSupplySensorPin)  == HIGH);
-  bool pipetLow = (digitalRead(pipetSupplySensorPin) == HIGH);
-
-  // Set lights based on conditions
-  digitalWrite(capLowSupplyLight,   (capLow   && flashState) ? HIGH : LOW);
-  digitalWrite(bulbLowSupplyLight,  (bulbLow  && flashState) ? HIGH : LOW);
-  digitalWrite(pipetLowSupplyLight, (pipetLow && flashState) ? HIGH : LOW);
-
-  // Buzzer on if any supply low
-  if (capLow || bulbLow || pipetLow) {
-    digitalWrite(lowSupplyBuzzer, flashState ? HIGH : LOW);
-  } else {
-    digitalWrite(lowSupplyBuzzer, LOW);
-  }
+  // CHANGED: buzzer constant ON (LOW) if any supply is low; otherwise OFF (HIGH)
+  bool anyLow = capLow || bulbLow || pipetLow;               // CHANGED
+  digitalWrite(lowSupplyBuzzer, anyLow ? LOW : HIGH);        // CHANGED
 }
+
 int currentHomePosition = 0;
 MachineState machine;
 
@@ -906,6 +902,11 @@ void setup() {
     pinMode(pipetSupplySensorPin, INPUT);
     pinMode(bulbSupplySensorPin, INPUT);
     pinMode(capSupplySensorPin, INPUT);
+
+    digitalWrite(pipetLowSupplyLight, HIGH); // OFF at boot
+    digitalWrite(bulbLowSupplyLight, HIGH); // OFF at boot
+    digitalWrite(capLowSupplyLight, HIGH); // OFF at boot
+    digitalWrite(lowSupplyBuzzer, HIGH); // OFF at boot
 
     digitalWrite(pipetTwisterPin, LOW);  // Start with twister off
     digitalWrite(bulbRamPin, LOW);
