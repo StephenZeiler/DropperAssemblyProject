@@ -246,6 +246,24 @@ bool hasConsecutiveErrors() {
             slots[i2].hasMissingBulb();
 
         if (threeMissingCaps || threeMissingPipets || threeMissingBulbs) {
+            if (threeMissingCaps){
+                 slots[i].setMissingCap(false);
+                slots[i1].setMissingCap(false);
+                slots[i2].setMissingCap(false);
+            }
+            if (threeMissingPipets){
+                 slots[i].setJunk(false);
+                slots[i1].setJunk(false);
+                slots[i2].setJunk(false);
+            }
+            if (threeMissingBulbs){
+                slots[i].setMissingBulb(false);
+                slots[i1].setMissingBulb(false);
+                slots[i2].setMissingBulb(false);
+            }
+                slots[i].setError(true);
+                slots[i1].setError(true);
+                slots[i2].setError(true); //set error so that nothing gets put into these slots when we resume. 
             return true;
         }
     }
