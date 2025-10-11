@@ -263,7 +263,7 @@ bool hasConsecutiveErrors() {
             }
                 slots[i].setError(true);
                 slots[i1].setError(true);
-                slots[i2].setError(true); //set error so that nothing gets put into these slots when we resume. 
+                slots[i2].setError(true); //set error so that nothing gets put into these slots when we resume.
             return true;
         }
     }
@@ -692,7 +692,8 @@ void machineTracker()
             slots[slotIdJunkConfirm].setError(false);
         }
 
-        if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
+        //if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
+        if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
         {
             machine.pause();
         }
