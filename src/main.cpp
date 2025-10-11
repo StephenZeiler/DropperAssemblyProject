@@ -695,11 +695,11 @@ void machineTracker()
         //if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
         if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
         {
-            machine.pause();
+            machine.pause(junkEjectorPin, dropperEjectPin);
         }
         if (slots[slotIdJunkEjection].shouldFinishProduction())
         {
-            machine.pause();
+            machine.pause(junkEjectorPin, dropperEjectPin);
             digitalWrite(junkEjectorPin, LOW);
             digitalWrite(dropperEjectPin, LOW);
         }
@@ -859,7 +859,7 @@ void stepMotor()
         }
         if (pauseRequested)
         {
-            machine.pause();
+            machine.pause(junkEjectorPin, dropperEjectPin);
             pauseRequested = false;
             return;
         }
@@ -1031,7 +1031,7 @@ void handleLowAirPressure()
 { // When low air pressure is detected, pause machine and wait for start button
     if (digitalRead(lowAirSensorPin) == HIGH)
     {
-        machine.pause();
+        machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "Low Air - Pause");
     }
 }
