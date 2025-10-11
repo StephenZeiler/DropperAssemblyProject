@@ -696,6 +696,8 @@ void machineTracker()
         if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
         {
             machine.pause();
+            digitalWrite(junkEjectorPin, LOW);
+            digitalWrite(dropperEjectPin, LOW);
         }
         if (slots[slotIdJunkEjection].shouldFinishProduction())
         {
