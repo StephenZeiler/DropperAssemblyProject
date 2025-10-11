@@ -223,6 +223,35 @@ void setSlotIdByPosition(SlotObject slots[])
         }
     }
 }
+
+bool hasConsecutiveErrors() {
+    int slotCount = sizeof(slots) / sizeof(slots[0]);
+    for (int i = 0; i < slotCount; ++i) {
+        int i1 = (i + 1) % slotCount;
+        int i2 = (i + 2) % slotCount;
+
+        bool threeMissingCaps =
+            slots[i].hasMissingCap() &&
+            slots[i1].hasMissingCap() &&
+            slots[i2].hasMissingCap();
+
+        bool threeMissingPipets =
+            slots[i].hasJunk() &&
+            slots[i1].hasJunk() &&
+            slots[i2].hasJunk();
+
+        bool threeMissingBulbs =
+            slots[i].hasMissingBulb() &&
+            slots[i1].hasMissingBulb() &&
+            slots[i2].hasMissingBulb();
+
+        if (threeMissingCaps || threeMissingPipets || threeMissingBulbs) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void setSlotErrors(SlotObject slots[])
 {
     for (int i = 0; i < 16; i++)
@@ -645,7 +674,7 @@ void machineTracker()
             slots[slotIdJunkConfirm].setError(false);
         }
 
-        if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
+        if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
         {
             machine.pause();
         }
