@@ -1104,7 +1104,6 @@ void loop()
     handleButtons();
     handleSupplyAlert();
     setSlotIdByPosition(slots);
-    machineTracker();
     //     if (slots[slotIdBulbInjection].shouldFinishProduction() && !machine.bulbSystemReady){
     //     myNex.writeStr("cautionTxt.txt+", "bulb\\r");
     //     //myNex.writeStr("cautionTxt.txt", fullLog);
@@ -1123,6 +1122,7 @@ void loop()
     {
         machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
+    machineTracker();
     handleCapInjection();
     handleBulbSystem();
     handlePipetSystem(); // Make sure this is uncommented
