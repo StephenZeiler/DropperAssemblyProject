@@ -98,6 +98,8 @@ bool canCheckForEmptyStart(){
             isPaused = true;
             inProduction = false;
         }
+            digitalWrite(junkEjectorPin, LOW);
+            digitalWrite(dropperEjectPin, LOW);
     }
     
     void stop() {
