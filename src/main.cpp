@@ -692,8 +692,8 @@ void machineTracker()
             slots[slotIdJunkConfirm].setError(false);
         }
 
-        if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
-       // if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
+        //if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
+        if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
         {
             machine.pause(junkEjectorPin, dropperEjectPin);
         }
