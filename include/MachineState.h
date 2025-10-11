@@ -93,13 +93,13 @@ bool canCheckForEmptyStart(){
         }
     }
     
-    void pause() {
+    void pause(int junkEjectorPin, int dropperEjectPin) {
         if (!isStopped) {
             isPaused = true;
             inProduction = false;
         }
-            digitalWrite(junkEjectorPin, LOW);
-            digitalWrite(dropperEjectPin, LOW);
+        digitalWrite(junkEjectorPin, LOW);
+        digitalWrite(dropperEjectPin, LOW);
     }
     
     void stop() {
