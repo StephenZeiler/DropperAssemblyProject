@@ -691,8 +691,14 @@ void machineTracker()
             slots[slotIdJunkConfirm].setMissingCap(false);
             slots[slotIdJunkConfirm].setError(false);
         }
+        
+        if (hasConsecutiveErrors())
+        //if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
+        {
+            machine.pause(junkEjectorPin, dropperEjectPin);
+        }
 
-        if (slots[slotIdFailedJunkEject].hasFailedJunkEject() || hasConsecutiveErrors())
+        if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
         //if (slots[slotIdFailedJunkEject].hasFailedJunkEject())
         {
             machine.pause(junkEjectorPin, dropperEjectPin);
