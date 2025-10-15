@@ -4,6 +4,7 @@
 #include "MachineState.h"
 #include "EasyNextionLibrary.h"
 
+MachineState machine;
 EasyNex myNex(Serial2); // Create an object of EasyNex class with the name < myNex >
 long startTime;
 // Motor pins
@@ -332,7 +333,6 @@ void handleSupplyAlert()
 }
 
 int currentHomePosition = 0;
-MachineState machine;
 
 void handlePipetSystem()
 {
