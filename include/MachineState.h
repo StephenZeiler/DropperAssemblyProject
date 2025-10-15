@@ -298,6 +298,11 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
                 String msg = "Slot " + String(slots[i].getId()) + " failed to eject junk.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
+            
+            if (slots[i].hasError()) {
+                String msg = "Slot " + String(slots[i].getId()) + " has an error.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            }
 
             // Prevent buffer overflow
             if (pos >= (int)sizeof(fullLog) - 64) {
