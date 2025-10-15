@@ -5,7 +5,10 @@
 
 class MachineState {
 public:
-    bool hasConsecutiveErrors = false;
+    bool hasConsecutiveBulbErrors = false;
+    bool hasConsecutiveCapErrors = false;
+    bool hasConsecutivePipetErrors = false;
+
     bool isPaused = false;
     bool isStopped = true;
     bool inProduction = false;
@@ -310,11 +313,18 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
                 break;
             }
         }
-        if (hasConsecutiveErrors) {
-                String msg = "3 consecutive errors - machine paused.\r\n";
+        if (hasConsecutiveBulbErrors) {
+                String msg = "3 bulb errors - machine paused.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
-            }
-
+        }
+        if (hasConsecutiveCapErrors) {
+                String msg = "3 cap errors - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+        }
+        if (hasConsecutivePipetErrors) {
+                String msg = "3 pipet errors - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+        }
         if (pos > 0) {
             lastCautionResetTime = currentMilliTime;
             myNex.writeStr("cautionTxt.txt", fullLog);

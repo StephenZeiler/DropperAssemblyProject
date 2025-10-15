@@ -251,25 +251,29 @@ bool hasConsecutiveErrors() {
                  slots[i].setMissingCap(false);
                 slots[i1].setMissingCap(false);
                 slots[i2].setMissingCap(false);
+                machine.hasConsecutiveCapErrors = true;
             }
             if (threeMissingPipets){
                  slots[i].setJunk(false);
                 slots[i1].setJunk(false);
                 slots[i2].setJunk(false);
+                machine.hasConsecutivePipetErrors = true;
             }
             if (threeMissingBulbs){
                 slots[i].setMissingBulb(false);
                 slots[i1].setMissingBulb(false);
                 slots[i2].setMissingBulb(false);
+                machine.hasConsecutiveBulbErrors = true;
             }
                 slots[i].setError(true);
                 slots[i1].setError(true);
-                slots[i2].setError(true); //set error so that nothing gets put into these slots when we resume.
-                machine.hasConsecutiveErrors = true;
+                slots[i2].setError(true); //set error so that nothing gets put into these slots when we resume.                
             return true;
         }
     }
-    machine.hasConsecutiveErrors = false;
+    machine.hasConsecutiveBulbErrors = false;
+    machine.hasConsecutiveCapErrors = false;
+    machine.hasConsecutivePipetErrors = false;
     return false;
 }
 
