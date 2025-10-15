@@ -29,6 +29,7 @@ public:
     int totalDroppersComplete = 0;
     int totalErroredDroppers = 0;
     int timeLoggingDelay = 230;
+    bool cautionShown = false;
     bool statusStateChange = false;
     String status = "";
 
@@ -324,10 +325,14 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
         if (pos > 0) {
             lastCautionResetTime = currentMilliTime;
             myNex.writeStr("cautionTxt.txt", fullLog);
+             cautionShown = true;
         }
-        else {
-            lastCautionResetTime = currentMilliTime;
-            myNex.writeStr("cautionTxt.txt", ""); // <-- CLEAR when nothing to report
+        else{
+            if(cautionShown){
+                lastCautionResetTime = currentMilliTime;
+                myNex.writeStr("cautionTxt.txt", ""); // <-- CLEAR when nothing to report
+                cautionShown = false;
+            }
         }
     }
 }
