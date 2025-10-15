@@ -325,6 +325,10 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
             lastCautionResetTime = currentMilliTime;
             myNex.writeStr("cautionTxt.txt", fullLog);
         }
+        else {
+            lastCautionResetTime = currentMilliTime;
+            myNex.writeStr("cautionTxt.txt", ""); // <-- CLEAR when nothing to report
+        }
     }
 }
 
