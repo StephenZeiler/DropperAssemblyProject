@@ -624,7 +624,7 @@ void machineTracker()
             // myNex.writeStr("errorTxt.txt+",  "Finish prod active \\r");
             slots[slotIdFailedJunkEject].setFinsihProduction(true);
         }
-        if (digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart() && !slots[slotIdPipetConfirm].shouldFinishProduction())
+        if (digitalRead(pipetTipSensor) == HIGH && machine.canPipetConfirmStart() && !slots[slotIdPipetConfirm].shouldFinishProduction() && !slots[slotIdPipetConfirm].hasError())
         {
             slots[slotIdPipetConfirm].setJunk(true);
             // String test = (String)slotIdPipetConfirm +   " slot has junk: "+ (String)slots[slotIdPipetConfirm].hasJunk() ;
@@ -634,7 +634,7 @@ void machineTracker()
         {
             slots[slotIdPipetConfirm].setJunk(false);
         }
-        if (digitalRead(bulbInCapSensor) == LOW && machine.canBulbConfirmStart() && !slots[slotIdBulbInCapConfirm].shouldFinishProduction())
+        if (digitalRead(bulbInCapSensor) == LOW && machine.canBulbConfirmStart() && !slots[slotIdBulbInCapConfirm].shouldFinishProduction() && !slots[slotIdBulbInCapConfirm].hasError())
         {
             slots[slotIdBulbInCapConfirm].setMissingBulb(true);
         }
@@ -642,7 +642,7 @@ void machineTracker()
         {
             slots[slotIdBulbInCapConfirm].setMissingBulb(false);
         }
-        if (digitalRead(capInWheel) == LOW && machine.canCapConfirmStart() && !slots[slotIdCapInWheelConfirm].shouldFinishProduction())
+        if (digitalRead(capInWheel) == LOW && machine.canCapConfirmStart() && !slots[slotIdCapInWheelConfirm].shouldFinishProduction() && !slots[slotIdCapInWheelConfirm].hasError())
         {
             slots[slotIdCapInWheelConfirm].setMissingCap(true);
         }
