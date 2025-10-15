@@ -304,16 +304,16 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
                 String msg = "Slot " + String(slots[i].getId()) + " has an error.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
-            if (hasConsecutiveErrors) {
-                String msg = "3 consecutive errors - machine paused.\r\n";
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
-            }
 
             // Prevent buffer overflow
             if (pos >= (int)sizeof(fullLog) - 64) {
                 break;
             }
         }
+        if (hasConsecutiveErrors) {
+                String msg = "3 consecutive errors - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            }
 
         if (pos > 0) {
             lastCautionResetTime = currentMilliTime;
