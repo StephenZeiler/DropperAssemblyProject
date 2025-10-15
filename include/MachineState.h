@@ -5,6 +5,7 @@
 
 class MachineState {
 public:
+    bool hasConsecutiveErrors = false;
     bool isPaused = false;
     bool isStopped = true;
     bool inProduction = false;
@@ -301,6 +302,10 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
             
             if (slots[i].hasError()) {
                 String msg = "Slot " + String(slots[i].getId()) + " has an error.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            }
+            if (hasConsecutiveErrors) {
+                String msg = "3 consecutive errors - machine paused.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
 

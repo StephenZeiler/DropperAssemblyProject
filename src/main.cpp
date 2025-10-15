@@ -264,9 +264,11 @@ bool hasConsecutiveErrors() {
                 slots[i].setError(true);
                 slots[i1].setError(true);
                 slots[i2].setError(true); //set error so that nothing gets put into these slots when we resume.
+                machine.hasConsecutiveErrors = true;
             return true;
         }
     }
+    machine.hasConsecutiveErrors = false;
     return false;
 }
 
