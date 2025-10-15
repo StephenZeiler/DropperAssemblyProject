@@ -417,7 +417,7 @@ void handlePipetSystem()
                 }
                 // Deactivate twister after 75% of pause time
                 // if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && !slots[slotIdPipetInjection].hasMissingBulb()) {
-                if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction()))
+                if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && (!slots[slotIdPipetInjection].hasError() || !slots[slotIdPipetInjection].shouldFinishProduction()))
                 {
                     digitalWrite(pipetTwisterPin, LOW);
                 }
