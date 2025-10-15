@@ -284,17 +284,17 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
 
             //test
             if (slots[i].hasMissingCap()) {
-                String msg = "Slot " + String(slots[i].getId()) + " has missing cap.\r\n";
+                String msg = "Slot " + String(slots[i].getId()) + " has cap error.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
 
             if (slots[i].hasMissingBulb()) {
-                String msg = "Slot " + String(slots[i].getId()) + " has missing bulb.\r\n";
+                String msg = "Slot " + String(slots[i].getId()) + " has bulb error.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
 
             if (slots[i].hasJunk()) {
-                String msg = "Slot " + String(slots[i].getId()) + " has broken/missing pipet.\r\n";
+                String msg = "Slot " + String(slots[i].getId()) + " has pipet error.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
 
@@ -303,10 +303,6 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
             
-            if (slots[i].hasError()) {
-                String msg = "Slot " + String(slots[i].getId()) + " has an error.\r\n";
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
-            }
 
             // Prevent buffer overflow
             if (pos >= (int)sizeof(fullLog) - 64) {
