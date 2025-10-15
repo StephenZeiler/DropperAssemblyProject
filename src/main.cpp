@@ -1126,11 +1126,11 @@ void loop()
     // }
     startTime = millis();
     motorPauseTime();
-    machineTracker();
     if (!isMoving && motorPausePercent > .90)
     {
         machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
+    machineTracker();
     handleCapInjection();
     handleBulbSystem();
     handlePipetSystem(); // Make sure this is uncommented
