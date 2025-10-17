@@ -1046,10 +1046,14 @@ void updatePauseAfterFromPot()
 
 void handleLowAirPressure()
 { // When low air pressure is detected, pause machine and wait for start button
-    if (digitalRead(lowAirSensorPin) == HIGH)
+    if (digitalRead(lowAirSensorPin) == LOW)
     {
+        machine.hasLowAirPressure = true;
         machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "Low Air - Pause");
+    }
+    else{
+        machine.hasLowAirPressure = false;
     }
 }
 

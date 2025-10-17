@@ -31,6 +31,7 @@ public:
     int timeLoggingDelay = 230;
     bool cautionShown = false;
     bool statusStateChange = false;
+    bool hasLowAirPressure = false;
     String status = "";
 
 void incrementDroppersCompleted(){
@@ -309,6 +310,10 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
             if (pos >= (int)sizeof(fullLog) - 64) {
                 break;
             }
+        }
+        if (hasLowAirPressure) {
+                String msg = "Low air pressure - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
         if (hasConsecutiveBulbErrors) {
                 String msg = "3 bulb errors - machine paused.\r\n";
