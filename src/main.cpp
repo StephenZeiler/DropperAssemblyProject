@@ -735,7 +735,10 @@ void handleCapInjection()
     {
         digitalWrite(capInjectPin, LOW);
     }
-    if(!isMoving && digitalRead(capPositionSensorPin) == LOW && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){
+    if(!isMoving && digitalRead(capPositionSensorPin) == LOW ){
+        machine.bulbSystemReady = true;
+    }
+    if(slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction()){
         machine.bulbSystemReady = true;
     }
     else if(isMoving){
