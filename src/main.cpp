@@ -1050,13 +1050,14 @@ void systemNotReadyTimeout() {
 
     const unsigned long TIMEOUT_MS = 2000UL;
     unsigned long now = millis();
-
+    if(machine.isReadyToMove()){
+        machine.timeoutMachine = false;
+    }
     bool condition =
         (!isMoving) &&
         (!machine.isReadyToMove()) &&
         (!machine.isPaused) &&
         (!machine.isStopped);
-
     if (condition) {
         if (!tracking) {               // first frame we notice the condition
             tracking = true;
