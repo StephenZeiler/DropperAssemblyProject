@@ -738,7 +738,7 @@ void handleCapInjection()
     if(!isMoving && digitalRead(capPositionSensorPin) == HIGH ){
         machine.capInjectionReady = true;
     }
-    if(slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction()){
+    if(slots[slotIdFailedJunkEject].hasError() || slots[slotIdFailedJunkEject].shouldFinishProduction()){
         machine.capInjectionReady = true;
     }
     if(isMoving){
