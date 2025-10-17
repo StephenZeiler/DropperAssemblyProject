@@ -88,6 +88,7 @@ const int junkEjectorPin = 49;
 // CAP injection
 const int capInjectPin = 35;
 const int capInWheel = 29;
+const int capPositionSensorPin = 52;
 
 // Empty Slot Sensor
 const int slotEmptySensor = 32;
@@ -733,6 +734,12 @@ void handleCapInjection()
     else
     {
         digitalWrite(capInjectPin, LOW);
+    }
+    if(!isMoving && digitalRead(capPositionSensorPin) == LOW && (slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction())){
+        machine.bulbSystemReady = true;
+    }
+    else if(isMoving){
+                machine.bulbSystemReady = false;
     }
 }
 void homeMachine()
