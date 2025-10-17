@@ -32,6 +32,7 @@ public:
     bool cautionShown = false;
     bool statusStateChange = false;
     bool hasLowAirPressure = false;
+    bool timeoutMachine = false;
     String status = "";
 
 void incrementDroppersCompleted(){
@@ -310,6 +311,21 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
             if (pos >= (int)sizeof(fullLog) - 64) {
                 break;
             }
+        }
+         if (timeoutMachine) {
+            if(!bulbSystemReady){
+                String msg = "Bulb System not ready - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            }
+            if(!pipetSystemReady){
+                String msg = "Pipet System not ready - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            }
+            if(!capInjectionReady){
+                String msg = "Cap System not ready - machine paused.\r\n";
+                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            }
+                
         }
         if (hasLowAirPressure) {
                 String msg = "Low air pressure - machine paused.\r\n";
