@@ -736,13 +736,13 @@ void handleCapInjection()
         digitalWrite(capInjectPin, LOW);
     }
     if(!isMoving && digitalRead(capPositionSensorPin) == LOW ){
-        machine.bulbSystemReady = true;
+        machine.capInjectionReady = true;
     }
     if(slots[slotIdBulbPreLoad].hasError() || slots[slotIdBulbPreLoad].shouldFinishProduction()){
-        machine.bulbSystemReady = true;
+        machine.capInjectionReady = true;
     }
-    else if(isMoving){
-                machine.bulbSystemReady = false;
+    if(isMoving){
+                machine.capInjectionReady = false;
     }
 }
 void homeMachine()
