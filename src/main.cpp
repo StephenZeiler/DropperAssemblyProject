@@ -1097,7 +1097,8 @@ void setup()
     pinMode(pipetSupplySensorPin, INPUT);
     pinMode(bulbSupplySensorPin, INPUT);
     pinMode(capSupplySensorPin, INPUT);
-
+    pinMode(capPositionSensorPin, INPUT);
+    
     pinMode(capLowSupplyLight, OUTPUT);
     pinMode(bulbLowSupplyLight, OUTPUT);
     pinMode(pipetLowSupplyLight, OUTPUT);
