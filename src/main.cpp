@@ -1043,7 +1043,36 @@ void updatePauseAfterFromPot()
     }
     //}
 }
+void systemNotReadyTimeout() {
+    // Pause if we've been "not moving" AND "not ready to move" for >= 2 seconds
+    static unsigned long notReadySince = 0;
+    static bool tracking = false;
 
+    const unsigned long TIMEOUT_MS = 2000UL;
+    unsigned long now = millis();
+
+    bool condition =
+        (!isMoving) &&
+        (!machine.isReadyToMove()) &&
+        (!machine.isPaused) &&
+        (!machine.isStopped);
+
+    if (condition) {
+        if (!tracking) {               // first frame we notice the condition
+            tracking = true;
+            notReadySince = now;
+        } else if (now - notReadySince >= TIMEOUT_MS) {
+            // Time’s up — pause once, then stop tracking so we don't spam pause()
+            machine.pause(junkEjectorPin, dropperEjectPin);
+            tracking = false;
+            machine.timeoutMachine = true;
+        }
+    } else {
+        // Condition cleared (either moving again, ready again, or already paused/stopped)
+        machine.timeoutMachine = false;
+        tracking = false;
+    }
+}
 void handleLowAirPressure()
 { // When low air pressure is detected, pause machine and wait for start button
     if (digitalRead(lowAirSensorPin) == LOW)
@@ -1141,7 +1170,7 @@ void loop()
     // }
     startTime = millis();
     motorPauseTime();
-    if (!isMoving && motorPausePercent > .90)
+    if ((!isMoving && motorPausePercent > .90)|| machine.isPaused)
     {
         machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
@@ -1149,6 +1178,7 @@ void loop()
     handleCapInjection();
     handleBulbSystem();
     handlePipetSystem(); // Make sure this is uncommented
+    systemNotReadyTimeout();
 
     if (machine.isStopped)
         return;
