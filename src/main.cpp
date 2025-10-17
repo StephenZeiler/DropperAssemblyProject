@@ -1069,7 +1069,7 @@ void systemNotReadyTimeout() {
         }
     } else {
         // Condition cleared (either moving again, ready again, or already paused/stopped)
-        machine.timeoutMachine = false;
+      //  machine.timeoutMachine = false;
         tracking = false;
     }
 }
