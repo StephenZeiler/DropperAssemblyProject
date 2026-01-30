@@ -1005,16 +1005,14 @@ void handleTeensyAlarms() {
     if (currentOverrunAlarm == HIGH && lastOverrunAlarm == LOW) {
         machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "RAM OVERRUN ERROR");
-        myNex.writeStr("errorTxt.txt+", "TEENSY: Ram overrun triggered\\r");
-        myNex.writeStr("errorTxt.txt+", "Check ram position and sensors\\r");
+        machine.hasTeensyRamError = true;  // Set flag for logging
     }
     
     // Check for WHEEL POSITION alarm (rising edge)
     if (currentWheelPosAlarm == HIGH && lastWheelPosAlarm == LOW) {
         machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "WHEEL POSITION ERROR");
-        myNex.writeStr("errorTxt.txt+", "TEENSY: Wheel position error\\r");
-        myNex.writeStr("errorTxt.txt+", "Wheel not in correct position\\r");
+        machine.hasTeensyWheelError = true;  // Set flag for logging
     }
     
     lastOverrunAlarm = currentOverrunAlarm;

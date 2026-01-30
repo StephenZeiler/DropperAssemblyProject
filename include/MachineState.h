@@ -1,4 +1,3 @@
-
 #ifndef MACHINE_STATE_H
 #define MACHINE_STATE_H
 #include "EasyNextionLibrary.h"
@@ -8,6 +7,8 @@ public:
     bool hasConsecutiveBulbErrors = false;
     bool hasConsecutiveCapErrors = false;
     bool hasConsecutivePipetErrors = false;
+    bool hasTeensyRamError = false;        // NEW: Teensy ram overrun error
+    bool hasTeensyWheelError = false;      // NEW: Teensy wheel position error
 
     bool isPaused = false;
     bool isStopped = true;
@@ -274,18 +275,6 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
         int pos = 0;
 
         for (int i = 0; i < 16; i++) {
-            //test
-            // if (slots[i].isAtPipetInjection() && slots[i].shouldFinishProduction() && pipetSystemReady){
-            //     String msg = String(slots[i].getId()) + " pipet ready\r\n";
-            // }
-            // if (slots[i].isAtBulbInjection() && slots[i].shouldFinishProduction() && bulbSystemReady){
-            //     String msg = String(slots[i].getId()) + " bulb ready\r\n";
-            // }
-            // if (slots[i].isAtBulbPreLoad() && slots[i].shouldFinishProduction() && bulbPreLoadReady){
-            //     String msg = String(slots[i].getId()) + "preload ready\r\n";
-            // }
-
-            //test
             if (slots[i].hasMissingCap()) {
                 String msg = "Slot " + String(slots[i].getId()) + " has cap error.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
@@ -306,13 +295,13 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
             
-
             // Prevent buffer overflow
             if (pos >= (int)sizeof(fullLog) - 64) {
                 break;
             }
         }
-         if (timeoutMachine) {
+        
+        if (timeoutMachine) {
             if(!bulbSystemReady){
                 String msg = "Bulb System not ready - machine paused.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
@@ -325,28 +314,43 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
                 String msg = "Cap System not ready - machine paused.\r\n";
                 pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
             }
-                
         }
+        
         if (hasLowAirPressure) {
-                String msg = "Low air pressure - machine paused.\r\n";
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            String msg = "Low air pressure - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
+        
         if (hasConsecutiveBulbErrors) {
-                String msg = "3 bulb errors - machine paused.\r\n";
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            String msg = "3 bulb errors - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
+        
         if (hasConsecutiveCapErrors) {
-                String msg = "3 cap errors - machine paused.\r\n";
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            String msg = "3 cap errors - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
+        
         if (hasConsecutivePipetErrors) {
-                String msg = "3 pipet errors - machine paused.\r\n";
-                pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+            String msg = "3 pipet errors - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
+        
+        // NEW: Teensy error logging (only when not moving/between slots)
+        if (hasTeensyRamError) {
+            String msg = "TEENSY: Ram overrun detected - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+        }
+        
+        if (hasTeensyWheelError) {
+            String msg = "TEENSY: Wheel position error - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+        }
+        
         if (pos > 0) {
             lastCautionResetTime = currentMilliTime;
             myNex.writeStr("cautionTxt.txt", fullLog);
-             cautionShown = true;
+            cautionShown = true;
         }
         else{
             if(cautionShown){
