@@ -383,7 +383,7 @@ void handlePipetSystem()
                 unsigned long stopDuration = micros() - motorStopTime;
                 float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-                if (pausePercent >= 0.01 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
+                if (pausePercent >= 0.00 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
                 {
                     if (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())
                     {
@@ -515,7 +515,7 @@ void handleBulbSystem()
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-            if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
+            if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
             {
                 if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
@@ -802,8 +802,7 @@ void stepMotor()
         bool teensyReady = (digitalRead(teensyWheelReadyPin) == HIGH) &&
                           (digitalRead(bulbRamHomeSensorPin) == HIGH);
         
-        if (machine.isReadyToMove() && teensyReady && 
-            (currentTime - pauseStartTime >= PAUSE_AFTER))
+        if (machine.isReadyToMove() && teensyReady)
         {
             // Additional safety check - confirm ram is home
             if (digitalRead(bulbRamHomeSensorPin))  // Reading from Teensy now
