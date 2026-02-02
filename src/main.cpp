@@ -44,6 +44,7 @@ const int pipetLowSupplyLight = 42;
 const int bulbLowSupplyLight = 44;
 const int capLowSupplyLight = 46;
 const int lowSupplyBuzzer = 48;
+const int startUpBuzzerPin = 41;      // Safety buzzer for machine start warning
 
 // Movement parameters - NO LONGER USED (Teensy handles this)
 // const int TOTAL_STEPS = 200;
@@ -879,10 +880,36 @@ void handleButtons()
     if (startState == LOW && lastStartState == HIGH)
     {
         lastDebounceTime = millis();
-        machine.start();
-        pauseRequested = false;
-        finsihProdRequested = false;
-        machine.updateStatus(myNex, "In Production");
+
+        // Safety buzzer - alert for 5 seconds before starting
+        machine.updateStatus(myNex, "Starting in 5s...");
+        digitalWrite(startUpBuzzerPin, HIGH);
+
+        unsigned long buzzerStartTime = millis();
+        bool startCancelled = false;
+
+        // Sound buzzer for 5 seconds, but allow pause to cancel
+        while (millis() - buzzerStartTime < 5000)
+        {
+            if (digitalRead(pauseButtonPin) == LOW)
+            {
+                startCancelled = true;
+                machine.updateStatus(myNex, "Start Cancelled");
+                break;
+            }
+            delay(10);
+        }
+
+        digitalWrite(startUpBuzzerPin, LOW);
+
+        // Only start if not cancelled
+        if (!startCancelled)
+        {
+            machine.start();
+            pauseRequested = false;
+            finsihProdRequested = false;
+            machine.updateStatus(myNex, "In Production");
+        }
     }
 
     if (pauseState == LOW && lastPauseState == HIGH && !machine.isStopped && !machine.isPaused)
@@ -1083,6 +1110,8 @@ void setup()
     pinMode(bulbLowSupplyLight, OUTPUT);
     pinMode(pipetLowSupplyLight, OUTPUT);
     pinMode(lowSupplyBuzzer, OUTPUT);
+    pinMode(startUpBuzzerPin, OUTPUT);
+    digitalWrite(startUpBuzzerPin, LOW);
 
     digitalWrite(pipetTwisterPin, LOW);
     digitalWrite(bulbRamPin, LOW);
