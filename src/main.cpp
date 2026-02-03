@@ -373,7 +373,7 @@ void handlePipetSystem()
                 // Just activate twister at appropriate time
                 unsigned long elapsedTime = micros() - motorStartTime;
                 // Estimate 25% based on time (wheel takes ~1 second to move)
-                if (elapsedTime >= 250000)  // 0.25 seconds
+                if (elapsedTime >= 50000)  // 50ms
                 {
                     digitalWrite(pipetTwisterPin, HIGH);
                 }
