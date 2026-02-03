@@ -765,25 +765,27 @@ void stepMotor()
         digitalWrite(stepPin, HIGH);  // Pin 22 -> Teensy pin 25
         delay(10);  // Short pulse
         digitalWrite(stepPin, LOW);
-        
+
         // Wait for Teensy to signal wheel is ready
-        isMoving = false;
+        // Keep isMoving = true while Teensy is physically moving the wheel
         unsigned long waitStart = millis();
-        
+
         while (digitalRead(teensyWheelReadyPin) == LOW)  // Pin 50 <- Teensy pin 26
         {
             delay(10);
-            
+
             // Timeout after 5 seconds
             if (millis() - waitStart > 5000)
             {
+                isMoving = false;
                 machine.pause(junkEjectorPin, dropperEjectPin);
                 machine.updateStatus(myNex, "Wheel Move Timeout");
                 return;
             }
         }
-        
-        // Wheel has moved successfully
+
+        // Wheel has moved successfully - now set to false
+        isMoving = false;
         shouldRunTracker = true;
         pauseStartTime = currentTime;
         machine.resetAllPneumatics();
