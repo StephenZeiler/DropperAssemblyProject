@@ -44,7 +44,6 @@ const int pipetLowSupplyLight = 42;
 const int bulbLowSupplyLight = 44;
 const int capLowSupplyLight = 46;
 const int lowSupplyBuzzer = 48;
-const int startUpBuzzerPin = 41;      // Safety buzzer for machine start warning
 
 // Movement parameters - NO LONGER USED (Teensy handles this)
 // const int TOTAL_STEPS = 200;
@@ -73,6 +72,17 @@ bool isMoving = false;
 bool pauseRequested = false;
 bool emptySlotsRequested = false;
 bool finsihProdRequested = false;
+
+// Wheel movement state machine
+enum WheelMoveState
+{
+    WHEEL_IDLE,
+    WHEEL_PULSE_SENT,
+    WHEEL_WAITING_FOR_READY
+};
+WheelMoveState wheelState = WHEEL_IDLE;
+unsigned long wheelPulseSentTime = 0;
+const unsigned long WHEEL_TIMEOUT_MS = 5000;
 
 // Bulb system pins
 const int bulbRamHomeSensorPin = 33; // NOW: INPUT from Teensy (was physical sensor)
@@ -373,7 +383,7 @@ void handlePipetSystem()
                 // Just activate twister at appropriate time
                 unsigned long elapsedTime = micros() - motorStartTime;
                 // Estimate 25% based on time (wheel takes ~1 second to move)
-                if (elapsedTime >= 50000)  // 50ms
+                if (elapsedTime >= 250000)  // 0.25 seconds
                 {
                     digitalWrite(pipetTwisterPin, HIGH);
                 }
@@ -384,7 +394,7 @@ void handlePipetSystem()
                 unsigned long stopDuration = micros() - motorStopTime;
                 float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-                if (pausePercent >= 0.00 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
+                if (pausePercent >= 0.01 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
                 {
                     if (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())
                     {
@@ -516,7 +526,7 @@ void handleBulbSystem()
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-            if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
+            if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
             {
                 if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
@@ -753,66 +763,77 @@ void homeMachine()
 bool puasedStateProcessing = false;
 
 // ============================================================================
-// stepMotor() - MODIFIED to send pulse to Teensy
+// stepMotor() - NON-BLOCKING version using state machine
 // ============================================================================
 void stepMotor()
 {
     unsigned long currentTime = micros();
 
-    if (isMoving)
+    switch (wheelState)
     {
-        // Send pulse to Teensy to move wheel one slot
-        digitalWrite(stepPin, HIGH);  // Pin 22 -> Teensy pin 25
-        delay(10);  // Short pulse
-        digitalWrite(stepPin, LOW);
-
-        // Wait for Teensy to signal wheel is ready
-        // Keep isMoving = true while Teensy is physically moving the wheel
-        unsigned long waitStart = millis();
-
-        while (digitalRead(teensyWheelReadyPin) == LOW)  // Pin 50 <- Teensy pin 26
-        {
-            delay(10);
-
-            // Timeout after 5 seconds
-            if (millis() - waitStart > 5000)
+        case WHEEL_IDLE:
+            // Not moving - check if we should start
+            if (!isMoving)
             {
+                if (pauseRequested)
+                {
+                    machine.pause(junkEjectorPin, dropperEjectPin);
+                    pauseRequested = false;
+                    return;
+                }
+                
+                // Check if ready to move (now includes Teensy ready signals)
+                bool teensyReady = (digitalRead(teensyWheelReadyPin) == HIGH) &&
+                                  (digitalRead(bulbRamHomeSensorPin) == HIGH);
+                
+                if (machine.isReadyToMove() && teensyReady && 
+                    (currentTime - pauseStartTime >= PAUSE_AFTER))
+                {
+                    // Additional safety check - confirm ram is home
+                    if (digitalRead(bulbRamHomeSensorPin))
+                    {
+                        // Send pulse to Teensy to move wheel one slot
+                        digitalWrite(stepPin, HIGH);
+                        delayMicroseconds(100);  // Short pulse
+                        digitalWrite(stepPin, LOW);
+                        
+                        // Transition to waiting state
+                        wheelState = WHEEL_WAITING_FOR_READY;
+                        wheelPulseSentTime = millis();
+                        isMoving = true;  // Set moving flag
+                    }
+                }
+            }
+            break;
+            
+        case WHEEL_WAITING_FOR_READY:
+            // Waiting for Teensy to signal wheel is ready
+            if (digitalRead(teensyWheelReadyPin) == HIGH)
+            {
+                // Wheel has moved successfully
                 isMoving = false;
-                machine.pause(junkEjectorPin, dropperEjectPin);
-                machine.updateStatus(myNex, "Wheel Move Timeout");
-                return;
+                shouldRunTracker = true;
+                pauseStartTime = currentTime;
+                machine.resetAllPneumatics();
+                currentHomePosition = (currentHomePosition + 1) % 16;
+                updateSlotPositions();
+                
+                // Return to idle state
+                wheelState = WHEEL_IDLE;
             }
-        }
-
-        // Wheel has moved successfully - now set to false
-        isMoving = false;
-        shouldRunTracker = true;
-        pauseStartTime = currentTime;
-        machine.resetAllPneumatics();
-        currentHomePosition = (currentHomePosition + 1) % 16;
-        updateSlotPositions();
-    }
-    else
-    {
-        if (pauseRequested)
-        {
-            machine.pause(junkEjectorPin, dropperEjectPin);
-            pauseRequested = false;
-            return;
-        }
-        
-        // Check if ready to move (now includes Teensy ready signals)
-        bool teensyReady = (digitalRead(teensyWheelReadyPin) == HIGH) &&
-                          (digitalRead(bulbRamHomeSensorPin) == HIGH);
-        
-        if (machine.isReadyToMove() && teensyReady)
-        {
-            // Additional safety check - confirm ram is home
-            if (digitalRead(bulbRamHomeSensorPin))  // Reading from Teensy now
+            else
             {
-                isMoving = true;
+                // Check for timeout
+                if (millis() - wheelPulseSentTime > WHEEL_TIMEOUT_MS)
+                {
+                    // Timeout - abort movement
+                    isMoving = false;
+                    wheelState = WHEEL_IDLE;
+                    machine.pause(junkEjectorPin, dropperEjectPin);
+                    machine.updateStatus(myNex, "Wheel Move Timeout");
+                }
             }
-        }
+            break;
     }
 }
 
@@ -882,36 +903,10 @@ void handleButtons()
     if (startState == LOW && lastStartState == HIGH)
     {
         lastDebounceTime = millis();
-
-        // Safety buzzer - alert for 5 seconds before starting
-        machine.updateStatus(myNex, "Starting in 5s...");
-        digitalWrite(startUpBuzzerPin, HIGH);
-
-        unsigned long buzzerStartTime = millis();
-        bool startCancelled = false;
-
-        // Sound buzzer for 5 seconds, but allow pause to cancel
-        while (millis() - buzzerStartTime < 5000)
-        {
-            if (digitalRead(pauseButtonPin) == LOW)
-            {
-                startCancelled = true;
-                machine.updateStatus(myNex, "Start Cancelled");
-                break;
-            }
-            delay(10);
-        }
-
-        digitalWrite(startUpBuzzerPin, LOW);
-
-        // Only start if not cancelled
-        if (!startCancelled)
-        {
-            machine.start();
-            pauseRequested = false;
-            finsihProdRequested = false;
-            machine.updateStatus(myNex, "In Production");
-        }
+        machine.start();
+        pauseRequested = false;
+        finsihProdRequested = false;
+        machine.updateStatus(myNex, "In Production");
     }
 
     if (pauseState == LOW && lastPauseState == HIGH && !machine.isStopped && !machine.isPaused)
@@ -1112,8 +1107,6 @@ void setup()
     pinMode(bulbLowSupplyLight, OUTPUT);
     pinMode(pipetLowSupplyLight, OUTPUT);
     pinMode(lowSupplyBuzzer, OUTPUT);
-    pinMode(startUpBuzzerPin, OUTPUT);
-    digitalWrite(startUpBuzzerPin, LOW);
 
     digitalWrite(pipetTwisterPin, LOW);
     digitalWrite(bulbRamPin, LOW);
