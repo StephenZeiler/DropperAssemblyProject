@@ -382,8 +382,8 @@ void handlePipetSystem()
                 // Motor is moving - Teensy handles wheel movement now
                 // Just activate twister at appropriate time
                 unsigned long elapsedTime = micros() - motorStartTime;
-                // Estimate 25% based on time (wheel takes ~1 second to move)
-                if (elapsedTime >= 250000)  // 0.25 seconds
+                // Activate twister early in the movement cycle
+                if (elapsedTime >= 50000)  // 50ms
                 {
                     digitalWrite(pipetTwisterPin, HIGH);
                 }
@@ -394,7 +394,7 @@ void handlePipetSystem()
                 unsigned long stopDuration = micros() - motorStopTime;
                 float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-                if (pausePercent >= 0.01 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
+                if (pausePercent >= 0.00 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
                 {
                     if (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())
                     {
@@ -526,7 +526,7 @@ void handleBulbSystem()
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-            if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
+            if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
             {
                 if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
@@ -535,7 +535,7 @@ void handleBulbSystem()
                 ramExtended = true;
                 ramRetracted = false;
             }
-            else if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbInCap)
+            else if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbInCap)
             {
                 machine.bulbPresent = false;
             }
@@ -796,18 +796,38 @@ void stepMotor()
                         digitalWrite(stepPin, HIGH);
                         delayMicroseconds(100);  // Short pulse
                         digitalWrite(stepPin, LOW);
-                        
-                        // Transition to waiting state
-                        wheelState = WHEEL_WAITING_FOR_READY;
+
+                        // Transition to pulse sent state - wait for ready pin to go LOW
+                        wheelState = WHEEL_PULSE_SENT;
                         wheelPulseSentTime = millis();
                         isMoving = true;  // Set moving flag
                     }
                 }
             }
             break;
-            
+
+        case WHEEL_PULSE_SENT:
+            // Wait for Teensy to acknowledge by pulling ready pin LOW
+            if (digitalRead(teensyWheelReadyPin) == LOW)
+            {
+                // Teensy acknowledged - now wait for it to finish
+                wheelState = WHEEL_WAITING_FOR_READY;
+            }
+            else
+            {
+                // Check for timeout waiting for acknowledgment
+                if (millis() - wheelPulseSentTime > WHEEL_TIMEOUT_MS)
+                {
+                    isMoving = false;
+                    wheelState = WHEEL_IDLE;
+                    machine.pause(junkEjectorPin, dropperEjectPin);
+                    machine.updateStatus(myNex, "Teensy No ACK");
+                }
+            }
+            break;
+
         case WHEEL_WAITING_FOR_READY:
-            // Waiting for Teensy to signal wheel is ready
+            // Waiting for Teensy to signal wheel is ready (pin goes HIGH)
             if (digitalRead(teensyWheelReadyPin) == HIGH)
             {
                 // Wheel has moved successfully
