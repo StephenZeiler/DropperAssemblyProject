@@ -69,6 +69,7 @@ const int pipetTipSensor = 31;
 
 // Motor state - simplified since Teensy handles movement
 unsigned long pauseStartTime = 0;
+unsigned long motorStopTime = 0;  // Synchronized with pauseStartTime for accurate ejector timing
 bool isMoving = false;
 bool pauseRequested = false;
 bool emptySlotsRequested = false;
@@ -578,13 +579,6 @@ bool shouldRunTracker = true;
 
 void machineTracker()
 {
-    static bool lastMotorState = false;
-    static unsigned long motorStopTime = 0;
-    if (lastMotorState && !isMoving)
-    {
-        motorStopTime = micros();
-    }
-    lastMotorState = isMoving;
     unsigned long stopDuration = micros() - motorStopTime;
 
     if (!isMoving && shouldRunTracker)
@@ -759,6 +753,7 @@ void homeMachine()
     machine.homingComplete();
     isMoving = false;  // Not moving after homing - ready to start pause cycle
     pauseStartTime = micros();
+    motorStopTime = pauseStartTime;  // Sync for accurate ejector timing
 }
 
 bool puasedStateProcessing = false;
@@ -812,6 +807,7 @@ void stepMotor()
             isMoving = false;
             shouldRunTracker = true;
             pauseStartTime = currentTime;
+            motorStopTime = currentTime;  // Sync with pauseStartTime for accurate ejector timing
             machine.resetAllPneumatics();
             currentHomePosition = (currentHomePosition + 1) % 16;
             updateSlotPositions();
