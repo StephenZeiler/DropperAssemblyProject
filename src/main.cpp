@@ -74,6 +74,17 @@ bool pauseRequested = false;
 bool emptySlotsRequested = false;
 bool finsihProdRequested = false;
 
+// Wheel movement state machine for non-blocking Teensy control
+enum WheelMoveState
+{
+    WHEEL_IDLE,
+    WHEEL_PULSE_SENT,
+    WHEEL_WAITING_FOR_READY
+};
+WheelMoveState wheelState = WHEEL_IDLE;
+unsigned long wheelPulseSentTime = 0;
+const unsigned long WHEEL_TIMEOUT_MS = 5000;
+
 // Bulb system pins
 const int bulbRamHomeSensorPin = 33; // NOW: INPUT from Teensy (was physical sensor)
 const int bulbInPreLoadPosSensorPin = 26;    // HIGH = something blocking sensor
@@ -370,10 +381,9 @@ void handlePipetSystem()
             if (isMoving)
             {
                 // Motor is moving - Teensy handles wheel movement now
-                // Just activate twister at appropriate time
+                // Activate twister at 25% of movement (wheel takes ~1 second)
                 unsigned long elapsedTime = micros() - motorStartTime;
-                // Estimate 25% based on time (wheel takes ~1 second to move)
-                if (elapsedTime >= 50000)  // 0.25 seconds
+                if (elapsedTime >= 250000)  // 250ms = 25% of 1 second
                 {
                     digitalWrite(pipetTwisterPin, HIGH);
                 }
@@ -747,6 +757,7 @@ void homeMachine()
     currentHomePosition = 0;
     machine.homingComplete();
     isMoving = false;  // Not moving after homing - ready to start pause cycle
+    wheelState = WHEEL_IDLE;  // Ensure state machine is in IDLE
     pauseStartTime = micros();
 }
 
@@ -759,60 +770,91 @@ void stepMotor()
 {
     unsigned long currentTime = micros();
 
-    if (isMoving)
+    switch (wheelState)
     {
-        // Send pulse to Teensy to move wheel one slot
-        digitalWrite(stepPin, HIGH);  // Pin 22 -> Teensy pin 25
-        delay(10);  // Short pulse
-        digitalWrite(stepPin, LOW);
-
-        // Wait for Teensy to signal wheel is ready
-        // Keep isMoving = true while wheel is physically moving
-        unsigned long waitStart = millis();
-
-        while (digitalRead(teensyWheelReadyPin) == LOW)  // Pin 50 <- Teensy pin 26
-        {
-            delay(10);
-
-            // Timeout after 5 seconds
-            if (millis() - waitStart > 5000)
+        case WHEEL_IDLE:
+            // Not moving - check if we should start
+            if (!isMoving)
             {
-                isMoving = false;  // Set false on timeout
-                machine.pause(junkEjectorPin, dropperEjectPin);
-                machine.updateStatus(myNex, "Wheel Move Timeout");
-                return;
-            }
-        }
+                if (pauseRequested)
+                {
+                    machine.pause(junkEjectorPin, dropperEjectPin);
+                    pauseRequested = false;
+                    return;
+                }
 
-        // Wheel has moved successfully - NOW set to false
-        isMoving = false;
-        shouldRunTracker = true;
-        pauseStartTime = currentTime;
-        machine.resetAllPneumatics();
-        currentHomePosition = (currentHomePosition + 1) % 16;
-        updateSlotPositions();
-    }
-    else
-    {
-        if (pauseRequested)
-        {
-            machine.pause(junkEjectorPin, dropperEjectPin);
-            pauseRequested = false;
-            return;
-        }
-        
-        // Check if ready to move (now includes Teensy ready signals)
-        bool teensyReady = (digitalRead(teensyWheelReadyPin) == HIGH) &&
-                          (digitalRead(bulbRamHomeSensorPin) == HIGH);
-        
-        if (machine.isReadyToMove() && teensyReady)
-        {
-            // Additional safety check - confirm ram is home
-            if (digitalRead(bulbRamHomeSensorPin))  // Reading from Teensy now
-            {
-                isMoving = true;
+                // Check if ready to move (includes Teensy ready signals)
+                bool teensyReady = (digitalRead(teensyWheelReadyPin) == HIGH) &&
+                                  (digitalRead(bulbRamHomeSensorPin) == HIGH);
+
+                if (machine.isReadyToMove() && teensyReady &&
+                    (currentTime - pauseStartTime >= PAUSE_AFTER))
+                {
+                    // Additional safety check - confirm ram is home
+                    if (digitalRead(bulbRamHomeSensorPin))
+                    {
+                        // Send pulse to Teensy to move wheel one slot
+                        digitalWrite(stepPin, HIGH);
+                        delayMicroseconds(100);  // Short pulse
+                        digitalWrite(stepPin, LOW);
+
+                        // Transition to pulse sent state - wait for ready pin to go LOW
+                        wheelState = WHEEL_PULSE_SENT;
+                        wheelPulseSentTime = millis();
+                        isMoving = true;  // Set moving flag
+                    }
+                }
             }
-        }
+            break;
+
+        case WHEEL_PULSE_SENT:
+            // Wait for Teensy to acknowledge by pulling ready pin LOW
+            if (digitalRead(teensyWheelReadyPin) == LOW)
+            {
+                // Teensy acknowledged - now wait for it to finish
+                wheelState = WHEEL_WAITING_FOR_READY;
+            }
+            else
+            {
+                // Check for timeout waiting for acknowledgment
+                if (millis() - wheelPulseSentTime > WHEEL_TIMEOUT_MS)
+                {
+                    isMoving = false;
+                    wheelState = WHEEL_IDLE;
+                    machine.pause(junkEjectorPin, dropperEjectPin);
+                    machine.updateStatus(myNex, "Teensy No ACK");
+                }
+            }
+            break;
+
+        case WHEEL_WAITING_FOR_READY:
+            // Waiting for Teensy to signal wheel is ready (pin goes HIGH)
+            if (digitalRead(teensyWheelReadyPin) == HIGH)
+            {
+                // Wheel has moved successfully
+                isMoving = false;
+                shouldRunTracker = true;
+                pauseStartTime = currentTime;
+                machine.resetAllPneumatics();
+                currentHomePosition = (currentHomePosition + 1) % 16;
+                updateSlotPositions();
+
+                // Return to idle state
+                wheelState = WHEEL_IDLE;
+            }
+            else
+            {
+                // Check for timeout
+                if (millis() - wheelPulseSentTime > WHEEL_TIMEOUT_MS)
+                {
+                    // Timeout - abort movement
+                    isMoving = false;
+                    wheelState = WHEEL_IDLE;
+                    machine.pause(junkEjectorPin, dropperEjectPin);
+                    machine.updateStatus(myNex, "Wheel Move Timeout");
+                }
+            }
+            break;
     }
 }
 
