@@ -7,8 +7,8 @@ public:
     bool hasConsecutiveBulbErrors = false;
     bool hasConsecutiveCapErrors = false;
     bool hasConsecutivePipetErrors = false;
-    bool hasTeensyRamError = false;        // NEW: Teensy ram overrun error
-    bool hasTeensyWheelError = false;      // NEW: Teensy wheel position error
+    bool hasTeensyRamError = false;        // Teensy ram overrun error
+    bool hasWheelPositionError = false;    // Wheel position sensor error (checked by Arduino)
 
     bool isPaused = false;
     bool isStopped = true;
@@ -342,8 +342,8 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
             pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
         
-        if (hasTeensyWheelError) {
-            String msg = "TEENSY: Wheel position error - machine paused.\r\n";
+        if (hasWheelPositionError) {
+            String msg = "Wheel position error - machine paused.\r\n";
             pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
         

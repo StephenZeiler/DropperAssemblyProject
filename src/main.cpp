@@ -12,15 +12,16 @@ long startTime;
 // ============================================================================
 const int teensyWheelReadyPin = 50;        // INPUT from Teensy - wheel ready (Teensy pin 26)
 const int teensyOverrunAlarmPin = 23;      // INPUT from Teensy - overrun alarm (Teensy pin 12)
-const int teensyWheelPosAlarmPin = 24;     // INPUT from Teensy - wheel pos alarm (Teensy pin 27)
 const int teensyTrollHomePin = 27;         // OUTPUT - relay to Teensy when to troll home (Teensy pin 24)
+const int wheelPositionSensorPin = 18;     // INPUT - wheel position sensor (moved from Teensy pin 31)
 
 // ============================================================================
 // EXISTING PINS - Some repurposed for Teensy communication
 // ============================================================================
+// Pin 18 (wheelPositionSensorPin) - INPUT from wheel position sensor (moved from Teensy pin 31)
 // Pin 22 (stepPin) - NOW: Pulse to move wheel (Teensy pin 25)
 // Pin 25 (homeSensorPin) - STAYS INPUT from physical sensor (unchanged!)
-// Pin 27 (teensyTrollHomePin) - NEW: OUTPUT to Teensy to relay home status (Teensy pin 24)
+// Pin 27 (teensyTrollHomePin) - OUTPUT to Teensy to relay home status (Teensy pin 24)
 // Pin 33 (bulbRamHomeSensorPin) - NOW: INPUT from Teensy (Teensy pin 11)
 // Pin 39 (bulbRamPin) - NOW: OUTPUT to Teensy (Teensy pin 10) - logic unchanged!
 
@@ -803,17 +804,29 @@ void stepMotor()
         // Now wait for Teensy to finish (wheelReady goes HIGH)
         if (digitalRead(teensyWheelReadyPin) == HIGH)
         {
-            // Move complete
+            // Move complete - check wheel position sensor (LOW = correct position)
+            if (digitalRead(wheelPositionSensorPin) == HIGH)
+            {
+                // Wheel not in correct position
+                isMoving = false;
+                movePulseTime = 0;
+                waitingForAck = false;
+                machine.pause(junkEjectorPin, dropperEjectPin);
+                machine.updateStatus(myNex, "WHEEL POSITION ERROR");
+                machine.hasWheelPositionError = true;
+                return;
+            }
+
             isMoving = false;
             shouldRunTracker = true;
             pauseStartTime = currentTime;
-            motorStopTime = currentTime;  // Sync with pauseStartTime for accurate ejector timing
+            motorStopTime = currentTime;
             machine.resetAllPneumatics();
             currentHomePosition = (currentHomePosition + 1) % 16;
             updateSlotPositions();
-            movePulseTime = 0;  // Reset stopwatch
-            waitingForAck = false;  // Reset flag
-            return;  // Exit - don't check timeout after successful completion
+            movePulseTime = 0;
+            waitingForAck = false;
+            return;
         }
 
         // Timeout check (5 seconds) - only if move hasn't completed
@@ -1060,27 +1073,17 @@ void handleLowAirPressure()
 // ============================================================================
 void handleTeensyAlarms() {
     static bool lastOverrunAlarm = LOW;
-    static bool lastWheelPosAlarm = LOW;
-    
+
     bool currentOverrunAlarm = digitalRead(teensyOverrunAlarmPin);
-    bool currentWheelPosAlarm = digitalRead(teensyWheelPosAlarmPin);
-    
+
     // Check for RAM OVERRUN alarm (rising edge)
     if (currentOverrunAlarm == HIGH && lastOverrunAlarm == LOW) {
         machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "RAM OVERRUN ERROR");
-        machine.hasTeensyRamError = true;  // Set flag for logging
+        machine.hasTeensyRamError = true;
     }
-    
-    // Check for WHEEL POSITION alarm (rising edge)
-    if (currentWheelPosAlarm == HIGH && lastWheelPosAlarm == LOW) {
-        machine.pause(junkEjectorPin, dropperEjectPin);
-        machine.updateStatus(myNex, "WHEEL POSITION ERROR");
-        machine.hasTeensyWheelError = true;  // Set flag for logging
-    }
-    
+
     lastOverrunAlarm = currentOverrunAlarm;
-    lastWheelPosAlarm = currentWheelPosAlarm;
 }
 
 void setup()
@@ -1120,7 +1123,7 @@ void setup()
     // ========================================================================
     pinMode(teensyWheelReadyPin, INPUT);
     pinMode(teensyOverrunAlarmPin, INPUT);
-    pinMode(teensyWheelPosAlarmPin, INPUT);
+    pinMode(wheelPositionSensorPin, INPUT);
 
     // Pneumatics
     delay(100);
