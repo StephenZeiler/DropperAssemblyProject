@@ -768,7 +768,8 @@ bool puasedStateProcessing = false;
 // ============================================================================
 void stepMotor()
 {
-    static unsigned long movePulseTime = 0;   // Stopwatch: when pulse was sent
+    static unsigned long movePulseTime = 0;      // Stopwatch: when pulse was sent
+    static bool waitingForAck = false;            // Waiting for Teensy to pull pin LOW
     unsigned long currentTime = micros();
 
     if (isMoving)
@@ -780,9 +781,31 @@ void stepMotor()
             delay(10);
             digitalWrite(stepPin, LOW);
             movePulseTime = micros();  // Start stopwatch
+            waitingForAck = true;      // Wait for Teensy to acknowledge (pin LOW)
         }
 
-        // Check if Teensy finished (wheelReady goes HIGH)
+        // Wait for Teensy to acknowledge by pulling ready pin LOW
+        if (waitingForAck)
+        {
+            if (digitalRead(teensyWheelReadyPin) == LOW)
+            {
+                waitingForAck = false;  // Teensy acknowledged, now wait for HIGH
+            }
+            // Check for timeout while waiting for acknowledgment
+            unsigned long elapsed = micros() - movePulseTime;
+            if (elapsed > 5000000)
+            {
+                isMoving = false;
+                movePulseTime = 0;
+                waitingForAck = false;
+                machine.pause(junkEjectorPin, dropperEjectPin);
+                machine.updateStatus(myNex, "Teensy No ACK");
+                return;
+            }
+            return;  // Don't check for HIGH until we get LOW
+        }
+
+        // Now wait for Teensy to finish (wheelReady goes HIGH)
         if (digitalRead(teensyWheelReadyPin) == HIGH)
         {
             // Move complete
