@@ -399,7 +399,7 @@ void handlePipetSystem()
 
                 if (pausePercent >= 0.00 && pausePercent < 0.90 && digitalRead(pipetRamPin) == LOW)
                 {
-                    if (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())
+                    if (machine.inProduction && !slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())
                     {
                         digitalWrite(pipetRamPin, HIGH);
                     }
@@ -531,7 +531,7 @@ void handleBulbSystem()
 
             if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
             {
-                if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
+                if (machine.inProduction && !slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
                     digitalWrite(bulbRamPin, HIGH);  // Sends to Teensy now!
                 }
