@@ -529,7 +529,7 @@ void handleBulbSystem()
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-            if (pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
+            if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
             {
                 if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
@@ -766,6 +766,7 @@ void stepMotor()
 {
     static unsigned long movePulseTime = 0;      // Stopwatch: when pulse was sent
     static bool waitingForAck = false;            // Waiting for Teensy to pull pin LOW
+    static bool sawSensorHigh = false;            // Tracks if wheel left previous slot during move
     unsigned long currentTime = micros();
 
     if (isMoving)
@@ -778,6 +779,13 @@ void stepMotor()
             digitalWrite(stepPin, LOW);
             movePulseTime = micros();  // Start stopwatch
             waitingForAck = true;      // Wait for Teensy to acknowledge (pin LOW)
+            sawSensorHigh = false;     // Reset - must see HIGH during this move
+        }
+
+        // Poll wheel position sensor throughout the move to confirm the wheel left the slot
+        if (digitalRead(wheelPositionSensorPin) == HIGH)
+        {
+            sawSensorHigh = true;
         }
 
         // Wait for Teensy to acknowledge by pulling ready pin LOW
@@ -794,6 +802,7 @@ void stepMotor()
                 isMoving = false;
                 movePulseTime = 0;
                 waitingForAck = false;
+                sawSensorHigh = false;
                 machine.pause(junkEjectorPin, dropperEjectPin);
                 machine.updateStatus(myNex, "Teensy No ACK");
                 return;
@@ -804,6 +813,19 @@ void stepMotor()
         // Now wait for Teensy to finish (wheelReady goes HIGH)
         if (digitalRead(teensyWheelReadyPin) == HIGH)
         {
+            // Verify the wheel actually left the previous slot during the move
+            if (!sawSensorHigh)
+            {
+                isMoving = false;
+                movePulseTime = 0;
+                waitingForAck = false;
+                sawSensorHigh = false;
+                machine.pause(junkEjectorPin, dropperEjectPin);
+                machine.updateStatus(myNex, "WHEEL DID NOT MOVE");
+                machine.hasWheelPositionError = true;
+                return;
+            }
+
             // Move complete - check wheel position sensor (LOW = correct position)
             if (digitalRead(wheelPositionSensorPin) == HIGH)
             {
@@ -811,6 +833,7 @@ void stepMotor()
                 isMoving = false;
                 movePulseTime = 0;
                 waitingForAck = false;
+                sawSensorHigh = false;
                 machine.pause(junkEjectorPin, dropperEjectPin);
                 machine.updateStatus(myNex, "WHEEL POSITION ERROR");
                 machine.hasWheelPositionError = true;
@@ -826,6 +849,7 @@ void stepMotor()
             updateSlotPositions();
             movePulseTime = 0;
             waitingForAck = false;
+            sawSensorHigh = false;
             return;
         }
 
@@ -835,6 +859,7 @@ void stepMotor()
         {
             isMoving = false;
             movePulseTime = 0;
+            sawSensorHigh = false;
             machine.pause(junkEjectorPin, dropperEjectPin);
             machine.updateStatus(myNex, "Wheel Move Timeout");
         }
