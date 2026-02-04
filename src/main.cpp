@@ -816,9 +816,11 @@ void stepMotor()
             currentHomePosition = (currentHomePosition + 1) % 16;
             updateSlotPositions();
             movePulseTime = 0;  // Reset stopwatch
+            waitingForAck = false;  // Reset flag
+            return;  // Exit - don't check timeout after successful completion
         }
 
-        // Timeout check (5 seconds)
+        // Timeout check (5 seconds) - only if move hasn't completed
         unsigned long elapsed = micros() - movePulseTime;
         if (elapsed > 5000000)
         {
