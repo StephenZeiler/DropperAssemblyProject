@@ -718,15 +718,14 @@ void homeMachine()
     // Send HIGH to Teensy to start trolling home
     digitalWrite(teensyTrollHomePin, HIGH);  // Pin 27 -> Teensy pin 24
     
-    // Wait for Teensy to signal that ram is home (pin 33 from Teensy pin 11)
-    while (digitalRead(bulbRamHomeSensorPin) == LOW)
+    // Wait for Teensy to finish both ram homing and wheel trolling (pin 50 from Teensy pin 26)
+    while (digitalRead(teensyWheelReadyPin) == LOW)
     {
         // Read physical home sensor (pin 25) and relay to Teensy via pin 27
-        // When pin 25 is LOW = at home, send LOW to Teensy
-        // When pin 25 is HIGH = not home, send HIGH to Teensy
+        // Teensy uses this during trollWheelToHome() to know when wheel is at home
         bool sensorValue = digitalRead(homeSensorPin);  // Read pin 25
         digitalWrite(teensyTrollHomePin, sensorValue);  // Send to Teensy via pin 27
-        
+
         if (!digitalRead(pauseButtonPin))
         {
             digitalWrite(teensyTrollHomePin, LOW);  // Stop trolling
@@ -736,11 +735,11 @@ void homeMachine()
         }
         delay(10);
     }
-    
-    // Teensy has signaled home - stop trolling
+
+    // Teensy has signaled both motors homed - stop relaying
     digitalWrite(teensyTrollHomePin, LOW);
-    
-    if (digitalRead(bulbRamHomeSensorPin) == HIGH)
+
+    if (digitalRead(teensyWheelReadyPin) == HIGH)
     {
         machine.inProduction = true;
         digitalWrite(junkEjectorPin, LOW);

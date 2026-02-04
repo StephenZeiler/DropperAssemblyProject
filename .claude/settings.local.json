@@ -4,7 +4,13 @@
       "Bash(pio run:*)",
       "Bash(cmd.exe /c \"C:\\\\Users\\\\Administrator\\\\.platformio\\\\penv\\\\Scripts\\\\platformio.exe run:*)",
       "Bash(cmd.exe /c \"del /f C:\\\\Users\\\\Administrator\\\\Documents\\\\Repositories\\\\DropperAssemblyProject\\\\nul\")",
-      "Bash(\"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -c \"import ctypes; k = ctypes.windll.kernel32; p = ''\\\\\\\\\\\\\\\\?\\\\\\\\C:\\\\\\\\Users\\\\\\\\Administrator\\\\\\\\Documents\\\\\\\\Repositories\\\\\\\\DropperAssemblyProject\\\\\\\\nul''; k.DeleteFileW\\(p\\)\")"
+      "Bash(\"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -c \"import ctypes; k = ctypes.windll.kernel32; p = ''\\\\\\\\\\\\\\\\?\\\\\\\\C:\\\\\\\\Users\\\\\\\\Administrator\\\\\\\\Documents\\\\\\\\Repositories\\\\\\\\DropperAssemblyProject\\\\\\\\nul''; k.DeleteFileW\\(p\\)\")",
+      "Bash(platformio run:*)",
+      "Bash(python -m platformio run:*)",
+      "Bash(where:*)",
+      "Bash(dir \"C:\\\\Users\\\\Administrator\\\\.platformio\\\\penv\\\\Scripts\\\\*pio*\")",
+      "Bash(dir:*)",
+      "Bash(\"C:\\\\Users\\\\Administrator\\\\.platformio\\\\penv\\\\Scripts\\\\pio.exe\" run)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Administrator\\Documents\\Repositories\\Teensy_J7_Addon\\src"
