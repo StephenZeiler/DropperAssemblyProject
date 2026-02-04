@@ -529,7 +529,7 @@ void handleBulbSystem()
             unsigned long stopDuration = micros() - motorStopTime;
             float pausePercent = (float)stopDuration / PAUSE_AFTER;
 
-            if (pausePercent >= 0.00 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
+            if (pausePercent >= 0.05 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && bulbInCap)
             {
                 if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
