@@ -756,7 +756,8 @@ void homeMachine()
 
     currentHomePosition = 0;
     machine.homingComplete();
-    isMoving = true;
+    isMoving = false;  // Not moving after homing - ready to start pause cycle
+    wheelState = WHEEL_IDLE;  // Ensure state machine is in IDLE
     pauseStartTime = micros();
 }
 
@@ -1181,7 +1182,7 @@ void loop()
         return;
     }
 
-    if (machine.inProduction)
+    if (machine.inProduction && !machine.isPaused)
     {
         stepMotor();
     }
