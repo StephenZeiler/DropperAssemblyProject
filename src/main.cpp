@@ -878,7 +878,7 @@ void emptySlots()
         
         // Send pulse to Teensy to move wheel
         digitalWrite(stepPin, HIGH);
-        delayMicroseconds(10);
+        delay(7);
         digitalWrite(stepPin, LOW);
         delayMicroseconds(stepDelay);
         ++i;
