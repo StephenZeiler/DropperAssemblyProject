@@ -3,6 +3,25 @@
 #include "MachineState.h"
 #include "EasyNextionLibrary.h"
 
+// ============================================================================
+// DEBUG LOGGING - Set to 1 to enable Serial debug output, 0 to disable
+// ============================================================================
+#define DEBUG_MODE 1
+
+#if DEBUG_MODE
+  #define DBG_INIT() Serial.begin(115200); while(!Serial && millis() < 3000){}
+  #define DBG(x) Serial.print(F(x))
+  #define DBG_VAL(x) Serial.print(x)
+  #define DBGLN(x) Serial.println(F(x))
+  #define DBGLN_VAL(x) Serial.println(x)
+#else
+  #define DBG_INIT()
+  #define DBG(x)
+  #define DBG_VAL(x)
+  #define DBGLN(x)
+  #define DBGLN_VAL(x)
+#endif
+
 MachineState machine;
 EasyNex myNex(Serial2); // Create an object of EasyNex class with the name < myNex >
 long startTime;
@@ -349,6 +368,9 @@ void handlePipetSystem()
     static bool homingComplete = false;
     static unsigned long motorStopTime = 0;
     static unsigned long motorStartTime = 0;
+    static bool lastPipetReady = true;
+    static bool lastRamState = false;
+    static bool lastTwisterState = false;
     bool twisterAtHome = digitalRead(pipetTwisterHomeSensorPin);
 
     if (!homingComplete)
@@ -359,6 +381,7 @@ void handlePipetSystem()
         }
         else
         {
+            DBGLN("[PIPET] Homing complete");
             digitalWrite(pipetTwisterPin, LOW);
             homingComplete = true;
             currentPipetState = PIPET_HOMING_COMPLETE;
@@ -388,6 +411,9 @@ void handlePipetSystem()
                 // Estimate 25% based on time (wheel takes ~1 second to move)
                 if (elapsedTime >= 50000)  // 0.25 seconds
                 {
+                    if (digitalRead(pipetTwisterPin) == LOW) {
+                        DBGLN("[PIPET] Twister ON (during move)");
+                    }
                     digitalWrite(pipetTwisterPin, HIGH);
                 }
                 machine.setPipetSystemReady(false);
@@ -401,12 +427,16 @@ void handlePipetSystem()
                 {
                     if (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction())
                     {
+                        DBG("[PIPET] RAM FIRING - pause%="); DBGLN_VAL(pausePercent);
                         digitalWrite(pipetRamPin, HIGH);
                     }
                 }
 
                 if (pausePercent >= 0.90)
                 {
+                    if (digitalRead(pipetRamPin) == HIGH) {
+                        DBGLN("[PIPET] RAM RETRACTING (pause >= 90%)");
+                    }
                     digitalWrite(pipetRamPin, LOW);
                     if (twisterAtHome)
                     {
@@ -416,6 +446,7 @@ void handlePipetSystem()
 
                 if (pausePercent >= 0.75 && digitalRead(pipetTwisterPin) == HIGH && (!slots[slotIdPipetInjection].hasError() && !slots[slotIdPipetInjection].shouldFinishProduction()))
                 {
+                    DBGLN("[PIPET] Twister OFF (pause >= 75%)");
                     digitalWrite(pipetTwisterPin, LOW);
                 }
             }
@@ -429,6 +460,17 @@ void handlePipetSystem()
             digitalWrite(pipetTwisterPin, HIGH);
             machine.setPipetSystemReady(true);
         }
+    }
+
+    // Log state changes
+    if (machine.pipetSystemReady != lastPipetReady) {
+        DBG("[PIPET] pipetSystemReady: "); DBGLN_VAL(machine.pipetSystemReady);
+        lastPipetReady = machine.pipetSystemReady;
+    }
+    bool currentRam = digitalRead(pipetRamPin);
+    if (currentRam != lastRamState) {
+        DBG("[PIPET] ramPin: "); DBGLN_VAL(currentRam);
+        lastRamState = currentRam;
     }
 }
 
@@ -469,8 +511,14 @@ void handleBulbSystem()
     static bool preloadFiredThisStop = false;
     static unsigned long preloadPulseStart = 0;
 
+    // Track state changes for logging
+    static bool lastRamExtended = false;
+    static bool lastBulbReady = true;
+    static bool lastPreloadReady = true;
+
     if (lastMotorState && !isMoving)
     {
+        DBGLN("[BULB] Motor stopped - arming preload");
         motorStopTime = micros();
         ramRetracted = false;
         preloadArmed = true;
@@ -498,6 +546,7 @@ void handleBulbSystem()
     {
         if (machine.inProduction && !slots[slotIdBulbPreLoad].hasError() && !slots[slotIdBulbPreLoad].shouldFinishProduction())
         {
+            DBGLN("[BULB] PRELOAD CYLINDER FIRING");
             digitalWrite(bulbPreLoadCylinder, HIGH);
         }
         preloadPulseStart = micros();
@@ -514,6 +563,9 @@ void handleBulbSystem()
         float pausePercent = (float)stopDuration / PAUSE_AFTER;
         if (pausePercent >= 0.95)
         {
+            if (digitalRead(bulbPreLoadCylinder) == HIGH) {
+                DBGLN("[BULB] PRELOAD CYLINDER RETRACTING");
+            }
             digitalWrite(bulbPreLoadCylinder, LOW);
             if (digitalRead(preLoadCylinderHomeSensorPin) == LOW)
             {
@@ -533,6 +585,9 @@ void handleBulbSystem()
             {
                 if (!slots[slotIdBulbInjection].hasError() && !slots[slotIdBulbInjection].shouldFinishProduction())
                 {
+                    DBG("[BULB] RAM FIRING - bulbInCap="); DBG_VAL(bulbInCap);
+                    DBG(" ramHome="); DBG_VAL(ramHome);
+                    DBG(" pause%="); DBGLN_VAL(pausePercent);
                     digitalWrite(bulbRamPin, HIGH);  // Sends to Teensy now!
                 }
                 ramExtended = true;
@@ -540,6 +595,9 @@ void handleBulbSystem()
             }
             else if (pausePercent >= 0.01 && pausePercent < 0.95 && !digitalRead(bulbRamPin) && !bulbInCap)
             {
+                if (machine.bulbPresent) {
+                    DBGLN("[BULB] No bulb in cap detected!");
+                }
                 machine.bulbPresent = false;
             }
             if (ramHome && (slots[slotIdBulbInjection].hasError() || slots[slotIdBulbInjection].shouldFinishProduction()))
@@ -549,11 +607,15 @@ void handleBulbSystem()
 
             if (pausePercent >= 0.95 && digitalRead(bulbRamPin))
             {
+                DBGLN("[BULB] RAM RETRACTING (pause >= 95%)");
                 digitalWrite(bulbRamPin, LOW);  // Sends to Teensy now!
             }
 
             if (ramExtended && ramHome && !digitalRead(bulbRamPin))
             {
+                if (!machine.bulbSystemReady) {
+                    DBGLN("[BULB] Ram cycle complete - system ready");
+                }
                 machine.setBulbSystemReady(true);
                 ramExtended = false;
                 ramRetracted = true;
@@ -563,6 +625,20 @@ void handleBulbSystem()
     else
     {
         machine.setBulbSystemReady(true);
+    }
+
+    // Log state changes
+    if (ramExtended != lastRamExtended) {
+        DBG("[BULB] ramExtended: "); DBGLN_VAL(ramExtended);
+        lastRamExtended = ramExtended;
+    }
+    if (machine.bulbSystemReady != lastBulbReady) {
+        DBG("[BULB] bulbSystemReady: "); DBGLN_VAL(machine.bulbSystemReady);
+        lastBulbReady = machine.bulbSystemReady;
+    }
+    if (machine.bulbPreLoadReady != lastPreloadReady) {
+        DBG("[BULB] bulbPreLoadReady: "); DBGLN_VAL(machine.bulbPreLoadReady);
+        lastPreloadReady = machine.bulbPreLoadReady;
     }
 }
 
@@ -686,6 +762,8 @@ void machineTracker()
 
 void handleCapInjection()
 {
+    static bool lastCapReady = true;
+
     if (machine.inProduction && !slots[slotIdFailedJunkEject].hasError() && !slots[slotIdFailedJunkEject].shouldFinishProduction())
     {
         digitalWrite(capInjectPin, HIGH);
@@ -694,17 +772,23 @@ void handleCapInjection()
     {
         digitalWrite(capInjectPin, LOW);
     }
-    
+
     if(!isMoving && digitalRead(capPositionSensorPin) == HIGH ){
         machine.capInjectionReady = true;
     }
-    
+
     if(slots[slotIdFailedJunkEject].hasError() || slots[slotIdFailedJunkEject].shouldFinishProduction()){
         machine.capInjectionReady = true;
     }
-    
+
     if(isMoving){
         machine.capInjectionReady = false;
+    }
+
+    // Log state changes
+    if (machine.capInjectionReady != lastCapReady) {
+        DBG("[CAP] capInjectionReady: "); DBGLN_VAL(machine.capInjectionReady);
+        lastCapReady = machine.capInjectionReady;
     }
 }
 
@@ -713,12 +797,16 @@ void handleCapInjection()
 // ============================================================================
 void homeMachine()
 {
+    DBGLN("[HOME] Starting homing sequence");
     digitalWrite(capInjectPin, LOW);
-    
+
     // Send HIGH to Teensy to start trolling home
+    DBGLN("[HOME] Sending troll home signal to Teensy");
     digitalWrite(teensyTrollHomePin, HIGH);  // Pin 27 -> Teensy pin 24
-    
+
     // Wait for Teensy to finish both ram homing and wheel trolling (pin 50 from Teensy pin 26)
+    DBGLN("[HOME] Waiting for Teensy ready signal...");
+    unsigned long homeStartTime = millis();
     while (digitalRead(teensyWheelReadyPin) == LOW)
     {
         // Read physical home sensor (pin 25) and relay to Teensy via pin 27
@@ -728,19 +816,30 @@ void homeMachine()
 
         if (!digitalRead(pauseButtonPin))
         {
+            DBGLN("[HOME] Homing cancelled by user");
             digitalWrite(teensyTrollHomePin, LOW);  // Stop trolling
             machine.stop();
             machine.updateStatus(myNex, "Homing Stopped");
             return;
+        }
+
+        // Log progress every second
+        static unsigned long lastHomeLog = 0;
+        if (millis() - lastHomeLog > 1000) {
+            DBG("[HOME] Still homing... homeSensor="); DBG_VAL(sensorValue);
+            DBG(" elapsed="); DBG_VAL((millis() - homeStartTime) / 1000); DBGLN("s");
+            lastHomeLog = millis();
         }
         delay(10);
     }
 
     // Teensy has signaled both motors homed - stop relaying
     digitalWrite(teensyTrollHomePin, LOW);
+    DBG("[HOME] Teensy ready! Homing took "); DBG_VAL((millis() - homeStartTime)); DBGLN("ms");
 
     if (digitalRead(teensyWheelReadyPin) == HIGH)
     {
+        DBGLN("[HOME] Initializing production state");
         machine.inProduction = true;
         digitalWrite(junkEjectorPin, LOW);
         digitalWrite(capInjectPin, HIGH);
@@ -754,6 +853,7 @@ void homeMachine()
     isMoving = false;  // Not moving after homing - ready to start pause cycle
     pauseStartTime = micros();
     motorStopTime = pauseStartTime;  // Sync for accurate ejector timing
+    DBGLN("[HOME] Homing complete! Ready for production");
 }
 
 bool puasedStateProcessing = false;
@@ -766,24 +866,36 @@ void stepMotor()
     static unsigned long movePulseTime = 0;      // Stopwatch: when pulse was sent
     static bool waitingForAck = false;            // Waiting for Teensy to pull pin LOW
     static bool sawSensorHigh = false;            // Tracks if wheel left previous slot during move
+    static bool lastIsMoving = false;             // For state change detection
     unsigned long currentTime = micros();
+
+    // Log state transitions
+    if (isMoving != lastIsMoving) {
+        DBG("[STEP] isMoving: "); DBG_VAL(lastIsMoving); DBG(" -> "); DBGLN_VAL(isMoving);
+        lastIsMoving = isMoving;
+    }
 
     if (isMoving)
     {
         // First iteration after isMoving=true: send pulse and start stopwatch
         if (movePulseTime == 0)
         {
+            DBGLN("[STEP] Sending pulse to Teensy");
             digitalWrite(stepPin, HIGH);  // Send pulse to Teensy
             delay(10);
             digitalWrite(stepPin, LOW);
             movePulseTime = micros();  // Start stopwatch
             waitingForAck = true;      // Wait for Teensy to acknowledge (pin LOW)
             sawSensorHigh = false;     // Reset - must see HIGH during this move
+            DBG("[STEP] Pulse sent, waiting for ACK. WheelReady="); DBGLN_VAL(digitalRead(teensyWheelReadyPin));
         }
 
         // Poll wheel position sensor throughout the move to confirm the wheel left the slot
         if (digitalRead(wheelPositionSensorPin) == HIGH)
         {
+            if (!sawSensorHigh) {
+                DBGLN("[STEP] Wheel pos sensor HIGH (wheel left slot)");
+            }
             sawSensorHigh = true;
         }
 
@@ -792,12 +904,14 @@ void stepMotor()
         {
             if (digitalRead(teensyWheelReadyPin) == LOW)
             {
+                DBGLN("[STEP] Teensy ACK received (pin LOW)");
                 waitingForAck = false;  // Teensy acknowledged, now wait for HIGH
             }
             // Check for timeout while waiting for acknowledgment
             unsigned long elapsed = micros() - movePulseTime;
             if (elapsed > 5000000)
             {
+                DBGLN("[STEP] ERROR: Teensy ACK timeout!");
                 isMoving = false;
                 movePulseTime = 0;
                 waitingForAck = false;
@@ -812,9 +926,12 @@ void stepMotor()
         // Now wait for Teensy to finish (wheelReady goes HIGH)
         if (digitalRead(teensyWheelReadyPin) == HIGH)
         {
+            DBGLN("[STEP] Teensy ready HIGH (move complete signal)");
+
             // Verify the wheel actually left the previous slot during the move
             if (!sawSensorHigh)
             {
+                DBGLN("[STEP] ERROR: Never saw wheel leave slot!");
                 isMoving = false;
                 movePulseTime = 0;
                 waitingForAck = false;
@@ -828,6 +945,7 @@ void stepMotor()
             // Move complete - check wheel position sensor (LOW = correct position)
             if (digitalRead(wheelPositionSensorPin) == HIGH)
             {
+                DBGLN("[STEP] ERROR: Wheel pos sensor still HIGH after move!");
                 // Wheel not in correct position
                 isMoving = false;
                 movePulseTime = 0;
@@ -839,6 +957,7 @@ void stepMotor()
                 return;
             }
 
+            DBG("[STEP] Move OK! Pos "); DBG_VAL(currentHomePosition); DBG(" -> "); DBGLN_VAL((currentHomePosition + 1) % 16);
             isMoving = false;
             shouldRunTracker = true;
             pauseStartTime = currentTime;
@@ -856,6 +975,7 @@ void stepMotor()
         unsigned long elapsed = micros() - movePulseTime;
         if (elapsed > 5000000)
         {
+            DBGLN("[STEP] ERROR: Move timeout (5s)!");
             isMoving = false;
             movePulseTime = 0;
             sawSensorHigh = false;
@@ -868,20 +988,48 @@ void stepMotor()
         // Not moving - check if should start
         if (pauseRequested)
         {
+            DBGLN("[STEP] Pause requested");
             machine.pause(junkEjectorPin, dropperEjectPin);
             pauseRequested = false;
             return;
         }
 
         // Only start move if Teensy is ready (wheelReady HIGH)
-        bool teensyReady = (digitalRead(teensyWheelReadyPin) == HIGH) &&
-                          (digitalRead(bulbRamHomeSensorPin) == HIGH);
+        bool teensyWheelReady = digitalRead(teensyWheelReadyPin) == HIGH;
+        bool bulbRamHome = digitalRead(bulbRamHomeSensorPin) == HIGH;
+        bool teensyReady = teensyWheelReady && bulbRamHome;
+        bool machineReady = machine.isReadyToMove();
+        bool pauseElapsed = (currentTime - pauseStartTime >= PAUSE_AFTER);
 
-        if (machine.isReadyToMove() && teensyReady &&
-            (currentTime - pauseStartTime >= PAUSE_AFTER))
+        // Log why we can't move (only periodically to avoid spam)
+        static unsigned long lastNotReadyLog = 0;
+        if (!machineReady || !teensyReady || !pauseElapsed) {
+            if (currentTime - lastNotReadyLog > 1000000) { // Log every 1 second max
+                lastNotReadyLog = currentTime;
+                if (!machineReady) {
+                    DBG("[STEP] NOT READY - Machine: bulb="); DBG_VAL(machine.bulbSystemReady);
+                    DBG(" cap="); DBG_VAL(machine.capInjectionReady);
+                    DBG(" preload="); DBG_VAL(machine.bulbPreLoadReady);
+                    DBG(" pipet="); DBGLN_VAL(machine.pipetSystemReady);
+                }
+                if (!teensyWheelReady) {
+                    DBGLN("[STEP] NOT READY - Teensy wheel not ready (pin LOW)");
+                }
+                if (!bulbRamHome) {
+                    DBGLN("[STEP] NOT READY - Bulb ram not home");
+                }
+                if (!pauseElapsed) {
+                    unsigned long remaining = (PAUSE_AFTER - (currentTime - pauseStartTime)) / 1000;
+                    DBG("[STEP] NOT READY - Pause remaining: "); DBG_VAL(remaining); DBGLN("ms");
+                }
+            }
+        }
+
+        if (machineReady && teensyReady && pauseElapsed)
         {
-            if (digitalRead(bulbRamHomeSensorPin))
+            if (bulbRamHome)
             {
+                DBGLN("[STEP] Starting move!");
                 isMoving = true;
                 movePulseTime = 0;  // Will send pulse on next iteration
             }
@@ -1054,42 +1202,103 @@ void systemNotReadyTimeout() {
 
     const unsigned long TIMEOUT_MS = 2000UL;
     unsigned long now = millis();
-    
+
     if(machine.isReadyToMove()){
         machine.timeoutMachine = false;
     }
-    
+
     bool condition =
         (!isMoving) &&
         (!machine.isReadyToMove()) &&
         (!machine.isPaused) &&
         (!machine.isStopped);
-        
+
     if (condition) {
         if (!tracking) {
             tracking = true;
             notReadySince = now;
+            DBG("[TIMEOUT] Started tracking not-ready state. bulb="); DBG_VAL(machine.bulbSystemReady);
+            DBG(" cap="); DBG_VAL(machine.capInjectionReady);
+            DBG(" preload="); DBG_VAL(machine.bulbPreLoadReady);
+            DBG(" pipet="); DBGLN_VAL(machine.pipetSystemReady);
         } else if (now - notReadySince >= TIMEOUT_MS) {
+            DBGLN("[TIMEOUT] TIMEOUT! Pausing machine - subsystem not ready for 2s");
+            DBG("[TIMEOUT] Final state: bulb="); DBG_VAL(machine.bulbSystemReady);
+            DBG(" cap="); DBG_VAL(machine.capInjectionReady);
+            DBG(" preload="); DBG_VAL(machine.bulbPreLoadReady);
+            DBG(" pipet="); DBGLN_VAL(machine.pipetSystemReady);
             machine.pause(junkEjectorPin, dropperEjectPin);
             tracking = false;
             machine.timeoutMachine = true;
         }
     } else {
+        if (tracking) {
+            DBGLN("[TIMEOUT] Tracking stopped - system ready");
+        }
         tracking = false;
     }
 }
 
 void handleLowAirPressure()
 {
+    static bool lastLowAir = false;
+
     if (digitalRead(lowAirSensorPin) == LOW)
     {
+        if (!lastLowAir) {
+            DBGLN("[AIR] LOW AIR PRESSURE DETECTED!");
+        }
         machine.hasLowAirPressure = true;
         machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "Low Air - Pause");
+        lastLowAir = true;
     }
     else{
+        if (lastLowAir) {
+            DBGLN("[AIR] Air pressure restored");
+        }
         machine.hasLowAirPressure = false;
+        lastLowAir = false;
     }
+}
+
+// Periodic status dump for debugging
+void debugStatusDump() {
+#if DEBUG_MODE
+    static unsigned long lastDump = 0;
+    const unsigned long DUMP_INTERVAL = 3000; // Every 3 seconds
+
+    if (millis() - lastDump < DUMP_INTERVAL) return;
+    if (!machine.inProduction || machine.isPaused) return; // Only during active production
+
+    lastDump = millis();
+
+    DBGLN("=== STATUS DUMP ===");
+    DBG("  pos="); DBG_VAL(currentHomePosition);
+    DBG(" moved="); DBG_VAL(machine.positionsMoved);
+    DBG(" isMoving="); DBGLN_VAL(isMoving);
+
+    DBG("  Teensy: wheelReady="); DBG_VAL(digitalRead(teensyWheelReadyPin));
+    DBG(" overrun="); DBG_VAL(digitalRead(teensyOverrunAlarmPin));
+    DBG(" bulbRamHome="); DBGLN_VAL(digitalRead(bulbRamHomeSensorPin));
+
+    DBG("  Sensors: wheelPos="); DBG_VAL(digitalRead(wheelPositionSensorPin));
+    DBG(" home="); DBG_VAL(digitalRead(homeSensorPin));
+    DBG(" bulbInCap="); DBG_VAL(digitalRead(bulbInCapSensor));
+    DBG(" capPos="); DBGLN_VAL(digitalRead(capPositionSensorPin));
+
+    DBG("  Ready: bulb="); DBG_VAL(machine.bulbSystemReady);
+    DBG(" cap="); DBG_VAL(machine.capInjectionReady);
+    DBG(" preload="); DBG_VAL(machine.bulbPreLoadReady);
+    DBG(" pipet="); DBGLN_VAL(machine.pipetSystemReady);
+
+    DBG("  Rams: bulb="); DBG_VAL(digitalRead(bulbRamPin));
+    DBG(" pipet="); DBG_VAL(digitalRead(pipetRamPin));
+    DBG(" preload="); DBGLN_VAL(digitalRead(bulbPreLoadCylinder));
+
+    DBG("  PAUSE_AFTER="); DBG_VAL(PAUSE_AFTER / 1000); DBGLN("ms");
+    DBGLN("===================");
+#endif
 }
 
 // ============================================================================
@@ -1102,6 +1311,7 @@ void handleTeensyAlarms() {
 
     // Check for RAM OVERRUN alarm (rising edge)
     if (currentOverrunAlarm == HIGH && lastOverrunAlarm == LOW) {
+        DBGLN("[ALARM] TEENSY RAM OVERRUN DETECTED!");
         machine.pause(junkEjectorPin, dropperEjectPin);
         machine.updateStatus(myNex, "RAM OVERRUN ERROR");
         machine.hasTeensyRamError = true;
@@ -1112,6 +1322,16 @@ void handleTeensyAlarms() {
 
 void setup()
 {
+    DBG_INIT();
+    DBGLN("=== DROPPER MACHINE STARTING ===");
+    DBGLN("Debug logging ENABLED - watching for decisions");
+    DBG("  stepPin="); DBG_VAL(stepPin);
+    DBG(" teensyWheelReady="); DBG_VAL(teensyWheelReadyPin);
+    DBG(" wheelPosSensor="); DBGLN_VAL(wheelPositionSensorPin);
+    DBG("  bulbRamPin="); DBG_VAL(bulbRamPin);
+    DBG(" bulbRamHome="); DBG_VAL(bulbRamHomeSensorPin);
+    DBG(" pipetRamPin="); DBGLN_VAL(pipetRamPin);
+
     myNex.begin(115200);
 
     // Initialize pins
@@ -1193,21 +1413,47 @@ int i = 0;
 
 void loop()
 {
+    // Track state changes for logging
+    static bool lastInProduction = false;
+    static bool lastIsPaused = false;
+    static bool lastIsStopped = true;
+    static bool lastNeedsHoming = true;
+    static unsigned long lastStateLog = 0;
+
+    // Log major state changes
+    if (machine.inProduction != lastInProduction) {
+        DBG("[LOOP] inProduction: "); DBGLN_VAL(machine.inProduction);
+        lastInProduction = machine.inProduction;
+    }
+    if (machine.isPaused != lastIsPaused) {
+        DBG("[LOOP] isPaused: "); DBGLN_VAL(machine.isPaused);
+        lastIsPaused = machine.isPaused;
+    }
+    if (machine.isStopped != lastIsStopped) {
+        DBG("[LOOP] isStopped: "); DBGLN_VAL(machine.isStopped);
+        lastIsStopped = machine.isStopped;
+    }
+    if (machine.needsHoming != lastNeedsHoming) {
+        DBG("[LOOP] needsHoming: "); DBGLN_VAL(machine.needsHoming);
+        lastNeedsHoming = machine.needsHoming;
+    }
+
     handleLowAirPressure();
     handleTeensyAlarms();        // NEW: Monitor Teensy alarm signals
     updatePauseAfterFromPot();
     handleButtons();
     handleSupplyAlert();
     setSlotIdByPosition(slots);
-    
+    debugStatusDump();           // Periodic status dump for debugging
+
     startTime = millis();
     motorPauseTime();
-    
+
     if ((!isMoving && motorPausePercent > .90) || machine.isPaused)
     {
         machine.updateMachineDisplayInfo(myNex, startTime, slots);
     }
-    
+
     machineTracker();
     handleCapInjection();
     handleBulbSystem();      // UNCHANGED - still uses pins 39 and 33
@@ -1216,7 +1462,7 @@ void loop()
 
     if (machine.isStopped)
         return;
-        
+
     if (machine.needsHoming)
     {
         if (machine.needsHoming)
@@ -1234,5 +1480,18 @@ void loop()
     if (machine.inProduction && !machine.isPaused)
     {
         stepMotor();
+    }
+    else
+    {
+        // Log why we're not calling stepMotor (only every 2 seconds)
+        if (millis() - lastStateLog > 2000) {
+            lastStateLog = millis();
+            if (!machine.inProduction) {
+                DBGLN("[LOOP] Not calling stepMotor: inProduction=false");
+            }
+            if (machine.isPaused) {
+                DBGLN("[LOOP] Not calling stepMotor: isPaused=true");
+            }
+        }
     }
 }
