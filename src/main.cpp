@@ -1365,8 +1365,8 @@ void setup()
     // ========================================================================
     // NEW: Teensy communication pins
     // ========================================================================
-    pinMode(teensyWheelReadyPin, INPUT);
-    pinMode(teensyOverrunAlarmPin, INPUT);
+    pinMode(teensyWheelReadyPin, INPUT_PULLUP);
+    pinMode(teensyOverrunAlarmPin, INPUT_PULLUP);  // Pull-up for Teensy open-drain output
     pinMode(wheelPositionSensorPin, INPUT);
 
     // Pneumatics
@@ -1381,7 +1381,7 @@ void setup()
     pinMode(preLoadCylinderHomeSensorPin, INPUT);
     
     // sensors
-    pinMode(bulbRamHomeSensorPin, INPUT);  // Still INPUT (now from Teensy)
+    pinMode(bulbRamHomeSensorPin, INPUT_PULLUP);  // Still INPUT (now from Teensy)
     pinMode(pipetTipSensor, INPUT);
     pinMode(bulbInCapSensor, INPUT);
     pinMode(capInWheel, INPUT);
