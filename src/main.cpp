@@ -1243,7 +1243,7 @@ void handleLowAirPressure()
 {
     static bool lastLowAir = false;
 
-    if (digitalRead(lowAirSensorPin) == LOW)
+    if (digitalRead(lowAirSensorPin) == HIGH)
     {
         if (!lastLowAir) {
             DBGLN("[AIR] LOW AIR PRESSURE DETECTED!");
