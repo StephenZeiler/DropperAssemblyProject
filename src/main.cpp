@@ -973,7 +973,7 @@ void stepMotor()
 
         // Timeout check (5 seconds) - only if move hasn't completed
         unsigned long elapsed = micros() - movePulseTime;
-        if (elapsed > 000000)
+        if (elapsed > 5000000)
         {
             DBGLN("[STEP] ERROR: Move timeout (5s)!");
             isMoving = false;
