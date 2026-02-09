@@ -973,7 +973,7 @@ void stepMotor()
 
         // Timeout check (5 seconds) - only if move hasn't completed
         unsigned long elapsed = micros() - movePulseTime;
-        if (elapsed > 5000000)
+        if (elapsed > 000000)
         {
             DBGLN("[STEP] ERROR: Move timeout (5s)!");
             isMoving = false;
@@ -1104,15 +1104,15 @@ void handleButtons()
     {
         lastDebounceTime = millis();
 
-        // Safety buzzer - alert for 5 seconds before starting
-        machine.updateStatus(myNex, "Starting in 5s...");
+        // Safety buzzer - alert for 3 seconds before starting
+        machine.updateStatus(myNex, "Starting in 3s...");
         digitalWrite(startUpBuzzerPin, HIGH);
 
         unsigned long buzzerStartTime = millis();
         bool startCancelled = false;
 
-        // Sound buzzer for 5 seconds, but allow pause to cancel
-        while (millis() - buzzerStartTime < 5000)
+        // Sound buzzer for 3 seconds, but allow pause to cancel
+        while (millis() - buzzerStartTime < 3000)
         {
             if (digitalRead(pauseButtonPin) == LOW)
             {
