@@ -1098,7 +1098,10 @@ void emptySlots()
 
 void handleEmptySlots()
 {
-    if (!machine.inProduction && !digitalRead(emptySlotsButtonPin))
+    // Only allow empty slots when Teensy is ready (HIGH) and button pressed
+    if (!machine.inProduction &&
+        !digitalRead(emptySlotsButtonPin) &&
+        digitalRead(teensyWheelReadyPin) == HIGH)
     {
         emptySlots();
     }
