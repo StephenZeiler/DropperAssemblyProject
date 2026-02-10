@@ -1040,12 +1040,11 @@ void stepMotor()
 void emptySlots()
 {
     machine.updateStatus(myNex, "Emptying Slots");
+    const unsigned long stepDelay = 4000;
     digitalWrite(pipetTwisterPin, LOW);
-
-    const int SLOTS_PER_REVOLUTION = 16;
-    const unsigned long TEENSY_TIMEOUT = 5000;  // 5 second timeout per slot
-
-    for (int slot = 0; slot < SLOTS_PER_REVOLUTION; slot++)
+    
+    int i = 0;
+    while (i <= 6400)  // doubled for 1600 steps/rev
     {
         if (!digitalRead(pauseButtonPin))
         {
@@ -1054,42 +1053,22 @@ void emptySlots()
             break;
         }
 
-        // Send pulse to Teensy to move one slot
+        if (i % 400 == 0)  // doubled for 1600 steps/rev
+        {
+            digitalWrite(junkEjectorPin, HIGH);
+            delay(200);
+            digitalWrite(junkEjectorPin, LOW);
+            delay(200);
+        }
+        
+        // Send pulse to Teensy to move wheel
         digitalWrite(stepPin, HIGH);
         delay(10);
         digitalWrite(stepPin, LOW);
-
-        // Wait for Teensy ACK (teensyWheelReadyPin goes LOW)
-        unsigned long startTime = millis();
-        while (digitalRead(teensyWheelReadyPin) == HIGH)
-        {
-            if (millis() - startTime > TEENSY_TIMEOUT)
-            {
-                machine.updateStatus(myNex, "Empty Timeout ACK");
-                machine.stop();
-                return;
-            }
-        }
-
-        // Wait for Teensy complete (teensyWheelReadyPin goes HIGH)
-        startTime = millis();
-        while (digitalRead(teensyWheelReadyPin) == LOW)
-        {
-            if (millis() - startTime > TEENSY_TIMEOUT)
-            {
-                machine.updateStatus(myNex, "Empty Timeout Done");
-                machine.stop();
-                return;
-            }
-        }
-
-        // Slot move complete - fire junk ejector
-        digitalWrite(junkEjectorPin, HIGH);
-        delay(200);
-        digitalWrite(junkEjectorPin, LOW);
-        delay(200);
+        delayMicroseconds(stepDelay);
+        ++i;
     }
-
+    
     machine.updateStatus(myNex, "Emptying Completed");
     digitalWrite(junkEjectorPin, LOW);
     digitalWrite(pipetTwisterPin, HIGH);
