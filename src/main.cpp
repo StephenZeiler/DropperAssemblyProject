@@ -1044,7 +1044,7 @@ void emptySlots()
     digitalWrite(pipetTwisterPin, LOW);
     
     int i = 0;
-    while (i <= 3200)
+    while (i <= 6400)  // doubled for 1600 steps/rev
     {
         if (!digitalRead(pauseButtonPin))
         {
@@ -1052,8 +1052,8 @@ void emptySlots()
             machine.updateStatus(myNex, "Emptying Stopped");
             break;
         }
-        
-        if (i % 200 == 0)
+
+        if (i % 400 == 0)  // doubled for 1600 steps/rev
         {
             digitalWrite(junkEjectorPin, HIGH);
             delay(200);
