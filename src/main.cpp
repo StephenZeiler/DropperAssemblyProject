@@ -768,7 +768,18 @@ void machineTracker()
 
         if (slots[slotIdJunkEjection].shouldFinishProduction())
         {
+            // Print final status before resetting
+            printFinishProdSlotStatus();
+
             machine.pause(junkEjectorPin, dropperEjectPin);
+            machine.updateStatus(myNex, "End Prod Complete");
+
+            // Reset all finish production flags so machine can start fresh
+            for (int i = 0; i < 16; i++) {
+                slots[i].setFinsihProduction(false);
+            }
+            finsihProdRequested = false;
+            finishProdEjectCount = 0;
         }
 
         if (finsihProdRequested)
