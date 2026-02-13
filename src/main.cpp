@@ -771,7 +771,7 @@ void machineTracker()
             // Print final status before resetting
             printFinishProdSlotStatus();
 
-            machine.pause(junkEjectorPin, dropperEjectPin);
+            machine.stop();
             machine.updateStatus(myNex, "End Prod Complete");
 
             // Reset all finish production flags so machine can start fresh
