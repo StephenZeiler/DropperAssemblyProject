@@ -1035,8 +1035,11 @@ void stepMotor()
                 static int lowSupplyCycleCount = 0;
                 if (handleLowSupplies()) {
                     lowSupplyCycleCount++;
+                    machine.hasLowSupplySlowing = true;
                     if (lowSupplyCycleCount >= 8) {
                         DBGLN("[STEP] LOW SUPPLY for 8 cycles - pausing machine");
+                        machine.hasLowSupplyPaused = true;
+                        machine.hasLowSupplySlowing = false;
                         machine.pause(junkEjectorPin, dropperEjectPin);
                         machine.updateStatus(myNex, "Low Supply - Pause");
                         lowSupplyCycleCount = 0;
@@ -1046,6 +1049,8 @@ void stepMotor()
                     delay(2000);
                 } else {
                     lowSupplyCycleCount = 0;
+                    machine.hasLowSupplySlowing = false;
+                    machine.hasLowSupplyPaused = false;
                 }
                 DBGLN("[STEP] Starting move!");
                 isMoving = true;

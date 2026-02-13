@@ -33,6 +33,8 @@ public:
     bool cautionShown = false;
     bool statusStateChange = false;
     bool hasLowAirPressure = false;
+    bool hasLowSupplySlowing = false;     // machine running slow due to low supply
+    bool hasLowSupplyPaused = false;      // machine paused due to low supply (8 cycles)
     bool timeoutMachine = false;
     String status = "";
 
@@ -318,6 +320,16 @@ void setCautionLogs(EasyNex myNex, long currentMilliTime, SlotObject slots[]) {
         
         if (hasLowAirPressure) {
             String msg = "Low air pressure - machine paused.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+        }
+
+        if (hasLowSupplySlowing) {
+            String msg = "Low supply - producing slowly.\r\n";
+            pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
+        }
+
+        if (hasLowSupplyPaused) {
+            String msg = "Low supply for 8 cycles - machine paused.\r\n";
             pos += snprintf(fullLog + pos, sizeof(fullLog) - pos, "%s", msg.c_str());
         }
         
