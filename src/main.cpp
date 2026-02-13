@@ -94,7 +94,7 @@ bool isMoving = false;
 bool pauseRequested = false;
 bool emptySlotsRequested = false;
 bool finsihProdRequested = false;
-int finishProdEjectCount = 0;
+
 
 // Wheel movement state machine for non-blocking Teensy control
 enum WheelMoveState
@@ -325,24 +325,6 @@ void setSlotErrors(SlotObject slots[])
             slots[i].setError(true);
         }
     }
-}
-
-void printFinishProdSlotStatus() {
-    DBGLN("=== FINISH PROD - SLOT STATUS ===");
-    for (int i = 0; i < 16; i++) {
-        DBG("Slot "); DBG_VAL(slots[i].getId());
-        DBG(" pos="); DBG_VAL(slots[i].getPosition());
-        DBG(" err="); DBG_VAL(slots[i].hasError());
-        DBG(" junk="); DBG_VAL(slots[i].hasJunk());
-        DBG(" noBulb="); DBG_VAL(slots[i].hasMissingBulb());
-        DBG(" noCap="); DBG_VAL(slots[i].hasMissingCap());
-        DBG(" junkFail="); DBG_VAL(slots[i].hasFailedJunkEject());
-        DBG(" finProd="); DBGLN_VAL(slots[i].shouldFinishProduction());
-    }
-    DBG("Ejecting slot (pos 13): "); DBGLN_VAL(slotIdDropeprEjection);
-    DBG("Junk eject slot (pos 14): "); DBGLN_VAL(slotIdJunkEjection);
-    DBG("Ejected since end prod: "); DBGLN_VAL(finishProdEjectCount);
-    DBGLN("=================================");
 }
 
 bool handleLowSupplies()
@@ -731,10 +713,6 @@ void machineTracker()
         if (machine.canDropperEjectionStart() && !slots[slotIdDropeprEjection].hasError() && !slots[slotIdDropeprEjection].shouldFinishProduction())
         {
             machine.incrementDroppersCompleted();
-            if (finsihProdRequested)
-            {
-                finishProdEjectCount++;
-            }
             if (stopDuration < 18000 && !isMoving)
             {
                 digitalWrite(dropperEjectPin, HIGH);
@@ -768,9 +746,6 @@ void machineTracker()
 
         if (slots[slotIdJunkEjection].shouldFinishProduction())
         {
-            // Print final status before resetting
-            printFinishProdSlotStatus();
-
             machine.stop();
             machine.updateStatus(myNex, "End Prod Complete");
 
@@ -779,12 +754,6 @@ void machineTracker()
                 slots[i].setFinsihProduction(false);
             }
             finsihProdRequested = false;
-            finishProdEjectCount = 0;
-        }
-
-        if (finsihProdRequested)
-        {
-            printFinishProdSlotStatus();
         }
     }
     
@@ -1217,7 +1186,6 @@ void handleButtons()
             machine.start();
             pauseRequested = false;
             finsihProdRequested = false;
-            finishProdEjectCount = 0;
             machine.updateStatus(myNex, "In Production");
         }
     }
