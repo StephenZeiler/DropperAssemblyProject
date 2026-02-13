@@ -1001,14 +1001,7 @@ void stepMotor()
         bool bulbRamHome = digitalRead(bulbRamHomeSensorPin) == HIGH;
         bool teensyReady = teensyWheelReady && bulbRamHome;
         bool machineReady = machine.isReadyToMove();
-
-        // Add extra pause when supplies are low to slow the machine down
-        bool lowSupply = handleLowSupplies();
-        unsigned long effectivePause = PAUSE_AFTER;
-        if (lowSupply) {
-            effectivePause += PAUSE_LOW_SUPPLY;
-        }
-        bool pauseElapsed = (currentTime - pauseStartTime >= effectivePause);
+        bool pauseElapsed = (currentTime - pauseStartTime >= PAUSE_AFTER);
 
         // Log why we can't move (only periodically to avoid spam)
         static unsigned long lastNotReadyLog = 0;
@@ -1028,11 +1021,8 @@ void stepMotor()
                     DBGLN("[STEP] NOT READY - Bulb ram not home");
                 }
                 if (!pauseElapsed) {
-                    unsigned long elapsed = currentTime - pauseStartTime;
-                    unsigned long remaining = (effectivePause > elapsed) ? (effectivePause - elapsed) / 1000 : 0;
-                    DBG("[STEP] NOT READY - Pause remaining: "); DBG_VAL(remaining); DBG("ms");
-                    if (lowSupply) { DBG(" (LOW SUPPLY +"); DBG_VAL(PAUSE_LOW_SUPPLY / 1000); DBG("ms)"); }
-                    DBGLN("");
+                    unsigned long remaining = (PAUSE_AFTER - (currentTime - pauseStartTime)) / 1000;
+                    DBG("[STEP] NOT READY - Pause remaining: "); DBG_VAL(remaining); DBGLN("ms");
                 }
             }
         }
@@ -1041,6 +1031,11 @@ void stepMotor()
         {
             if (bulbRamHome)
             {
+                // If supplies are low, wait 2 seconds before moving
+                if (handleLowSupplies()) {
+                    DBGLN("[STEP] LOW SUPPLY - delaying 2s before move");
+                    delay(2000);
+                }
                 DBGLN("[STEP] Starting move!");
                 isMoving = true;
                 movePulseTime = 0;  // Will send pulse on next iteration
