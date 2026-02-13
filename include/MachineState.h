@@ -117,6 +117,7 @@ bool canCheckForEmptyStart(){
         isPaused = false;
         inProduction = false;
         needsHoming = true;
+        positionsMoved = 0;
     }
     void finishProduction() {
         
