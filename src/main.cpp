@@ -328,20 +328,22 @@ void setSlotErrors(SlotObject slots[])
 
 bool handleLowSupplies()
 {
-    if (digitalRead(capSupplySensorPin) == HIGH)
-    {
-        return true;
-    }
-    else if (digitalRead(bulbSupplySensorPin) == HIGH)
-    {
-        return true;
-    }
-    else if (digitalRead(pipetSupplySensorPin) == HIGH)
-    {
-        return true;
-    }
-    else
-    {
+    static unsigned long lowSinceTime = 0;
+    static bool wasLow = false;
+    const unsigned long DEBOUNCE_MS = 500; // sensor must read low-supply for 0.5s
+
+    bool anyLow = (digitalRead(capSupplySensorPin) == HIGH) ||
+                  (digitalRead(bulbSupplySensorPin) == HIGH) ||
+                  (digitalRead(pipetSupplySensorPin) == HIGH);
+
+    if (anyLow) {
+        if (!wasLow) {
+            lowSinceTime = millis();
+            wasLow = true;
+        }
+        return (millis() - lowSinceTime >= DEBOUNCE_MS);
+    } else {
+        wasLow = false;
         return false;
     }
 }
@@ -999,7 +1001,14 @@ void stepMotor()
         bool bulbRamHome = digitalRead(bulbRamHomeSensorPin) == HIGH;
         bool teensyReady = teensyWheelReady && bulbRamHome;
         bool machineReady = machine.isReadyToMove();
-        bool pauseElapsed = (currentTime - pauseStartTime >= PAUSE_AFTER);
+
+        // Add extra pause when supplies are low to slow the machine down
+        bool lowSupply = handleLowSupplies();
+        unsigned long effectivePause = PAUSE_AFTER;
+        if (lowSupply) {
+            effectivePause += PAUSE_LOW_SUPPLY;
+        }
+        bool pauseElapsed = (currentTime - pauseStartTime >= effectivePause);
 
         // Log why we can't move (only periodically to avoid spam)
         static unsigned long lastNotReadyLog = 0;
@@ -1019,8 +1028,11 @@ void stepMotor()
                     DBGLN("[STEP] NOT READY - Bulb ram not home");
                 }
                 if (!pauseElapsed) {
-                    unsigned long remaining = (PAUSE_AFTER - (currentTime - pauseStartTime)) / 1000;
-                    DBG("[STEP] NOT READY - Pause remaining: "); DBG_VAL(remaining); DBGLN("ms");
+                    unsigned long elapsed = currentTime - pauseStartTime;
+                    unsigned long remaining = (effectivePause > elapsed) ? (effectivePause - elapsed) / 1000 : 0;
+                    DBG("[STEP] NOT READY - Pause remaining: "); DBG_VAL(remaining); DBG("ms");
+                    if (lowSupply) { DBG(" (LOW SUPPLY +"); DBG_VAL(PAUSE_LOW_SUPPLY / 1000); DBG("ms)"); }
+                    DBGLN("");
                 }
             }
         }
