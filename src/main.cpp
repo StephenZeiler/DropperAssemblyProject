@@ -1031,10 +1031,21 @@ void stepMotor()
         {
             if (bulbRamHome)
             {
-                // If supplies are low, wait 2 seconds before moving
+                // If supplies are low, delay and count cycles
+                static int lowSupplyCycleCount = 0;
                 if (handleLowSupplies()) {
+                    lowSupplyCycleCount++;
+                    if (lowSupplyCycleCount >= 8) {
+                        DBGLN("[STEP] LOW SUPPLY for 8 cycles - pausing machine");
+                        machine.pause(junkEjectorPin, dropperEjectPin);
+                        machine.updateStatus(myNex, "Low Supply - Pause");
+                        lowSupplyCycleCount = 0;
+                        return;
+                    }
                     DBGLN("[STEP] LOW SUPPLY - delaying 2s before move");
                     delay(2000);
+                } else {
+                    lowSupplyCycleCount = 0;
                 }
                 DBGLN("[STEP] Starting move!");
                 isMoving = true;
