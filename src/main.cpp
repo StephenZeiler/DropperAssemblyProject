@@ -1298,7 +1298,8 @@ void systemNotReadyTimeout() {
         (!isMoving) &&
         (!machine.isReadyToMove()) &&
         (!machine.isPaused) &&
-        (!machine.isStopped);
+        (!machine.isStopped) &&
+        (!machine.needsHoming);
 
     if (condition) {
         if (!tracking) {
